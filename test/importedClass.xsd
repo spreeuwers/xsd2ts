@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:dep="http://schemas.example.nl/">
+    <xs:complexType name="Test">
+        <xs:sequence>
+        <xs:element name="imported" type="dep:OtherClass"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

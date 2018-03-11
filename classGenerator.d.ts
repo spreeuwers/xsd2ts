@@ -1,12 +1,19 @@
+/// <reference types="lodash" />
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
 import { FileDefinition } from "ts-code-generator";
+export declare type namespaceResolver = (ns: string) => void;
 export declare class ClassGenerator {
     private fileDef;
     private verbose;
+    private pluralPostFix;
+    private dependencies;
+    private importMap;
     types: string[];
-    generateClassFileDefinition(xsd: string, verbose?: boolean): FileDefinition;
+    private nsResolver(ns);
+    constructor(dependencies?: Map<string, string>);
+    generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
     private log(msg);
     /**
      * Recusrsive function to retrieve all types from the XSD

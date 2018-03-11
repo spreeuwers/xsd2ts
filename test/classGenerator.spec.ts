@@ -9,11 +9,12 @@ describe("ClassGenerator", () => {
         let generator: ClassGenerator;
         let simpleClassXsd = '';
         let simpleInheritedClassXsd = '';
-
+        let importedClassXsd = '';
         beforeEach(() => {
-            generator = new ClassGenerator();
+            generator = new ClassGenerator(<Map<string,string>>{"dep":"mylib"});
             simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
             simpleInheritedClassXsd = fs.readFileSync('./test/simpleInheritedClass.xsd').toString();
+            importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
         });
 
         it("ClassGenerator heeft een werkende constructor", () => {
@@ -32,7 +33,7 @@ describe("ClassGenerator", () => {
             expect(generator.generateClassFileDefinition('').classes.length).toBe(0);
         });
         it("ClassGenerator geeft een simpele classFile terug", () => {
-            expect(generator.generateClassFileDefinition(simpleClassXsd,true).classes.length).toBe(1);
+            expect(generator.generateClassFileDefinition(simpleClassXsd,'',true).classes.length).toBe(1);
         });
 
         it("ClassGenerator geeft een inherited classFile terug", () => {
@@ -45,6 +46,10 @@ describe("ClassGenerator", () => {
             expect(test.getMethod("constructor")).toBeDefined();
             expect(test.getProperty("dateField").type.isArrayType()).toBe(false);
             expect(test.getProperty("arrayField").type.isArrayType()).toBe(true);
+        });
+
+        it("ClassGenerator geeft een  classFile terug met imports", () => {
+            expect(generator.generateClassFileDefinition(importedClassXsd,'',true).classes.length).toBe(1);
         });
 
     });

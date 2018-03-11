@@ -19,21 +19,32 @@ const TSCONFIG =
                 ]
     }`;
 
+let importStatements = [];
 
-export function generateTemplateClassesFromXSD(xsdFilePath: string): void {
+let imports = {};
+
+
+function  nsResolver(ns: string): void {
+    importStatements.push(`import * as ${ns} from "${imports[ns]}";\n`);
+}
+
+
+export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies?: Map<string,string>): void {
+    let imports = dependencies || <Map<string,string>>{};
+     console.log(JSON.stringify(dependencies));
 
     const PROTECTED = 'protected';
     const xsdString = fs.readFileSync(xsdFilePath, 'utf8');
 
     const genSrcPath = "./src/generated";
-    const generator = new ClassGenerator();
+    const generator = new ClassGenerator(imports);
 
     if (!fs.existsSync(genSrcPath)) {
         fs.mkdirSync(genSrcPath);
         fs.writeFileSync('./src/generated/tsconfig.json', TSCONFIG, 'utf8');
     }
 
-    const classFileDef = generator.generateClassFileDefinition(xsdString);
+    const classFileDef = generator.generateClassFileDefinition(xsdString, '');
 
     //add classes in order of hierarchy depth to make the compiler happy
 

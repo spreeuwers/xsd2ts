@@ -8,26 +8,37 @@ var parse = require("xml-parser");
 var XS_RESTRICTION = "xs:restriction";
 var XS_SIMPLE_TYPE = "xs:simpleType";
 var XS_SCHEMA = "xs:schema";
-var XS_STRING = 'string';
-var XS_GROUP = 'xs:group';
+var XS_STRING = 'xs:string';
 var XS_SEQUENCE = "xs:sequence";
 var XS_ELEMENT = "xs:element";
 var XS_EXTENSION = "xs:extension";
 var XS_COMPLEX_TYPE = "xs:complexType";
 var XS_ENUM = "xs:enumeration";
+var XS_GROUP = "xs:group";
 var ClassGenerator = /** @class */ (function () {
-    function ClassGenerator() {
+    function ClassGenerator(dependencies) {
         //private file: FileDefinition;
         //private classes: { [key: string]: FileDefinition } = {};
         this.fileDef = ts_code_generator_1.createFile({ classes: [] });
         this.verbose = false;
+        this.pluralPostFix = 's';
+        this.importMap = [];
         this.types = [];
+        this.dependencies = dependencies || {};
+        console.log(JSON.stringify(this.dependencies));
     }
-    ClassGenerator.prototype.generateClassFileDefinition = function (xsd, verbose) {
+    ClassGenerator.prototype.nsResolver = function (ns) {
+        //this.importStatements.push(`import * as ${ns} from "${this.dependencies[ns]}";\n`);
+        this.importMap[ns] = this.dependencies[ns] || "ns";
+        //console.log(ns, this.dependencies[ns]);
+    };
+    ClassGenerator.prototype.generateClassFileDefinition = function (xsd, pluralPostFix, verbose) {
         var _this = this;
+        if (pluralPostFix === void 0) { pluralPostFix = 's'; }
         this.fileDef = ts_code_generator_1.createFile({ classes: [] });
         var xmlDoc = parse(xsd);
         this.verbose = verbose;
+        this.pluralPostFix = pluralPostFix;
         this.log('--------------------generating classFile definition for----------------------------------');
         this.log('');
         this.log(xsd);
@@ -139,6 +150,12 @@ var ClassGenerator = /** @class */ (function () {
                 }
                 this.log('  field: ' + fldName);
                 if (fldName && classDef) {
+                    //is the field is of type string array then we add a prefix (s)
+                    var fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
+                    if (arrayPostfix === '[]' && fldType === XS_STRING) {
+                        //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
+                        console.log('  field: ', fldName, '  fieldNamePostFix: ', fieldNamePostFix);
+                    }
                     classDef.addProperty({
                         name: fldName,
                         type: this.getFieldType(fldType) + arrayPostfix,
@@ -154,6 +171,9 @@ var ClassGenerator = /** @class */ (function () {
     ClassGenerator.prototype.makeSortedFileDefinition = function (sortedClasses) {
         var _this = this;
         var outFile = ts_code_generator_1.createFile({ classes: [] });
+        for (var ns in this.importMap) {
+            outFile.addImport({ moduleSpecifier: this.importMap[ns], starImportName: ns });
+        }
         var depth = 0;
         var max_depth = 1;
         while (depth <= max_depth) {
@@ -253,7 +273,17 @@ var ClassGenerator = /** @class */ (function () {
                 result = "string";
                 break;
         }
-        return result;
+        if (result) {
+            if (result.indexOf(':') > 0) {
+                var ns = result.split(':')[0];
+                this.nsResolver(ns);
+                console.log("namespace", ns);
+            }
+            return result.replace(':', '.');
+        }
+        else {
+            return 'any';
+        }
     };
     return ClassGenerator;
 }());

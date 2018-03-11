@@ -1,34 +1,54 @@
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
-import {ClassDefinition,  createFile, FileDefinition} from "ts-code-generator";
+import {ClassDefinition, createFile, FileDefinition, ImportStructure} from "ts-code-generator";
 import parse = require("xml-parser");
 
 
 const XS_RESTRICTION = "xs:restriction";
 const XS_SIMPLE_TYPE = "xs:simpleType";
 const XS_SCHEMA = "xs:schema";
-const XS_STRING = 'string';
-const XS_GROUP = 'xs:group';
+const XS_STRING = 'xs:string';
 const XS_SEQUENCE = "xs:sequence";
 const XS_ELEMENT = "xs:element";
 const XS_EXTENSION = "xs:extension";
 const XS_COMPLEX_TYPE = "xs:complexType";
 const XS_ENUM = "xs:enumeration";
+const XS_GROUP = "xs:group";
+
+
+
+export type namespaceResolver = (ns:string) => void;
 
 export class ClassGenerator {
     //private file: FileDefinition;
     //private classes: { [key: string]: FileDefinition } = {};
     private fileDef = createFile({classes: []});
     private verbose = false;
+    private pluralPostFix = 's';
+    private dependencies: Map<string,string>;
+    private importMap:string[] = [];
 
     public types: string[] = [];
 
+    private nsResolver(ns: string): void {
+        //this.importStatements.push(`import * as ${ns} from "${this.dependencies[ns]}";\n`);
+        this.importMap[ns] = this.dependencies[ns] || "ns";
+        //console.log(ns, this.dependencies[ns]);
+    }
 
-    public generateClassFileDefinition(xsd: string, verbose?: boolean): FileDefinition {
+    constructor(dependencies?: Map<string,string>){
+        this.dependencies = dependencies || <Map<string,string>>{};
+        console.log(JSON.stringify(this.dependencies));
+    }
+
+
+    public generateClassFileDefinition(xsd: string, pluralPostFix='s',  verbose?: boolean): FileDefinition {
         this.fileDef = createFile({classes: []});
         const xmlDoc = parse(xsd);
         this.verbose = verbose;
+        this.pluralPostFix = pluralPostFix;
+
 
         this.log('--------------------generating classFile definition for----------------------------------');
         this.log('');
@@ -165,6 +185,12 @@ export class ClassGenerator {
                 }
                 this.log('  field: ' + fldName);
                 if (fldName && classDef) {
+                    //is the field is of type string array then we add a prefix (s)
+                    let fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
+                    if (arrayPostfix === '[]' && fldType === XS_STRING) {
+                        //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
+                        console.log('  field: ', fldName,'  fieldNamePostFix: ', fieldNamePostFix);
+                    }
                     classDef.addProperty({
                         name: fldName,
                         type: this.getFieldType(fldType) + arrayPostfix,
@@ -185,6 +211,10 @@ export class ClassGenerator {
 
     private makeSortedFileDefinition(sortedClasses: ClassDefinition[]): FileDefinition {
         const outFile = createFile({classes: []});
+        for ( let ns in this.importMap){
+            outFile.addImport({moduleSpecifier:this.importMap[ns], starImportName: ns});
+        }
+
         let depth = 0;
         let max_depth = 1;
         while (depth <= max_depth) {
@@ -303,7 +333,19 @@ export class ClassGenerator {
                 result = "string";
                 break;
         }
-        return result;
+
+        if (result){
+            if (result.indexOf(':') > 0){
+                let ns = result.split(':')[0];
+                this.nsResolver(ns);
+                console.log("namespace",ns);
+            }
+
+            return result.replace(':','.');
+        } else {
+            return 'any';
+        }
+
     }
 
 }
