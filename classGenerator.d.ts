@@ -5,6 +5,7 @@
 import { FileDefinition } from "ts-code-generator";
 export declare type namespaceResolver = (ns: string) => void;
 export declare class ClassGenerator {
+    private class_prefix;
     private fileDef;
     private verbose;
     private pluralPostFix;
@@ -12,7 +13,7 @@ export declare class ClassGenerator {
     private importMap;
     types: string[];
     private nsResolver(ns);
-    constructor(dependencies?: Map<string, string>);
+    constructor(dependencies?: Map<string, string>, class_prefix?: string);
     generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
     private log(msg);
     /**

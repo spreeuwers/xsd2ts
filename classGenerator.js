@@ -15,8 +15,11 @@ var XS_EXTENSION = "xs:extension";
 var XS_COMPLEX_TYPE = "xs:complexType";
 var XS_ENUM = "xs:enumeration";
 var XS_GROUP = "xs:group";
+var CLASS_PREFIX = ".";
 var ClassGenerator = /** @class */ (function () {
-    function ClassGenerator(dependencies) {
+    function ClassGenerator(dependencies, class_prefix) {
+        if (class_prefix === void 0) { class_prefix = CLASS_PREFIX; }
+        this.class_prefix = class_prefix;
         //private file: FileDefinition;
         //private classes: { [key: string]: FileDefinition } = {};
         this.fileDef = ts_code_generator_1.createFile({ classes: [] });
@@ -205,7 +208,7 @@ var ClassGenerator = /** @class */ (function () {
                         if (c.extendsTypes.length) {
                             writer.write("super();\n");
                         }
-                        writer.write("this[\"@class\"] = \"" + c.name + "\";\n");
+                        writer.write("this[\"@class\"] = \"" + _this.class_prefix + c.name + "\";\n");
                         writer.write('(<any>Object).assign(this, <any> props);');
                     };
                 }

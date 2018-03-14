@@ -15,6 +15,7 @@ const XS_EXTENSION = "xs:extension";
 const XS_COMPLEX_TYPE = "xs:complexType";
 const XS_ENUM = "xs:enumeration";
 const XS_GROUP = "xs:group";
+const CLASS_PREFIX = ".";
 
 
 
@@ -37,7 +38,7 @@ export class ClassGenerator {
         //console.log(ns, this.dependencies[ns]);
     }
 
-    constructor(dependencies?: Map<string,string>){
+    constructor(dependencies?: Map<string,string>, private class_prefix = CLASS_PREFIX){
         this.dependencies = dependencies || <Map<string,string>>{};
         console.log(JSON.stringify(this.dependencies));
     }
@@ -232,10 +233,13 @@ export class ClassGenerator {
                         if (c.name.indexOf('group_') === 0) {
                             return;
                         }
+
+
+
                         outFile.addClass({name: c.name});
 
 
-                        let classDef = outFile.getClass(c.name);
+                        let classDef = outFile.getClass( c.name);
                         classDef.isExported = true;
                         classDef.isAbstract = c.isAbstract;
                         c.extendsTypes.forEach((t) => classDef.addExtends(t.text));
@@ -253,7 +257,7 @@ export class ClassGenerator {
                             if (c.extendsTypes.length) {
                                 writer.write(`super();\n`);
                             }
-                            writer.write(`this["@class"] = "${c.name}";\n`);
+                            writer.write(`this["@class"] = "${this.class_prefix}${c.name}";\n`);
                             writer.write('(<any>Object).assign(this, <any> props);');
                         };
                     }
