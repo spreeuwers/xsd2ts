@@ -6,6 +6,7 @@
   "scripts": {
     "test:jasmine": "ts-node -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "compile": "tsc -p ./src",
+    "example": "tsc -p ./test/example",
     "setup": "npm install",
     "release": "npm version patch & npm publish"
   },

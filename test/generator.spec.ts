@@ -16,7 +16,7 @@ describe("generator", () => {
 
 
 
-        it(" has functio generateTemplateClassesFromXSD", () => {
+        it(" has function generateTemplateClassesFromXSD", () => {
             expect(generateTemplateClassesFromXSD).toBeDefined();
         });
 
@@ -24,8 +24,9 @@ describe("generator", () => {
             expect(generateTemplateClassesFromXSD('./test/simpleClass.xsd'));
         });
         it("ClassGenerator heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD('./test/importedClass.xsd',<Map<string,string>>{"dep":"mylib"}));
+            expect(generateTemplateClassesFromXSD('./test/importedClass.xsd',<Map<string,string>>{"dep":"xml-parser"}));
         });
+
 
     });
 });

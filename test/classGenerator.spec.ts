@@ -11,7 +11,7 @@ describe("ClassGenerator", () => {
         let simpleInheritedClassXsd = '';
         let importedClassXsd = '';
         beforeEach(() => {
-            generator = new ClassGenerator(<Map<string,string>>{"dep":"mylib"});
+            generator = new ClassGenerator(<Map<string,string>>{"dep":"xml-parser"});
             simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
             simpleInheritedClassXsd = fs.readFileSync('./test/simpleInheritedClass.xsd').toString();
             importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
@@ -40,12 +40,14 @@ describe("ClassGenerator", () => {
             let result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
             expect(result.classes.length).toBe(2);
             let test = result.getClass("Test");
+            console.log(test.write());
             expect(test).toBeDefined();
+
             expect(test.getProperty("intField")).toBeDefined();
             expect(test.getProperty("dateField")).toBeDefined();
             expect(test.getMethod("constructor")).toBeDefined();
             expect(test.getProperty("dateField").type.isArrayType()).toBe(false);
-            expect(test.getProperty("arrayField").type.isArrayType()).toBe(true);
+            expect(test.getProperty("arrayField?").type.isArrayType()).toBe(true);
         });
 
         it("ClassGenerator geeft een  classFile terug met imports", () => {

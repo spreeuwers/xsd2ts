@@ -157,11 +157,14 @@ export class ClassGenerator {
                 break;
 
             case XS_ELEMENT:
-                const fldName = node.attributes.name;
+                let fldName = node.attributes.name;
                 let fldType = node.attributes.type;
                 let child = node.children[0];
                 let skipField = false;
                 let arrayPostfix = '';
+                if (node.attributes.minOccurs === "0") {
+                    fldName+= "?";
+                }
 
                 if (child && child.name === XS_SIMPLE_TYPE) {
                     fldType = XS_STRING;
@@ -245,11 +248,13 @@ export class ClassGenerator {
                         );
                         let constructor = classDef.addMethod({name: 'constructor'});
                         constructor.scope = "protected";
+                        constructor.addParameter({name:"props?", type:c.name});
                         constructor.onWriteFunctionBody = (writer) => {
                             if (c.extendsTypes.length) {
                                 writer.write(`super();\n`);
                             }
-                            writer.write(`this["@class"] = "${c.name}";`);
+                            writer.write(`this["@class"] = "${c.name}";\n`);
+                            writer.write('(<any>Object).assign(this, <any> props);');
                         };
                     }
                 }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:complexType name="Test">
+        <xs:element name="intField" type="xs:integer"/>
+        <xs:element name="dateField" type="xs:dateTime"/>
     </xs:complexType>
 </xs:schema>

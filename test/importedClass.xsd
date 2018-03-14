@@ -3,7 +3,9 @@
            xmlns:dep="http://schemas.example.nl/">
     <xs:complexType name="Test">
         <xs:sequence>
-        <xs:element name="imported" type="dep:OtherClass"/>
+            <xs:element name="firstName" type="xs:string"/>
+            <xs:element name="lastName" type="xs:string" minOccurs="0"/>
+        <xs:element name="imported" type="dep:Node"/>
         </xs:sequence>
     </xs:complexType>
 </xs:schema>

@@ -129,6 +129,9 @@ var ClassGenerator = /** @class */ (function () {
                 var child = node.children[0];
                 var skipField = false;
                 var arrayPostfix = '';
+                if (node.attributes.minOccurs === "0") {
+                    fldName += "?";
+                }
                 if (child && child.name === XS_SIMPLE_TYPE) {
                     fldType = XS_STRING;
                 }
@@ -197,11 +200,13 @@ var ClassGenerator = /** @class */ (function () {
                     });
                     var constructor = classDef_1.addMethod({ name: 'constructor' });
                     constructor.scope = "protected";
+                    constructor.addParameter({ name: "props?", type: c.name });
                     constructor.onWriteFunctionBody = function (writer) {
                         if (c.extendsTypes.length) {
                             writer.write("super();\n");
                         }
-                        writer.write("this[\"@class\"] = \"" + c.name + "\";");
+                        writer.write("this[\"@class\"] = \"" + c.name + "\";\n");
+                        writer.write('(<any>Object).assign(this, <any> props);');
                     };
                 }
             });
