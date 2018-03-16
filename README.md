@@ -1,10 +1,11 @@
 # xsd2ts
 converting an xsd to typscript template classes
 
-example:
+#example:
 
 create an npm project with package.json content:
-
+````
+{
   "name": "template-ts",
   "version": "0.1.0",
   "description": "generated template classes for xsd",
@@ -27,14 +28,15 @@ create an npm project with package.json content:
     "xsd2ts": "0.0.8"
   }
 }
-
+````
 create a src folder
 
 create a typescript file in this folder with following content:
 
+````
 import {generateTemplateClassesFromXSD} from "xsd2ts";
 generateTemplateClassesFromXSD('./yourXsdFile.xsd');
-
+````
 then:
   run ts-gen script //generates a folder generated with index.ts file
   run makelib script  //compiles the index.ts file and henerates declaration
