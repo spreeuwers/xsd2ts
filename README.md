@@ -32,9 +32,9 @@ Create an npm project(folder) with a package.json file with content:
 ````
 
 Replace the value template-ts for the name property 
-by your choosen package name. 
-create a src folder inside this projct folder
-create a typescript file in this folder with following content:
+by your own package name. 
+Create a src folder inside this projct folder
+Create a typescript file in this folder with following content:
 
 ````
 import {generateTemplateClassesFromXSD} from "xsd2ts";
