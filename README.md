@@ -50,7 +50,7 @@ Compile the index.ts file and generate declaration file by executing:
     
 Then publish you npm package:
   
-    run npm publish
+    npm publish
 
 Now you can use the npm lib in other npm projects by installing it:
 
