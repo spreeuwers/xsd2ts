@@ -54,4 +54,4 @@ Then publish you npm package:
 
 Now you can use the npm lib in other npm projects by installing it:
 
-    npm install --save <template-ts>
+    npm install --save <your npm package name>
