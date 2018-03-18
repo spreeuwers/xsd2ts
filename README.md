@@ -48,7 +48,7 @@ Compile the index.ts file and generate declaration file by executing:
     
     npm run makelib 
     
-Then publish you npm package:
+Then publish your npm package:
   
     npm publish
 
