@@ -31,20 +31,21 @@ Create an npm project(folder) with a package.json file with content:
 
 ````
 
-Replace the value template-ts for the name property 
+Replace the value 'template-ts' for the name property 
 by your own package name. 
-Create a src folder inside this projct folder
-Create a typescript file in this folder with following content:
+Create a src folder inside this project folder.
+Create a typescript file named 'generate.ts' in this folder 
+and add the following content:
 
 ````
 import {generateTemplateClassesFromXSD} from "xsd2ts";
 generateTemplateClassesFromXSD('./yourXsdFile.xsd');
 ````
-Generate a folder 'generated' with index.ts file by executing:
+Generate a folder 'src/generated' with index.ts file by executing:
     
     npm run ts-gen
   
-Compile the index.ts file and generate declaration file by executing:
+Compile the generated index.ts file and generate declaration file by executing:
     
     npm run makelib 
     
