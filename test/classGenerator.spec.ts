@@ -38,7 +38,7 @@ describe("ClassGenerator", () => {
 
         it("ClassGenerator geeft een inherited classFile terug", () => {
             let result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
-            expect(result.classes.length).toBe(2);
+            expect(result.classes.length).toBe(4);
             let test = result.getClass("Test");
             console.log(test.write());
             expect(test).toBeDefined();
@@ -48,6 +48,8 @@ describe("ClassGenerator", () => {
             expect(test.getMethod("constructor")).toBeDefined();
             expect(test.getProperty("dateField").type.isArrayType()).toBe(false);
             expect(test.getProperty("arrayField?").type.isArrayType()).toBe(true);
+            expect(test.getProperty("nestedFields").type.isArrayType()).toBe(false);
+            expect(test.getProperty("nestedFields").type.text).toBe("NestedFields");
         });
 
         it("ClassGenerator geeft een  classFile terug met imports", () => {

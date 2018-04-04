@@ -26,6 +26,9 @@ describe("generator", () => {
         it("ClassGenerator heeft een types property", () => {
             expect(generateTemplateClassesFromXSD('./test/importedClass.xsd',<Map<string,string>>{"dep":"xml-parser"}));
         });
+        it("ClassGenerator heeft een types property", () => {
+            expect(generateTemplateClassesFromXSD('./test/simpleInheritedClass.xsd',<Map<string,string>>{"dep":"xml-parser"}));
+        });
 
 
     });

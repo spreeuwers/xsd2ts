@@ -177,15 +177,27 @@ export class ClassGenerator {
                     if (child && child.name === XS_SEQUENCE) {
                         child = child.children[0];
                         if (child && child.name === XS_ELEMENT && child.attributes) {
-                            fldType = child.attributes.type;
-                            stopDescent = true;
+
+
                             this.log('nested typedef: ' + fldType);
                             if (child.attributes.maxOccurs === "unbounded") {
                                 arrayPostfix = "[]";
+                                fldType = child.attributes.type;
+                            } else {
+                                fldType = fldName[0].toUpperCase() + fldName.substring(1);
+                                fileDef.addClass({name: fldType}).addProperty(
+                                    {
+                                        name: child.attributes.name,
+                                        type: this.getFieldType(child.attributes.type),
+                                        scope: "protected"
+                                    }
+                                );
                             }
-
+                            this.log('nested typedef: ' + fldType);
+                            stopDescent = true;
                         }
                     }
+
                 }
                 this.log('  field: ' + fldName);
                 if (fldName && classDef) {
