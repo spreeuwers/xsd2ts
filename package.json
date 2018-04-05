@@ -1,13 +1,14 @@
 {
   "name": "xsd2ts",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "generates template classes for xsd",
   "main": "index.js",
   "scripts": {
     "test:jasmine": "ts-node -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "compile": "tsc -p ./src",
+    "version": "npm version patch",
     "setup": "npm install",
-    "release": "npm version patch & npm publish"
+    "publish": "npm publish"
   },
   "author": "Eddy Spreeuwers",
   "license": "GNU",
