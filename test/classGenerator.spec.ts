@@ -1,5 +1,5 @@
 /**
- * Created by isc05210 on 14-02-18.
+ * Created by eddy spreeuwers 14-02-18.
  */;
 import {ClassGenerator} from "../src/classGenerator";
 import * as fs from "fs";
