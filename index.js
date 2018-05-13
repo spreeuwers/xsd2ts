@@ -22,7 +22,7 @@ function generateTemplateClassesFromXSD(xsdFilePath, dependencies) {
         fs.mkdirSync(genSrcPath);
         fs.writeFileSync('./src/generated/tsconfig.json', TSCONFIG, 'utf8');
     }
-    var classFileDef = generator.generateClassFileDefinition(xsdString, '');
+    var classFileDef = generator.generateClassFileDefinition(xsdString, 's');
     //add classes in order of hierarchy depth to make the compiler happy
     var disclaimer = "/***********\ngenerated template classes for " + xsdFilePath + ' ' + new Date().toLocaleString() + "\n***********/\n\n";
     var types = generator.types.map(function (t) { return "" + t; }).join('\n');

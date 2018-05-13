@@ -14,8 +14,10 @@ var XS_ELEMENT = "xs:element";
 var XS_EXTENSION = "xs:extension";
 var XS_COMPLEX_TYPE = "xs:complexType";
 var XS_ENUM = "xs:enumeration";
+var XS_ANNOTATION = "xs:annotation";
 var XS_GROUP = "xs:group";
 var CLASS_PREFIX = ".";
+var UNBOUNDED = "unbounded";
 var ClassGenerator = /** @class */ (function () {
     function ClassGenerator(dependencies, class_prefix) {
         if (class_prefix === void 0) { class_prefix = CLASS_PREFIX; }
@@ -127,6 +129,7 @@ var ClassGenerator = /** @class */ (function () {
                 classDef.addExtends(base);
                 break;
             case XS_ELEMENT:
+                var childNr = 0;
                 var fldName = node.attributes.name;
                 var fldType = node.attributes.type;
                 var child = node.children[0];
@@ -134,6 +137,15 @@ var ClassGenerator = /** @class */ (function () {
                 var arrayPostfix = '';
                 if (node.attributes.minOccurs === "0") {
                     fldName += "?";
+                }
+                while (child && child.name === XS_ANNOTATION) {
+                    child = node.children[childNr++];
+                }
+                if (!child && node.attributes.maxOccurs === UNBOUNDED) {
+                    arrayPostfix = '[]';
+                    fldType = this.getFieldType(node.attributes.type);
+                    fldName = node.attributes.name + this.pluralPostFix;
+                    this.log('unbound; ' + node.attributes.name + ' ' + fldType + arrayPostfix);
                 }
                 if (child && child.name === XS_SIMPLE_TYPE) {
                     fldType = XS_STRING;
@@ -146,12 +158,12 @@ var ClassGenerator = /** @class */ (function () {
                         child = child.children[0];
                         if (child && child.name === XS_ELEMENT && child.attributes) {
                             this.log('nested typedef: ' + fldType);
-                            if (child.attributes.maxOccurs === "unbounded") {
+                            if (child.attributes.maxOccurs === UNBOUNDED) {
                                 arrayPostfix = "[]";
                                 fldType = child.attributes.type;
                             }
                             else {
-                                fldType = fldName[0].toUpperCase() + fldName.substring(1);
+                                fldType = fldName[0].toUpperCase() + fldName.substring(1).replace("?", "");
                                 fileDef.addClass({ name: fldType }).addProperty({
                                     name: child.attributes.name,
                                     type: this.getFieldType(child.attributes.type),
@@ -166,11 +178,12 @@ var ClassGenerator = /** @class */ (function () {
                 this.log('  field: ' + fldName);
                 if (fldName && classDef) {
                     //is the field is of type string array then we add a prefix (s)
-                    var fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
-                    if (arrayPostfix === '[]' && fldType === XS_STRING) {
-                        //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
-                        console.log('  field: ', fldName, '  fieldNamePostFix: ', fieldNamePostFix);
-                    }
+                    // let fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
+                    // console.log('  field: ' + fldName + ' '+ arrayPostfix + ' '+ fldType);
+                    // if (arrayPostfix === '[]' && fldType === XS_STRING) {
+                    //     //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
+                    //     console.log('  field: ', fldName, '  fieldNamePostFix: ', fieldNamePostFix);
+                    // }
                     classDef.addProperty({
                         name: fldName,
                         type: this.getFieldType(fldType) + arrayPostfix,

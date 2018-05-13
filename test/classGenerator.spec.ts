@@ -10,11 +10,13 @@ describe("ClassGenerator", () => {
         let simpleClassXsd = '';
         let simpleInheritedClassXsd = '';
         let importedClassXsd = '';
+        let formXsd: string = '';
         beforeEach(() => {
             generator = new ClassGenerator(<Map<string,string>>{"dep":"xml-parser"});
             simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
             simpleInheritedClassXsd = fs.readFileSync('./test/simpleInheritedClass.xsd').toString();
             importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
+            formXsd = fs.readFileSync("./test/form.xsd").toString();
         });
 
         it("ClassGenerator heeft een werkende constructor", () => {
@@ -38,7 +40,7 @@ describe("ClassGenerator", () => {
 
         it("ClassGenerator geeft een inherited classFile terug", () => {
             let result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
-            expect(result.classes.length).toBe(4);
+            expect(result.classes.length).toBe(7);
             let test = result.getClass("Test");
             console.log(test.write());
             expect(test).toBeDefined();
@@ -50,11 +52,27 @@ describe("ClassGenerator", () => {
             expect(test.getProperty("arrayField?").type.isArrayType()).toBe(true);
             expect(test.getProperty("nestedFields").type.isArrayType()).toBe(false);
             expect(test.getProperty("nestedFields").type.text).toBe("NestedFields");
+            expect(test.getProperty("strArrayFields").type.text).toBe("string[]");
+
+            test = result.getClass("MeldingIdentificatie");
+            console.log(test.write());
+            expect(test).toBeDefined();
+            expect(test.getProperty("externeBrons").type.text).toBe("string[]");
         });
 
         it("ClassGenerator geeft een  classFile terug met imports", () => {
-            expect(generator.generateClassFileDefinition(importedClassXsd,'',true).classes.length).toBe(1);
+            let importingClass =generator.generateClassFileDefinition(importedClassXsd,'',true);
+            expect(importingClass.classes.length).toBe(1);
+            let fld = importingClass.getClass("Test").getProperty("imported");
+            expect(fld).toBeDefined();
         });
 
+        it("ClassGenerator geeft een  classFile terug voor form met refs", () => {
+            let classFile = generator.generateClassFileDefinition(formXsd,"",true);
+            expect(classFile.classes.length).toBe(3);
+            let fld = classFile.getClass("Forms").getProperty("field");
+            expect(fld.type.text).toBe("Field");
+
+        });
     });
 });

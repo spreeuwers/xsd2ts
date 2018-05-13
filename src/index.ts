@@ -44,7 +44,7 @@ export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies
         fs.writeFileSync('./src/generated/tsconfig.json', TSCONFIG, 'utf8');
     }
 
-    const classFileDef = generator.generateClassFileDefinition(xsdString, '');
+    const classFileDef = generator.generateClassFileDefinition(xsdString, 's');
 
     //add classes in order of hierarchy depth to make the compiler happy
 

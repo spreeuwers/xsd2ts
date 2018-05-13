@@ -10,13 +10,19 @@
                     <xs:element name="dateField" type="xs:dateTime"/>
 
                     <xs:element name="arrayField" maxOccurs="1" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>Hier worden alle voorvallen genoemd die nieuw/toegevoegd/gewijzigd worden bij deze registratie.
+                            </xs:documentation>
+                        </xs:annotation>
                         <xs:complexType>
                             <xs:sequence>
                                 <xs:element name="item" maxOccurs="unbounded" minOccurs="0" type="xs:string"/>
                             </xs:sequence>
                         </xs:complexType>
                     </xs:element>
-                   <xs:element name="nestedFields" maxOccurs="1" minOccurs="1">
+
+                    <xs:element name="strArrayField" maxOccurs="unbounded" minOccurs="1" type="xs:string"/>
+                    <xs:element name="nestedFields" maxOccurs="1" minOccurs="1">
                         <xs:complexType>
                             <xs:sequence>
                                 <xs:element name="nestedItem"  type="NestedItem"/>
@@ -30,9 +36,30 @@
     </xs:complexType>
     <xs:complexType name="Base">
     </xs:complexType>
+
+
     <xs:complexType name="NestedItem">
-    <xs:sequence>
-        <xs:element name="field" maxOccurs="1" minOccurs="1" type="xs:string"/>
-    </xs:sequence>
+        <xs:sequence>
+            <xs:element name="field" maxOccurs="1" minOccurs="1" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="MeldingIdentificatie">
+        <xs:sequence>
+            <xs:element name="meldingIdentificatieId" minOccurs="0" type="xs:string"/>
+            <xs:element name="meldingIdentificatieNummer" minOccurs="0" type="xs:string"/>
+            <xs:element name="meldingJaar" minOccurs="0" type="xs:int"/>
+            <xs:element name="externeBron" maxOccurs="unbounded" minOccurs="0" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="MerkSpecificatie">
+        <xs:complexContent>
+            <xs:extension base="Specificatie">
+                <xs:sequence>
+                    <xs:element name="omschrijving" minOccurs="0" type="xs:string"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="Specificatie">
     </xs:complexType>
 </xs:schema>
