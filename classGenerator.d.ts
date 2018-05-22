@@ -17,7 +17,7 @@ export declare class ClassGenerator {
     generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
     private log(msg);
     /**
-     * Recusrsive function to retrieve all types from the XSD
+     * Recursive function to retrieve all types from the XSD
      * @param node
      * @param parentClassDef
      * @param parent
