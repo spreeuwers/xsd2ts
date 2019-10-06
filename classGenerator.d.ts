@@ -12,19 +12,22 @@ export declare class ClassGenerator {
     private dependencies;
     private importMap;
     types: string[];
-    private nsResolver(ns);
+    private nsResolver;
+    private findAttrValue;
+    private nodeName;
+    private childName;
     constructor(dependencies?: Map<string, string>, class_prefix?: string);
     generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
-    private log(msg);
+    private log;
     /**
      * Recursive function to retrieve all types from the XSD
      * @param node
      * @param parentClassDef
      * @param parent
      */
-    private traverse(node, parentClassDef?, parent?);
-    private makeSortedFileDefinition(sortedClasses);
-    private addProtectedPropToClass(classDef, prop);
-    private findHierachyDepth(c, f);
-    private getFieldType(type);
+    private traverse;
+    private makeSortedFileDefinition;
+    private addProtectedPropToClass;
+    private findHierachyDepth;
+    private getFieldType;
 }

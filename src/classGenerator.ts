@@ -2,7 +2,7 @@
  * Created by Eddy Spreeuwers at 11 march 2018
  */
 import {ClassDefinition, createFile, FileDefinition, ImportStructure} from "ts-code-generator";
-import parse = require("xml-parser");
+import {DOMParser} from "xmldom-reborn";
 
 
 const XS_RESTRICTION = "xs:restriction";
@@ -14,13 +14,13 @@ const XS_ELEMENT = "xs:element";
 const XS_EXTENSION = "xs:extension";
 const XS_COMPLEX_TYPE = "xs:complexType";
 const XS_ENUM = "xs:enumeration";
-const XS_ANNOTATION = "xs:annotation";
 const XS_GROUP = "xs:group";
 const CLASS_PREFIX = ".";
-const UNBOUNDED = "unbounded";
 
 
-export type namespaceResolver = (ns: string) => void;
+
+export type namespaceResolver = (ns:string) => void;
+
 
 export class ClassGenerator {
     //private file: FileDefinition;
@@ -28,8 +28,8 @@ export class ClassGenerator {
     private fileDef = createFile({classes: []});
     private verbose = false;
     private pluralPostFix = 's';
-    private dependencies: Map<string, string>;
-    private importMap: string[] = [];
+    private dependencies: Map<string,string>;
+    private importMap:string[] = [];
 
     public types: string[] = [];
 
@@ -39,15 +39,28 @@ export class ClassGenerator {
         //console.log(ns, this.dependencies[ns]);
     }
 
-    constructor(dependencies?: Map<string, string>, private class_prefix = CLASS_PREFIX) {
-        this.dependencies = dependencies || <Map<string, string>>{};
+    private findAttrValue(node: HTMLElement, attrName: string):string{
+        return node?.attributes?.getNamedItem(attrName)?.value;
+    }
+
+    private nodeName(node: HTMLElement):string{
+        return this.findAttrValue(node , 'name');
+    }
+    private childName(node: HTMLElement):string{
+        return this.findAttrValue(node?.children[0] as HTMLElement, 'name');
+    }
+
+    constructor(dependencies?: Map<string,string>, private class_prefix = CLASS_PREFIX){
+        this.dependencies = dependencies || <Map<string,string>>{};
         console.log(JSON.stringify(this.dependencies));
     }
 
 
-    public generateClassFileDefinition(xsd: string, pluralPostFix = 's', verbose?: boolean): FileDefinition {
+    public generateClassFileDefinition(xsd: string, pluralPostFix='s',  verbose?: boolean): FileDefinition {
         this.fileDef = createFile({classes: []});
-        const xmlDoc = parse(xsd);
+        let xmlDom = new DOMParser().parseFromString(xsd,'application/xml');
+
+        //const xmlDoc = {root:xmlRoot};//parse(xsd);
         this.verbose = verbose;
         this.pluralPostFix = pluralPostFix;
 
@@ -58,8 +71,9 @@ export class ClassGenerator {
         this.log('');
         //this.log(JSON.stringify(xmlDoc, null, ' '));
         this.log('-------------------------------------------------------------------------------------');
-        if (xmlDoc.root) {
-            this.traverse(xmlDoc.root);
+        if (xmlDom?.documentElement) {
+            this.traverse(xmlDom.documentElement);
+
         }
 
         let sortedClasses = this.fileDef.classes.sort(
@@ -87,30 +101,39 @@ export class ClassGenerator {
      * @param parentClassDef
      * @param parent
      */
-    private traverse(node: parse.Node, parentClassDef?: ClassDefinition, parent?: parse.Node): void {
+    private traverse(node: HTMLElement, parentClassDef?: ClassDefinition, parent?: HTMLElement): void {
         //console.log(node.name);
         let classDef = parentClassDef;
         let stopDescent = false;
 
         let fileDef = this.fileDef;
+        const nodeName = this.findAttrValue(node,'name');
+        const abstract = this.findAttrValue(node,'abstract');
+        const parentName = this.findAttrValue(parent,'name');
+        const nodeBase = this.findAttrValue(parent,'base');
+        const nodeType = this.findAttrValue(node,'type');
+        const minOccurs = this.findAttrValue(node,'minOccurs');
+        const firstChild = (node?.children)?node.children[0]:null;
+        const childName = this.nodeName(<HTMLElement>firstChild);
+        switch (node.tagName) {
 
-        switch (node.name) {
             case XS_GROUP:
-                if (node.attributes && node.attributes.ref) {
-                    classDef.addProperty({
-                        name: 'group_' + node.attributes.ref,
-                        type: 'group_' + node.attributes.ref,
-                        scope: "protected"
-                    });
-                    break;
-                }
+            if (node.attributes && node.attributes.getNamedItem('ref')) {
+                let ref = node.attributes.getNamedItem('ref');
+                classDef.addProperty({
+                    name: 'group_'+ ref,
+                    type: 'group_'+ ref,
+                    scope: "protected"
+                });
+                break;
+            }
 
 
             case XS_COMPLEX_TYPE:
-                if (node.attributes && node.attributes.name) {
-                    let className = node.attributes.name;
-                    const isAbstract = !!node.attributes.abstract;
-                    if (node.name === XS_GROUP) {
+                if (nodeName) {
+                    let className = nodeName;
+                    const isAbstract = !!abstract;
+                    if (nodeName === XS_GROUP) {
                         className = 'group_' + className;
                     }
                     fileDef.addClass({name: className});
@@ -124,19 +147,21 @@ export class ClassGenerator {
                 break;
             case XS_SIMPLE_TYPE:
                 //make a typedef for string enums
-                if (parent && parent.name === XS_SCHEMA) {
-                    const simpleType = `export type ${node.attributes.name} `;
-                    let child = node.children[0];
+                if (parentName === XS_SCHEMA) {
+                    const simpleType = `export type ${nodeName} `;
+                    let child = node.children[0];//children[0];
                     let options = [];
+                    let childName = this.nodeName(<HTMLElement>child);
+                    let childBase = this.findAttrValue(<HTMLElement>child,'base');
                     if (child && child.attributes) {
                         this.log('  export typ: ' + simpleType);
 
 
-                        if (child.name === XS_RESTRICTION) {
+                        if (childName === XS_RESTRICTION) {
                             this.log('  restriction: ' + simpleType);
 
 
-                            child.children.filter(
+                           Array.prototype.slice.call(child.children,0).filter(
                                 (c) => c.name === XS_ENUM
                             ).forEach(
                                 (c) => {
@@ -146,66 +171,49 @@ export class ClassGenerator {
                         }
                     }
                     if (options.length === 0) {
-                        options.push(this.getFieldType(child.attributes.base));
+                        options.push(this.getFieldType(childBase));
                     }
                     //convert to typedef statement
                     this.types.push(simpleType + '= ' + options.join(' | ') + ';');
                 }
                 break;
             case XS_EXTENSION:
-                const base = node.attributes.base;
-                this.log('  base: ' + base);
-                classDef.addExtends(base);
+                this.log('node  base: ' + nodeBase);
+                classDef.addExtends(nodeBase);
                 break;
 
             case XS_ELEMENT:
-                let childNr = 0;
-                let fldName = node.attributes.name;
-                let fldType = node.attributes.type;
+                let fldName = nodeName;
+                let fldType = nodeType;
                 let child = node.children[0];
                 let skipField = false;
                 let arrayPostfix = '';
-                if (node.attributes.minOccurs === "0") {
-                    fldName += "?";
+                if (minOccurs === "0") {
+                    fldName+= "?";
                 }
 
-
-
-
-                while (child && child.name === XS_ANNOTATION) {
-                    child = node.children[childNr++];
-                }
-
-                if (!child && node.attributes.maxOccurs === UNBOUNDED) {
-                    arrayPostfix = '[]';
-                    fldType = this.getFieldType(node.attributes.type);
-                    fldName = node.attributes.name + this.pluralPostFix;
-                    this.log('unbound; ' + node.attributes.name +' '+ fldType + arrayPostfix)
-                }
-
-                if (child && child.name === XS_SIMPLE_TYPE) {
+                if (this.nodeName(child as HTMLElement) === XS_SIMPLE_TYPE) {
                     fldType = XS_STRING;
                 }
-
                 //check if there is a complextype defined within the element
                 //and retrieve the element type in this element
-                if (child && child.name === XS_COMPLEX_TYPE) {
+                if (this.nodeName(child as HTMLElement) === XS_COMPLEX_TYPE) {
                     child = child.children[0];
-                    if (child && child.name === XS_SEQUENCE) {
+                    if (this.nodeName(child as HTMLElement) === XS_SEQUENCE) {
                         child = child.children[0];
-                        if (child && child.name === XS_ELEMENT && child.attributes) {
+                        if (this.nodeName(child as HTMLElement) === XS_ELEMENT && child.attributes) {
 
-
+                            const type = this.findAttrValue(child as HTMLElement,'type');
                             this.log('nested typedef: ' + fldType);
-                            if (child.attributes.maxOccurs === UNBOUNDED) {
+                            if (this.findAttrValue(child as HTMLElement,'maxOccurs') === "unbounded") {
                                 arrayPostfix = "[]";
-                                fldType = child.attributes.type;
+                                fldType = type;
                             } else {
-                                fldType = fldName[0].toUpperCase() + fldName.substring(1).replace("?", "");
+                                fldType = fldName[0].toUpperCase() + fldName.substring(1);
                                 fileDef.addClass({name: fldType}).addProperty(
                                     {
-                                        name: child.attributes.name,
-                                        type: this.getFieldType(child.attributes.type),
+                                        name: this.nodeName(child as HTMLElement),
+                                        type: this.getFieldType(type),
                                         scope: "protected"
                                     }
                                 );
@@ -219,12 +227,11 @@ export class ClassGenerator {
                 this.log('  field: ' + fldName);
                 if (fldName && classDef) {
                     //is the field is of type string array then we add a prefix (s)
-                    // let fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
-                    // console.log('  field: ' + fldName + ' '+ arrayPostfix + ' '+ fldType);
-                    // if (arrayPostfix === '[]' && fldType === XS_STRING) {
-                    //     //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
-                    //     console.log('  field: ', fldName, '  fieldNamePostFix: ', fieldNamePostFix);
-                    // }
+                    let fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
+                    if (arrayPostfix === '[]' && fldType === XS_STRING) {
+                        //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
+                        console.log('  field: ', fldName,'  fieldNamePostFix: ', fieldNamePostFix);
+                    }
                     classDef.addProperty({
                         name: fldName,
                         type: this.getFieldType(fldType) + arrayPostfix,
@@ -236,7 +243,7 @@ export class ClassGenerator {
                 break;
         }
         if (!stopDescent) {
-            node.children.forEach(
+            Array.prototype.slice.call(node.children,0).forEach(
                 (child) => this.traverse(child, classDef, node)
             );
         }
@@ -245,8 +252,8 @@ export class ClassGenerator {
 
     private makeSortedFileDefinition(sortedClasses: ClassDefinition[]): FileDefinition {
         const outFile = createFile({classes: []});
-        for (let ns in this.importMap) {
-            outFile.addImport({moduleSpecifier: this.importMap[ns], starImportName: ns});
+        for ( let ns in this.importMap){
+            outFile.addImport({moduleSpecifier:this.importMap[ns], starImportName: ns});
         }
 
         let depth = 0;
@@ -265,10 +272,11 @@ export class ClassGenerator {
                         }
 
 
+
                         outFile.addClass({name: c.name});
 
 
-                        let classDef = outFile.getClass(c.name);
+                        let classDef = outFile.getClass( c.name);
                         classDef.isExported = true;
                         classDef.isAbstract = c.isAbstract;
                         c.extendsTypes.forEach((t) => classDef.addExtends(t.text));
@@ -281,7 +289,7 @@ export class ClassGenerator {
                         );
                         let constructor = classDef.addMethod({name: 'constructor'});
                         constructor.scope = "protected";
-                        constructor.addParameter({name: "props?", type: c.name});
+                        constructor.addParameter({name:"props?", type:c.name});
                         constructor.onWriteFunctionBody = (writer) => {
                             if (c.extendsTypes.length) {
                                 writer.write(`super();\n`);
@@ -300,8 +308,8 @@ export class ClassGenerator {
     private addProtectedPropToClass(classDef: ClassDefinition, prop) {
         let type = prop.type.text;
 
-        if (/^group_/.test(type)) {
-            let c = this.fileDef.getClass(type);
+        if (/^group_/.test(type)){
+            let c =this.fileDef.getClass(type);
             c.getPropertiesAndConstructorParameters().forEach(
                 (p) => {
                     this.addProtectedPropToClass(classDef, p);
@@ -372,14 +380,14 @@ export class ClassGenerator {
                 break;
         }
 
-        if (result) {
-            if (result.indexOf(':') > 0) {
+        if (result){
+            if (result.indexOf(':') > 0){
                 let ns = result.split(':')[0];
                 this.nsResolver(ns);
-                console.log("namespace", ns);
+                console.log("namespace",ns);
             }
 
-            return result.replace(':', '.');
+            return result.replace(':','.');
         } else {
             return 'any';
         }

@@ -1,19 +1,19 @@
 {
   "name": "xsd2ts",
-  "version": "0.2.0",
+  "version": "0.1.19",
   "description": "generates template classes for xsd",
   "main": "index.js",
   "scripts": {
     "test:jasmine": "ts-node -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "compile": "tsc -p ./src",
+    "version": "npm version patch",
     "setup": "npm install",
-    "dopub": "npm publish"
+    "publish": "npm publish"
   },
   "author": "Eddy Spreeuwers",
   "license": "UNLICENSED",
   "repository": "https://github.com/spreeuwers/xsd2ts.git",
   "dependencies": {
-    "@types/libxmljs": "^0.14.31",
     "@types/lodash.clonedeep": "4.5.3",
     "@types/lodash.merge": "4.6.3",
     "@types/node": "8.0.7",
@@ -23,16 +23,16 @@
     "npm-test": "0.0.1",
     "ts-code-generator": "0.0.3",
     "ts-loader": "2.2.2",
-    "ts-node": "3.3.0",
-    "tslint": "5.8.0",
-    "typescript": "2.6.1",
-    "xml-parser": "^1.2.1"
+    "ts-node": "^8.4.1",
+    "typescript": "3.7.0-beta",
+    "xmldom-reborn": "^1.0.5"
   },
   "devDependencies": {
-    "@types/jasmine": "^2.8.6",
+    "@types/jasmine": "^2.8.16",
     "istanbul": "1.1.0-alpha.1",
-    "jasmine": "2.6.0",
+    "jasmine": "^3.5.0",
     "jasmine-core": "2.6.2",
-    "jasmine-ts": "0.2.0"
+    "jasmine-ts": "0.2.0",
+    "tslint": "^5.20.0"
   }
 }
