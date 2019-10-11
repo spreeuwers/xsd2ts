@@ -15,6 +15,7 @@ var XS_EXTENSION = "xs:extension";
 var XS_COMPLEX_TYPE = "xs:complexType";
 var XS_ENUM = "xs:enumeration";
 var XS_GROUP = "xs:group";
+var XS_ANNOTATION = "xs:annotation";
 var CLASS_PREFIX = ".";
 var ClassGenerator = /** @class */ (function () {
     function ClassGenerator(dependencies, class_prefix) {
@@ -36,8 +37,9 @@ var ClassGenerator = /** @class */ (function () {
         //console.log(ns, this.dependencies[ns]);
     };
     ClassGenerator.prototype.findAttrValue = function (node, attrName) {
-        var _a, _b, _c;
-        return (_c = (_b = (_a = node) === null || _a === void 0 ? void 0 : _a.attributes) === null || _b === void 0 ? void 0 : _b.getNamedItem(attrName)) === null || _c === void 0 ? void 0 : _c.value;
+        var _a, _b, _c, _d, _e;
+        this.log(attrName + ':' + ((_b = (_a = node) === null || _a === void 0 ? void 0 : _a.attributes) === null || _b === void 0 ? void 0 : _b.getNamedItem(attrName)));
+        return (_e = (_d = (_c = node) === null || _c === void 0 ? void 0 : _c.attributes) === null || _d === void 0 ? void 0 : _d.getNamedItem(attrName)) === null || _e === void 0 ? void 0 : _e.value;
     };
     ClassGenerator.prototype.nodeName = function (node) {
         return this.findAttrValue(node, 'name');
@@ -46,9 +48,28 @@ var ClassGenerator = /** @class */ (function () {
         var _a;
         return this.findAttrValue((_a = node) === null || _a === void 0 ? void 0 : _a.children[0], 'name');
     };
+    ClassGenerator.prototype.findChildren = function (node) {
+        var _a;
+        var result = [];
+        var child = (_a = node) === null || _a === void 0 ? void 0 : _a.firstChild;
+        while (child) {
+            if (!/function Text/.test("" + child.constructor)) {
+                result.push(child);
+            }
+            child = child.nextSibling;
+        }
+        return result;
+    };
+    ClassGenerator.prototype.findFirstChild = function (node) {
+        return this.findChildren(node)[0];
+    };
+    ClassGenerator.prototype.arrayfy = function (nodes) {
+        return Array.prototype.slice.call(nodes || [], 0);
+    };
     ClassGenerator.prototype.generateClassFileDefinition = function (xsd, pluralPostFix, verbose) {
         var _this = this;
         if (pluralPostFix === void 0) { pluralPostFix = 's'; }
+        var _a;
         this.fileDef = ts_code_generator_1.createFile({ classes: [] });
         var xmlDom = new xmldom_reborn_1.DOMParser().parseFromString(xsd, 'application/xml');
         //const xmlDoc = {root:xmlRoot};//parse(xsd);
@@ -58,9 +79,12 @@ var ClassGenerator = /** @class */ (function () {
         this.log('');
         this.log(xsd);
         this.log('');
+        //this.log(xmlDom);
         //this.log(JSON.stringify(xmlDoc, null, ' '));
         this.log('-------------------------------------------------------------------------------------');
-        if (xmlDom.documentElement) {
+        if ((_a = xmlDom) === null || _a === void 0 ? void 0 : _a.documentElement) {
+            //console.log('start'+ xmlDom?.documentElement.firstChild.nextSibling);
+            //console.log('------------------------------------------------------');
             this.traverse(xmlDom.documentElement);
         }
         var sortedClasses = this.fileDef.classes.sort(function (a, b) { return a.name.localeCompare(b.name); });
@@ -76,27 +100,33 @@ var ClassGenerator = /** @class */ (function () {
         }
     };
     /**
-     * Recusrsive function to retrieve all types from the XSD
+     * Recursive function to retrieve all types from the XSD
      * @param node
      * @param parentClassDef
      * @param parent
      */
-    ClassGenerator.prototype.traverse = function (node, parentClassDef, parent) {
+    ClassGenerator.prototype.traverse = function (node, parentClassDef, parent, indent) {
         var _this = this;
+        var _a, _b, _c;
         //console.log(node.name);
         var classDef = parentClassDef;
+        indent = indent || "";
         var stopDescent = false;
         var fileDef = this.fileDef;
         var nodeName = this.findAttrValue(node, 'name');
+        this.log('nodename:' + nodeName);
         var abstract = this.findAttrValue(node, 'abstract');
         var parentName = this.findAttrValue(parent, 'name');
-        var nodeBase = this.findAttrValue(parent, 'base');
+        var nodeBase = this.findAttrValue(node, 'base');
         var nodeType = this.findAttrValue(node, 'type');
         var minOccurs = this.findAttrValue(node, 'minOccurs');
-        var firstChild = node.children[0];
+        var maxOccurs = this.findAttrValue(node, 'maxOccurs');
+        var firstChild = ((_a = node) === null || _a === void 0 ? void 0 : _a.children) ? node.children[0] : null;
         var childName = this.nodeName(firstChild);
+        console.log(indent + 'node.tagName:' + node.tagName);
         switch (node.tagName) {
             case XS_GROUP:
+                console.log(XS_GROUP);
                 if (node.attributes && node.attributes.getNamedItem('ref')) {
                     var ref = node.attributes.getNamedItem('ref');
                     classDef.addProperty({
@@ -107,6 +137,7 @@ var ClassGenerator = /** @class */ (function () {
                     break;
                 }
             case XS_COMPLEX_TYPE:
+                console.log(indent + XS_COMPLEX_TYPE);
                 if (nodeName) {
                     var className = nodeName;
                     var isAbstract = !!abstract;
@@ -121,19 +152,22 @@ var ClassGenerator = /** @class */ (function () {
                 }
                 break;
             case XS_SIMPLE_TYPE:
+                console.log(indent + "XS_SIMPLE_TYPE");
                 //make a typedef for string enums
                 if (parentName === XS_SCHEMA) {
                     var simpleType = "export type " + nodeName + " ";
-                    var child_1 = node.children[0]; //children[0];
+                    var child_1 = this.findFirstChild(node); //children[0];
                     var options_1 = [];
                     var childName_1 = this.nodeName(child_1);
                     var childBase = this.findAttrValue(child_1, 'base');
                     if (child_1 && child_1.attributes) {
                         this.log('  export typ: ' + simpleType);
-                        if (childName_1 === XS_RESTRICTION) {
+                        if (child_1.tagName === XS_RESTRICTION) {
                             this.log('  restriction: ' + simpleType);
-                            Array.prototype.slice.call(child_1.children, 0).filter(function (c) { return c.name === XS_ENUM; }).forEach(function (c) {
-                                options_1.push("\"" + c.attributes.value + "\"");
+                            //Array.prototype.slice.call(child.children,0).filter(
+                            this.findChildren(child_1).filter(function (c) { return (c.tagName === XS_ENUM); }).forEach(function (c) {
+                                var value = _this.findAttrValue(c, 'value');
+                                options_1.push("\"" + value + "\"");
                             });
                         }
                     }
@@ -145,33 +179,45 @@ var ClassGenerator = /** @class */ (function () {
                 }
                 break;
             case XS_EXTENSION:
+                console.log(indent + "XS_EXTENSION");
                 this.log('node  base: ' + nodeBase);
                 classDef.addExtends(nodeBase);
                 break;
             case XS_ELEMENT:
+                console.log(indent + "XS_ELEMENT");
                 var fldName = nodeName;
                 var fldType = nodeType;
-                var child = node.children[0];
+                var child = this.findFirstChild(node);
                 var skipField = false;
-                var arrayPostfix = '';
+                var arrayPostfix = (maxOccurs === "unbounded") ? "[]" : "";
                 if (minOccurs === "0") {
                     fldName += "?";
                 }
-                if (this.nodeName(child) === XS_SIMPLE_TYPE) {
+                while (((_b = child) === null || _b === void 0 ? void 0 : _b.tagName) === XS_ANNOTATION || /function Text/.test("" + ((_c = child) === null || _c === void 0 ? void 0 : _c.constructor))) {
+                    console.log(indent + " XS_ANNOTATION");
+                    child = child.nextSibling;
+                    //console.log(child);
+                }
+                if (child && child.tagName === XS_SIMPLE_TYPE) {
+                    console.log(indent + " XS_SIMPLE_TYPE");
                     fldType = XS_STRING;
                 }
                 //check if there is a complextype defined within the element
                 //and retrieve the element type in this element
-                if (this.nodeName(child) === XS_COMPLEX_TYPE) {
-                    child = child.children[0];
-                    if (this.nodeName(child) === XS_SEQUENCE) {
-                        child = child.children[0];
-                        if (this.nodeName(child) === XS_ELEMENT && child.attributes) {
-                            var type = this.findAttrValue(child, 'type');
-                            this.log('nested typedef: ' + fldType);
+                if (child && child.tagName === XS_COMPLEX_TYPE) {
+                    console.log(indent + " XS_COMPLEX_TYPE");
+                    child = this.findFirstChild(child);
+                    if (child.tagName === XS_SEQUENCE) {
+                        console.log(indent + "  XS_SEQUENCE");
+                        child = this.findFirstChild(child);
+                        if (child && child.tagName === XS_ELEMENT && child.attributes) {
+                            var type = this.findAttrValue(child, "type");
+                            console.log(indent + "   XS_ELEMENT", child.attributes.length, type, this.findAttrValue(child, 'name'));
+                            console.log(indent + '   nested typedef: ' + fldType, this.findAttrValue(child, 'maxOccurs'));
                             if (this.findAttrValue(child, 'maxOccurs') === "unbounded") {
                                 arrayPostfix = "[]";
                                 fldType = type;
+                                console.log(indent + "array");
                             }
                             else {
                                 fldType = fldName[0].toUpperCase() + fldName.substring(1);
@@ -180,19 +226,20 @@ var ClassGenerator = /** @class */ (function () {
                                     type: this.getFieldType(type),
                                     scope: "protected"
                                 });
+                                console.log(indent + "   addClass: " + fldType);
                             }
                             this.log('nested typedef: ' + fldType);
                             stopDescent = true;
                         }
                     }
                 }
-                this.log('  field: ' + fldName);
+                console.log(indent + '  field: ' + fldName, arrayPostfix);
                 if (fldName && classDef) {
                     //is the field is of type string array then we add a prefix (s)
                     var fieldNamePostFix = (arrayPostfix === '[]' && fldType === XS_STRING) ? this.pluralPostFix : '';
                     if (arrayPostfix === '[]' && fldType === XS_STRING) {
                         //console.log('  field: ', fldName, '['+ fldType + ']', arrayPostfix, this.pluralPostFix);
-                        console.log('  field: ', fldName, '  fieldNamePostFix: ', fieldNamePostFix);
+                        console.log(indent + "   field: ", fldName, '  fieldNamePostFix: ', fieldNamePostFix);
                     }
                     classDef.addProperty({
                         name: fldName,
@@ -203,20 +250,28 @@ var ClassGenerator = /** @class */ (function () {
                 break;
         }
         if (!stopDescent) {
-            Array.prototype.slice.call(node.children, 0).forEach(function (child) { return _this.traverse(child, classDef, node); });
+            var elms = this.findChildren(node);
+            console.log(indent + 'nrofchildren:' + elms.length);
+            elms.forEach(function (child) { return _this.traverse(child, classDef, node, indent + " "); });
         }
     };
     ClassGenerator.prototype.makeSortedFileDefinition = function (sortedClasses) {
         var _this = this;
+        console.log('makeSortedFileDefinition ');
         var outFile = ts_code_generator_1.createFile({ classes: [] });
         for (var ns in this.importMap) {
+            console.log('ns ', ns);
             outFile.addImport({ moduleSpecifier: this.importMap[ns], starImportName: ns });
         }
         var depth = 0;
         var max_depth = 1;
+        //console.log('max_depth ',max_depth);
         while (depth <= max_depth) {
+            //console.log('depth ');
             sortedClasses.forEach(function (c) {
+                //console.log('forEach ', c);
                 var hDepth = _this.findHierachyDepth(c, _this.fileDef);
+                //console.log('hDepth ', hDepth);
                 if (hDepth > max_depth) {
                     max_depth = hDepth;
                 }
@@ -245,8 +300,10 @@ var ClassGenerator = /** @class */ (function () {
                     };
                 }
             });
+            console.log('depth:', depth);
             depth++;
         }
+        console.log('ready');
         return outFile;
     };
     ClassGenerator.prototype.addProtectedPropToClass = function (classDef, prop) {
@@ -267,12 +324,14 @@ var ClassGenerator = /** @class */ (function () {
         });
     };
     ClassGenerator.prototype.findHierachyDepth = function (c, f) {
+        var _a, _b;
         var result = 0;
         var superClassName = (c.extendsTypes[0]) ? c.extendsTypes[0].text : '';
         while (superClassName) {
+            //console.log('superClassName',c,superClassName)
             result++;
             c = f.getClass(superClassName);
-            superClassName = (c.extendsTypes[0]) ? c.extendsTypes[0].text : '';
+            superClassName = (_b = (_a = c) === null || _a === void 0 ? void 0 : _a.extendsTypes[0]) === null || _b === void 0 ? void 0 : _b.text;
         }
         return result;
     };

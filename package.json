@@ -4,7 +4,8 @@
   "description": "generates template classes for xsd",
   "main": "index.js",
   "scripts": {
-    "test:jasmine": "ts-node -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
+    "test:jasmine": "ts-node  -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
+    "test:j-debug": "ts-node $NODE_DEBUG_OPTION  ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "compile": "tsc -p ./src",
     "version": "npm version patch",
     "setup": "npm install",

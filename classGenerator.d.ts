@@ -16,6 +16,9 @@ export declare class ClassGenerator {
     private findAttrValue;
     private nodeName;
     private childName;
+    private findChildren;
+    private findFirstChild;
+    private arrayfy;
     constructor(dependencies?: Map<string, string>, class_prefix?: string);
     generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
     private log;
