@@ -39,9 +39,9 @@ describe("ClassGenerator", () => {
             expect(generator.generateClassFileDefinition(simpleClassXsd,"",true).classes.length).toBe(1);
         });
 
-        it("ClassGenerator geeft een inherited classFile terug", () => {
+        fit("ClassGenerator geeft een inherited classFile terug", () => {
             const result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
-            console.log('\n-------------\n', result.write(), '\n-------------\n');
+            //console.log('\n-------------\n', result.write(), '\n-------------\n');
             console.log("\n-------------\n");
             result.classes.forEach((c) => {console.log(c.name);});
             console.log("\n-------------\n");
@@ -74,9 +74,53 @@ describe("ClassGenerator", () => {
 
         it("ClassGenerator geeft een  classFile terug voor form met refs", () => {
             let classFile = generator.generateClassFileDefinition(formXsd,"",true);
+
+            console.log(classFile.write());
             expect(classFile.classes.length).toBe(3);
             let fld = classFile.getClass("Forms").getProperty("field");
             expect(fld.type.text).toBe("Field");
+
+        });
+
+        it("ClassGenerator geeft een  classFile terug voor een elements", () => {
+            const elmXsd = `
+              <?xml version='1.0' encoding='UTF-8'?>
+                 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                   <xs:element name="naam" type="string"/>
+                 </xs:schema>
+                 
+             `
+            let classFile = generator.generateClassFileDefinition(elmXsd,"",true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(1);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
+
+
+        it("ClassGenerator geeft een  classFile terug voor een elements", () => {
+            const elmXsd = `
+              <?xml version='1.0' encoding='UTF-8'?>
+                 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                   <xs:element name="naam">
+                     <xs:complexType>
+                       <xs:sequence>
+                         <xs:element name="intField" type="xs:integer"/>
+                         <xs:element name="dateField" type="xs:dateTime"/>
+                       </xs:sequence>
+                      </xs:complexType>
+                      </xs:element>
+                 </xs:schema>
+                 
+             `
+            let classFile = generator.generateClassFileDefinition(elmXsd,"",true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(1);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
 
         });
     });
