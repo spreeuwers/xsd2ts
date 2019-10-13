@@ -131,8 +131,12 @@ describe("ClassGenerator", () => {
 
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(2);
-            let c  = classFile.getClass("Naam");
+            let c  = classFile.getClass("Ordertype");
+            //console.log('class:  ' ,  c.write());
             expect(c).toBeDefined();
+            let p  = c.getProperty('customer');
+            //console.log('prop:  ' ,  p);
+            expect(p.type).toBeDefined();
 
         });
         it("ClassGenerator returns a classFile for a single element with nested type", () => {
