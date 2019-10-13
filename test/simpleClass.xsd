@@ -3,5 +3,20 @@
     <xs:complexType name="Test">
         <xs:element name="intField" type="xs:integer"/>
         <xs:element name="dateField" type="xs:dateTime"/>
+        <xs:element name="arrayField" maxOccurs="unbounded" type="xs:string"/>
+        <xs:element name="nestedFields" maxOccurs="1" minOccurs="1">
+            <xs:complexType>
+                <xs:sequence>
+                    <xs:element name="nestedItem"  type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:element>
+        <xs:element name="nestedArray" maxOccurs="1" minOccurs="1">
+            <xs:complexType>
+                <xs:sequence>
+                    <xs:element name="nestedItem" maxOccurs="unbounded"  type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:element>
     </xs:complexType>
 </xs:schema>

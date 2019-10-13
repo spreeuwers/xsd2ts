@@ -5,6 +5,14 @@
             <xs:extension base="Base">
                 <xs:sequence>
 
+                    <xs:element name="nestedFields" maxOccurs="1" minOccurs="1">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="nestedItem"  type="NestedItem"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+
                     <xs:element name="intField" type="xs:integer"/>
 
                     <xs:element name="dateField" type="xs:dateTime"/>
@@ -22,13 +30,7 @@
                     </xs:element>
 
                     <xs:element name="strArrayField" maxOccurs="unbounded" minOccurs="1" type="xs:string"/>
-                    <xs:element name="nestedFields" maxOccurs="1" minOccurs="1">
-                        <xs:complexType>
-                            <xs:sequence>
-                                <xs:element name="nestedItem"  type="NestedItem"/>
-                            </xs:sequence>
-                        </xs:complexType>
-                    </xs:element>
+
 
                 </xs:sequence>
             </xs:extension>

@@ -1,9 +1,19 @@
 /**
  * Created by eddy spreeuwers 14-02-18.
- */;
+ */import {FileDefinition} from "ts-code-generator";
+;
 import {ClassGenerator} from "../src/classGenerator";
 import * as fs from "fs";
 
+let logClassDef = function (result: FileDefinition) {
+    console.log('\n----- classdef --------\n');
+    console.log(result.write());
+    console.log("\n-----------------------\n");
+    result.classes.forEach((c) => {
+        console.log(c.name);
+    });
+    console.log("\n-------------\n");
+};
 describe("ClassGenerator", () => {
     describe("ClassGenerator simpleClass", () => {
         let generator: ClassGenerator;
@@ -35,16 +45,16 @@ describe("ClassGenerator", () => {
             expect(generator.generateClassFileDefinition("").classes.length).toBe(0);
         });
 
-        it("ClassGenerator geeft een simpele classFile terug", () => {
-            expect(generator.generateClassFileDefinition(simpleClassXsd,"",true).classes.length).toBe(1);
+        it("ClassGenerator returns a simple classFile ", () => {
+            const result = generator.generateClassFileDefinition(simpleClassXsd);
+            logClassDef(result);
+            expect(result.classes.length).toBe(2);
+
         });
 
-        fit("ClassGenerator geeft een inherited classFile terug", () => {
+        it("ClassGenerator geeft een inherited classFile terug", () => {
             const result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
-            //console.log('\n-------------\n', result.write(), '\n-------------\n');
-            console.log("\n-------------\n");
-            result.classes.forEach((c) => {console.log(c.name);});
-            console.log("\n-------------\n");
+            logClassDef(result);
             expect(result.classes.length).toBe(7);
             let test = result.getClass("Test");
             console.log(test.write());
@@ -76,7 +86,7 @@ describe("ClassGenerator", () => {
             let classFile = generator.generateClassFileDefinition(formXsd,"",true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(3);
+            expect(classFile.classes.length).toBe(4);
             let fld = classFile.getClass("Forms").getProperty("field");
             expect(fld.type.text).toBe("Field");
 
@@ -100,7 +110,7 @@ describe("ClassGenerator", () => {
         });
 
 
-        it("ClassGenerator geeft een  classFile terug voor een elements", () => {
+        it("ClassGenerator returns a classFile for a single element with nested type", () => {
             const elmXsd = `
               <?xml version='1.0' encoding='UTF-8'?>
                  <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
@@ -118,7 +128,7 @@ describe("ClassGenerator", () => {
             let classFile = generator.generateClassFileDefinition(elmXsd,"",true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(1);
+            expect(classFile.classes.length).toBe(2);
             let c  = classFile.getClass("Naam");
             expect(c).toBeDefined();
 
