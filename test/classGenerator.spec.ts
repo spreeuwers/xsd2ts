@@ -21,12 +21,14 @@ describe("ClassGenerator", () => {
         let simpleInheritedClassXsd = '';
         let importedClassXsd = '';
         let formXsd: string = '';
+        let typesXsd = '';
         beforeEach(() => {
             generator = new ClassGenerator(<Map<string,string>>{"dep":"xml-parser"});
             simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
             simpleInheritedClassXsd = fs.readFileSync('./test/simpleInheritedClass.xsd').toString();
             importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
             formXsd = fs.readFileSync("./test/form.xsd").toString();
+            typesXsd = fs.readFileSync("./test/types.xsd").toString();
         });
 
         it("ClassGenerator heeft een werkende constructor", () => {
@@ -52,7 +54,7 @@ describe("ClassGenerator", () => {
 
         });
 
-        it("ClassGenerator geeft een inherited classFile terug", () => {
+        fit("ClassGenerator geeft een inherited classFile terug", () => {
             const result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
             logClassDef(result);
             expect(result.classes.length).toBe(7);
@@ -84,6 +86,16 @@ describe("ClassGenerator", () => {
 
         it("ClassGenerator geeft een  classFile terug voor form met refs", () => {
             let classFile = generator.generateClassFileDefinition(formXsd,"",true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(4);
+            let fld = classFile.getClass("Forms").getProperty("field");
+            expect(fld.type.text).toBe("Field");
+            expect(fld.name).toBe("Field");
+
+        });
+        it("ClassGenerator returns a  classFile with special types", () => {
+            let classFile = generator.generateClassFileDefinition(typesXsd,"",true);
 
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(4);

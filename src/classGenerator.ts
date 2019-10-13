@@ -373,16 +373,15 @@ export class ClassGenerator {
         let createdFields = elms.map(child => this.traverse(child, state, node, indent + " "));
         let fieldCreated = createdFields.filter(cf => cf === state.fieldName).length >0;
         console.log(indent, ' fieldCreated: ', state.fieldName);
-        //console.log(indent, ' state after  descent: ', JSON.stringify(state));
-        //}
 
-
-        //&& !/\[\]$/.test(state.field)
 
         if (state.className ){
 
-            this.createClass(fileDef, state.className, indent);
-           //classDef.isAbstract = isAbstract;
+            const classDef = this.createClass(fileDef, state.className, indent);
+            if (superClassName){
+                classDef.addExtends(superClassName);
+            }
+             //classDef.isAbstract = isAbstract;
 
 
         }
@@ -418,7 +417,7 @@ export class ClassGenerator {
         return createdField;
    }
 
-    private createClass(fileDef: FileDefinition, name: string, indent: string) {
+    private createClass(fileDef: FileDefinition, name: string, indent: string): ClassDefinition {
         let classDef = fileDef.getClass(name);
         if (!classDef) {
             console.log(indent, 'defining class: ', name);
@@ -426,6 +425,7 @@ export class ClassGenerator {
             classDef.isExported = true;
 
         }
+        return classDef;
     }
 
     private makeSortedFileDefinition(sortedClasses: ClassDefinition[]): FileDefinition {
