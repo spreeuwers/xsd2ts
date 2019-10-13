@@ -17,11 +17,13 @@ let logClassDef = function (result: FileDefinition) {
 describe("ClassGenerator", () => {
     describe("ClassGenerator simpleClass", () => {
         let generator: ClassGenerator;
-        let simpleClassXsd = '';
-        let simpleInheritedClassXsd = '';
-        let importedClassXsd = '';
-        let formXsd: string = '';
-        let typesXsd = '';
+        let simpleClassXsd = ""
+        let simpleInheritedClassXsd ="";
+        let importedClassXsd = "";
+        let formXsd: string = "";
+        let typesXsd = "";
+        let groupXsd = "";
+        let elmXsd = "";
         beforeEach(() => {
             generator = new ClassGenerator(<Map<string,string>>{"dep":"xml-parser"});
             simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
@@ -29,6 +31,8 @@ describe("ClassGenerator", () => {
             importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
             formXsd = fs.readFileSync("./test/form.xsd").toString();
             typesXsd = fs.readFileSync("./test/types.xsd").toString();
+            groupXsd = fs.readFileSync("./test/group.xsd").toString();
+            elmXsd = fs.readFileSync("./test/element.xsd").toString();
         });
 
         it("ClassGenerator heeft een werkende constructor", () => {
@@ -54,14 +58,14 @@ describe("ClassGenerator", () => {
 
         });
 
-        fit("ClassGenerator geeft een inherited classFile terug", () => {
+        it("ClassGenerator geeft een inherited classFile terug", () => {
             const result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
             logClassDef(result);
             expect(result.classes.length).toBe(7);
             let test = result.getClass("Test");
             console.log(test.write());
             expect(test).toBeDefined();
-
+            expect(test.extendsTypes[0].text).toBe('Base');
             expect(test.getProperty("intField")).toBeDefined();
             expect(test.getProperty("dateField")).toBeDefined();
             expect(test.getMethod("constructor")).toBeDefined();
@@ -121,22 +125,18 @@ describe("ClassGenerator", () => {
 
         });
 
+        fit("ClassGenerator returns a classFile for a single element with nested type", () => {
 
+            let classFile = generator.generateClassFileDefinition(groupXsd,"",true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(2);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
         it("ClassGenerator returns a classFile for a single element with nested type", () => {
-            const elmXsd = `
-              <?xml version='1.0' encoding='UTF-8'?>
-                 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
-                   <xs:element name="naam">
-                     <xs:complexType>
-                       <xs:sequence>
-                         <xs:element name="intField" type="xs:integer"/>
-                         <xs:element name="dateField" type="xs:dateTime"/>
-                       </xs:sequence>
-                      </xs:complexType>
-                      </xs:element>
-                 </xs:schema>
-                 
-             `
+
             let classFile = generator.generateClassFileDefinition(elmXsd,"",true);
 
             console.log(classFile.write());
