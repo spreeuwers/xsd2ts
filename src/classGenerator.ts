@@ -419,13 +419,14 @@ export class ClassGenerator {
 
         if (/^group_/.test(type)){
             let c =this.fileDef.getClass(type);
-            c.getPropertiesAndConstructorParameters().forEach(
-                (p) => {
-                    this.addProtectedPropToClass(classDef, p);
-
-                }
-            );
-            return;
+            if(c) {
+                 c.getPropertiesAndConstructorParameters().forEach(
+                    (p) => {
+                        this.addProtectedPropToClass(classDef, p);
+                   }
+                );
+                return;
+            }
         }
 
         classDef.addProperty(

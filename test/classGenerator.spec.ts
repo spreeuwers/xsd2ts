@@ -95,15 +95,15 @@ describe("ClassGenerator", () => {
             expect(classFile.classes.length).toBe(4);
             let fld = classFile.getClass("Forms").getProperty("field");
             expect(fld.type.text).toBe("Field");
-            expect(fld.name).toBe("Field");
+            expect(fld.name).toBe("field");
 
         });
-        it("ClassGenerator returns a  classFile with special types", () => {
+        xit("ClassGenerator returns a  classFile with special types", () => {
             let classFile = generator.generateClassFileDefinition(typesXsd,"",true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(4);
-            let fld = classFile.getClass("Forms").getProperty("field");
+            expect(classFile.classes.length).toBe(6);
+            let fld = classFile.getClass("Item").getProperty("item");
             expect(fld.type.text).toBe("Field");
 
         });
@@ -125,7 +125,7 @@ describe("ClassGenerator", () => {
 
         });
 
-        fit("ClassGenerator returns a classFile for a single element with nested type", () => {
+        it("ClassGenerator returns a classFile for a single element with nested type", () => {
 
             let classFile = generator.generateClassFileDefinition(groupXsd,"",true);
 
