@@ -29,6 +29,9 @@ export declare class ClassGenerator {
      * @param parent
      */
     private traverse;
+    private createField;
+    private adjustField;
+    private createClass;
     private makeSortedFileDefinition;
     private addProtectedPropToClass;
     private findHierachyDepth;

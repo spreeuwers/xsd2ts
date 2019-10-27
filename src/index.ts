@@ -49,7 +49,7 @@ export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies
     //add classes in order of hierarchy depth to make the compiler happy
 
     let disclaimer = "/***********\ngenerated template classes for " + xsdFilePath + ' ' + new Date().toLocaleString() + "\n***********/\n\n";
-    let types = generator.types.map((t) => `${t}`).join('\n');
+    let types = generator.types.map((t) => `${t}`).join("\n");
     let src = disclaimer + types + '\n\n\n\n' + classFileDef.write().replace(/protected\s/g, 'public ');
     fs.writeFileSync(`./src/generated/index.ts`, src, 'utf8');
 

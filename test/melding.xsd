@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:complexType name="MeldingIdentificatie">
+        <xs:sequence>
+            <xs:element name="meldingIdentificatieId" minOccurs="0" type="xs:string"/>
+            <xs:element name="meldingIdentificatieNummer" minOccurs="0" type="xs:string"/>
+            <xs:element name="meldingJaar" minOccurs="0" type="xs:int"/>
+            <xs:element name="externeBron" maxOccurs="unbounded" minOccurs="0" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="MerkSpecificatie">
+        <xs:complexContent>
+            <xs:extension base="Specificatie">
+                <xs:sequence>
+                    <xs:element name="omschrijving" minOccurs="0" type="xs:string"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="Specificatie">
+    </xs:complexType>
+</xs:schema>
