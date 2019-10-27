@@ -100,7 +100,7 @@ describe("ClassGenerator", () => {
             expect(fld.name).toBe("field");
 
         });
-        xit("ClassGenerator returns a  classFile with special types from typesXsd", () => {
+        fit("ClassGenerator returns a  classFile with special types from typesXsd", () => {
             let classFile = generator.generateClassFileDefinition(typesXsd,"",true);
             let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");

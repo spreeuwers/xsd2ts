@@ -22,6 +22,7 @@ const XS_GROUP = "xs:group";
 const XS_ANNOTATION = "xs:annotation";
 const XS_DOCUMENTATION = "xs:documentation";
 const XS_ATTRIBUTE= "xs:attribute";
+const XS_ATTRGROUP ="xs:attributeGroup";
 const UNKNOWN = "Unknown";
 
 const GROUP_PREFIX = 'group_';
@@ -218,7 +219,7 @@ export class ClassGenerator {
                 break;
             case XS_DOCUMENTATION:
                 break;
-            case XS_ATTRIBUTE:
+
 
 
 
@@ -278,14 +279,15 @@ export class ClassGenerator {
                 }
                 this.createClass( state.className, indent);
                 break;
-
+            case XS_ATTRGROUP:
             case XS_GROUP:
-                console.log(indent, 'XS_GROUP');
+                //console.log(indent, nodeName);
                 if (nodeName) {
                     state.className = GROUP_PREFIX + nodeName;
                     this.createClass(state.className, indent).isAbstract=true;
                     break;
                 }
+            case XS_ATTRIBUTE:
             case XS_ELEMENT:
                 //console.log(indent+"XS_ELEMENT");
                 state.fieldName = nodeName;
@@ -307,6 +309,7 @@ export class ClassGenerator {
                     let ref = this.findAttrValue(node,'ref');
                     if(ref){
                         state.fieldType = GROUP_PREFIX + ref;
+                        state.fieldName = nodeName || ref;
                     }
                     console.log(indent, 'createField:' , state);
                     this.createField(state, arrayPostfix, requiredPostfix, indent);
