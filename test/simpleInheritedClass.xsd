@@ -47,7 +47,7 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
-    <xs:complexType name="Base">
+    <xs:complexType name="Base" abstract="true">
     </xs:complexType>
 
 

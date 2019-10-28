@@ -168,7 +168,7 @@ export class ClassGenerator {
         //console.log(node.name);
         //let classDef = parentClassDef;
         if (!node?.tagName) {
-            console.log(indent + `<!--   comment    -->`);
+            this.log(indent + `<!--   comment    -->`);
             return "";
         }
         indent=indent||"";
@@ -183,15 +183,19 @@ export class ClassGenerator {
         const nodeType = this.findAttrValue(node,'type');
         const minOccurs = this.findAttrValue(node,'minOccurs');
         const maxOccurs = this.findAttrValue(node,'maxOccurs');
+        const abstract = this.findAttrValue(node,'abstract');
+        const final = this.findAttrValue(node,'final');
+        const nillable = this.findAttrValue(node,'nillable');
+
         const firstChild = (node?.children)?node.children[0]:null;
         //const childName = this.nodeName(<HTMLElement>firstChild);
-        console.log(indent + `<${node?.tagName} name="${nodeName}" type="${nodeType}">`);
+        this.log(indent + `<${node?.tagName} name="${nodeName}" type="${nodeType}">`);
         let createField= false;
 
 
 
         state.path = (state.path || '') + node?.tagName.replace('xs:','/');
-        console.log(indent, ' path', state.path);
+        this.log(indent, ' path', state.path);
         switch (node.tagName) {
 
             case XS_SCHEMA:
@@ -225,7 +229,7 @@ export class ClassGenerator {
 
 
             case XS_SIMPLE_TYPE:
-                console.log(indent + "XS_SIMPLE_TYPE");
+                this.log(indent + "XS_SIMPLE_TYPE");
                 //make a typedef for string enums
                 let typeName = (nodeName) ? nodeName : capfirst(state.fieldName);
 
@@ -263,7 +267,7 @@ export class ClassGenerator {
 
 
             case XS_COMPLEX_TYPE:
-                console.log(indent + 'XS_COMPLEX_TYPE');
+                //this.log(indent + 'XS_COMPLEX_TYPE');
 
 
                 if (nodeName) {
@@ -277,17 +281,20 @@ export class ClassGenerator {
                     state.className = capfirst(state.fieldName);
 
                 }
-                this.createClass( state.className, indent);
+                this.createClass( state.className, indent).isAbstract = /true/i.test(abstract);
                 break;
             case XS_ATTRGROUP:
+            //treat as group
             case XS_GROUP:
                 //console.log(indent, nodeName);
                 if (nodeName) {
                     state.className = GROUP_PREFIX + nodeName;
-                    this.createClass(state.className, indent).isAbstract=true;
+                    this.createClass(state.className, indent).isAbstract= true;
                     break;
                 }
+                //treat as element
             case XS_ATTRIBUTE:
+                //treat as element
             case XS_ELEMENT:
                 //console.log(indent+"XS_ELEMENT");
                 state.fieldName = nodeName;
@@ -296,11 +303,11 @@ export class ClassGenerator {
                 let arrayPostfix = (maxOccurs==="unbounded") ? "[]" : "";
 
                 let nrOfElements =  this.findChildren(parent).filter(c => c.tagName === XS_ELEMENT).length;
-                console.log(indent, 'elm siblings:' ,parent.tagName, nrOfElements);
+                this.log(indent, 'elm siblings:' ,parent.tagName, nrOfElements);
                 let isArrayClass = nrOfElements===1 && arrayPostfix;
                 //nested field with nested class
                 if (isArrayClass){
-                    console.log(indent, 'isArrayClass:' , isArrayClass);
+                    this.log(indent, 'isArrayClass:' , isArrayClass);
                     let fieldName = state.parentName  + ((minOccurs==="0") ? "?" : "");
                     this. adjustField(state.parentClass, fieldName, nodeType, arrayPostfix, indent);
                     this.fileDef.classes = this.fileDef.classes.filter(c=>c.name!==state.className)
@@ -311,7 +318,7 @@ export class ClassGenerator {
                         state.fieldType = GROUP_PREFIX + ref;
                         state.fieldName = nodeName || ref;
                     }
-                    console.log(indent, 'createField:' , state);
+                    this.log(indent, 'createField:' , state);
                     this.createField(state, arrayPostfix, requiredPostfix, indent);
                 }
 
@@ -319,56 +326,7 @@ export class ClassGenerator {
         ////////////////////////////////////////////////////////////////
 
         let elms =this.findChildren(node);
-        //console.log(indent + 'nrofchildren:'+ elms.length);
-        //traverse should return a className if needed
-        //let showState = new State(state);
-        //delete(showState.path);
-        //console.log(indent, ' state before descent: ', JSON.stringify(showState));
-        let createdFields = elms.map(child => this.traverse(child, state, node, indent + " "));
-
-        // if (/^group_/.test(state.className)){
-        //     this.log(this.fileDef.getClass(state.className).write());
-        // }
-        //showState = new State(state);
-        //delete(showState.path);
-        //console.log(indent, ' state after descent: ', JSON.stringify(showState));
-        /////////////////////////////////////////////////////////////////
-
-        // if (state.className ){
-        //
-        //     const classDef = this.createClass(fileDef, state.className, indent);
-        //     if (superClassName){
-        //         classDef.addExtends(superClassName);
-        //     }
-        //      //classDef.isAbstract = isAbstract;
-        //
-        //
-        // }
-        //&& newField.parent
-        //console.log('className: ', className)
-        // let createdField = null;
-        // if (state.fieldName){
-        //     if (!state.className){
-        //        this.createClass(fileDef, UNKNOWN, indent);
-        //        state.className = UNKNOWN;
-        //     }
-        //     console.log(indent, 'defining field: ', state.fieldName, 'on', state.className);
-        //     //let classDef = fileDef.getClass(className);
-        //     let fldName = state.fieldName;
-        //     let fldType = this.getFieldType(state.fieldType) + arrayPostfix;
-        //     let classDef = fileDef.getClass(state.className);
-        //     let property = classDef?.getProperty(fldName);
-        //
-        //     if (!property) {
-        //         property = classDef?.addProperty({name: fldName, type: fldType, scope: "protected"});
-        //     }
-        //
-        //     console.log('created field:',fldName, 'on class: ',state.className, ' with type: ', fldType);
-        //     console.log(indent,'prop: ', property?.name, property?.type?.text);
-        //     createdField = property?.name;
-        // }
-        // console.log(indent + `</${node.tagName}>//${nodeName}`);
-        // return createdField;
+        elms.map(child => this.traverse(child, state, node, indent + " "));
    }
 
     private createField(state: State, arrayPostfix: string, requiredPoastfix:string, indent: string) {
@@ -408,7 +366,7 @@ export class ClassGenerator {
     private createClass(name: string, indent: string): ClassDefinition {
         let classDef = this.fileDef.getClass(name);
         if (!classDef) {
-            console.log(indent, 'defining class: ', name);
+            this.log(indent, 'defining class: ', name);
             classDef = this.fileDef.addClass({name: name});
             classDef.isExported = true;
 
