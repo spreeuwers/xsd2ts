@@ -90,14 +90,18 @@ describe("ClassGenerator", () => {
             expect(fld).toBeDefined();
         });
 
-        it("ClassGenerator geeft een  classFile terug voor form met refs", () => {
-            let classFile = generator.generateClassFileDefinition(formXsd,"",true);
+        fit("ClassGenerator geeft een  classFile terug voor form met refs", () => {
+            let classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(4);
             let fld = classFile.getClass("Forms").getProperty("field");
             expect(fld.type.text).toBe("Field");
             expect(fld.name).toBe("field");
+
+            fld = classFile.getClass("Forms").getProperty("option");
+            expect(fld.type.text).toBe("Option");
+            expect(fld.name).toBe("option");
 
         });
         it("ClassGenerator returns a  classFile with special types from typesXsd", () => {
