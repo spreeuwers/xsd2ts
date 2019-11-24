@@ -23,6 +23,7 @@ var XS_ANNOTATION = "xs:annotation";
 var XS_DOCUMENTATION = "xs:documentation";
 var XS_ATTRIBUTE = "xs:attribute";
 var XS_ATTRGROUP = "xs:attributeGroup";
+var XS_ENUM = "xs:enum";
 var UNKNOWN = "Unknown";
 var GROUP_PREFIX = 'group_';
 var CLASS_PREFIX = ".";
@@ -123,7 +124,7 @@ var ClassGenerator = /** @class */ (function () {
         sortedClasses.forEach(function (c) { return _this.log(c.name); });
         logLine();
         var outfile = this.makeSortedFileDefinition(sortedClasses);
-        // outfile.enums =this.fileDef.enums;
+        outfile.enums = this.fileDef.enums;
         return outfile;
     };
     ClassGenerator.prototype.log = function (message) {
@@ -194,6 +195,8 @@ var ClassGenerator = /** @class */ (function () {
                 }
                 break;
             case XS_DOCUMENTATION:
+                break;
+            case XS_ENUM:
                 break;
             case XS_SIMPLE_TYPE:
                 this.log(indent + "XS_SIMPLE_TYPE");
@@ -267,7 +270,7 @@ var ClassGenerator = /** @class */ (function () {
                 else {
                     var ref = this.findAttrValue(node, 'ref');
                     if (ref) {
-                        state.fieldType = GROUP_PREFIX + ref;
+                        state.fieldType = (XS_GROUP === node.tagName) ? GROUP_PREFIX + ref : capfirst(ref);
                         state.fieldName = nodeName || ref;
                     }
                     this.log(indent, 'createField:', state);
