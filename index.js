@@ -16,6 +16,7 @@ function generateTemplateClassesFromXSD(xsdFilePath, dependencies) {
     console.log(JSON.stringify(dependencies));
     var PROTECTED = 'protected';
     var xsdString = fs.readFileSync(xsdFilePath, 'utf8');
+    var fileName = xsdFilePath.split("/").reverse()[0].replace(".xsd", ".ts");
     var genSrcPath = "./src/generated";
     var generator = new classGenerator_1.ClassGenerator(imports);
     if (!fs.existsSync(genSrcPath)) {
@@ -27,6 +28,6 @@ function generateTemplateClassesFromXSD(xsdFilePath, dependencies) {
     var disclaimer = "/***********\ngenerated template classes for " + xsdFilePath + ' ' + new Date().toLocaleString() + "\n***********/\n\n";
     var types = generator.types.map(function (t) { return "" + t; }).join("\n");
     var src = disclaimer + types + '\n\n\n\n' + classFileDef.write().replace(/protected\s/g, 'public ');
-    fs.writeFileSync("./src/generated/index.ts", src, 'utf8');
+    fs.writeFileSync(genSrcPath + "/" + fileName, src, 'utf8');
 }
 exports.generateTemplateClassesFromXSD = generateTemplateClassesFromXSD;

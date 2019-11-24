@@ -256,7 +256,7 @@ export class ClassGenerator {
                                 const value = this.findAttrValue(<HTMLElement>c, 'value');
 
                                 if (value){
-                                    enums.push(value);
+                                    enums.push(value.toUpperCase().replace(/\W/g,"_"));
                                 } else {
                                     options.push(`"${value}"`);
                                 }

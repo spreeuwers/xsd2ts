@@ -156,7 +156,7 @@ describe("ClassGenerator", () => {
             expect(c).toBeDefined();
 
         });
-        fit("ClassGenerator returns a classFile for a simpleTypeXsd", () => {
+        it("ClassGenerator returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(simpleTypeXsd,"",true);
             let types = generator.types.map((t) => `${t}`).join("\n");

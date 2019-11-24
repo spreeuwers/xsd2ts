@@ -7,6 +7,8 @@
     "test:jasmine": "ts-node  -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "test:j-debug": "ts-node $NODE_DEBUG_OPTION  ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "compile": "tsc -p ./src",
+    "compile-gen": "tsc -p ./src/generated",
+
     "version": "npm version patch",
     "setup": "npm install",
     "publish": "npm publish"

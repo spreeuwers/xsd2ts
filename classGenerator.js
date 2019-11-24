@@ -201,11 +201,11 @@ var ClassGenerator = /** @class */ (function () {
             case XS_SIMPLE_TYPE:
                 this.log(indent + "XS_SIMPLE_TYPE");
                 //make a typedef for string enums
-                this.createEnum(nodeName, indent);
                 var typeName = (nodeName) ? nodeName : capfirst(state.fieldName);
                 var simpleType = "export type " + typeName + " ";
                 var child = this.findFirstChild(node); //children[0];
                 var options_1 = [];
+                var enums_1 = [];
                 var childName = this.nodeName(child);
                 var childBase = this.findAttrValue(child, 'base');
                 if (child && child.attributes) {
@@ -215,16 +215,26 @@ var ClassGenerator = /** @class */ (function () {
                         //Array.prototype.slice.call(child.children,0).filter(
                         this.findChildren(child).filter(function (c) { return (c.tagName === xsdTypes.XS_ENUM); }).forEach(function (c) {
                             var value = _this.findAttrValue(c, 'value');
-                            options_1.push("\"" + value + "\"");
+                            if (value) {
+                                enums_1.push(value.toUpperCase().replace(/\W/g, "_"));
+                            }
+                            else {
+                                options_1.push("\"" + value + "\"");
+                            }
                         });
                     }
                 }
-                if (options_1.length === 0) {
-                    options_1.push(this.getFieldType(childBase));
+                if (enums_1.length > 0) {
+                    this.createEnum(nodeName || capfirst(state.fieldName), enums_1, indent);
                 }
-                //convert to typedef statement
-                this.types.push(simpleType + '= ' + options_1.join(' | ') + ';');
-                this.log('  export types: ' + this.types);
+                else {
+                    if (options_1.length === 0) {
+                        options_1.push(this.getFieldType(childBase));
+                    }
+                    //convert to typedef statement
+                    this.types.push(simpleType + '= ' + options_1.join(' | ') + ';');
+                    this.log('  export types: ' + this.types);
+                }
                 break;
             case XS_COMPLEX_TYPE:
                 //this.log(indent + 'XS_COMPLEX_TYPE');
@@ -307,12 +317,13 @@ var ClassGenerator = /** @class */ (function () {
         (_b = (_a = classDef) === null || _a === void 0 ? void 0 : _a.getProperty(fldName)) === null || _b === void 0 ? void 0 : _b.setType(fldType);
     };
     /////////////////////////////////////////////////////////////////////////
-    ClassGenerator.prototype.createEnum = function (name, indent) {
+    ClassGenerator.prototype.createEnum = function (name, names, indent) {
         var enumDef = null; //this.fileDef.getEnum(name);
         if (!enumDef) {
             this.log(indent, 'defining Enum: ', name);
             enumDef = this.fileDef.addEnum({ name: name });
             enumDef.isExported = true;
+            names.forEach(function (n, i) { return enumDef.addMember({ name: n, value: "\"" + n + "\"" }); });
         }
         return enumDef;
     };
