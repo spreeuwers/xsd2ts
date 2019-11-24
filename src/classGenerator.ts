@@ -379,7 +379,7 @@ export class ClassGenerator {
             enumDef = this.fileDef.addEnum({name: name});
             enumDef.isExported = true;
             names.forEach(
-                (n, i) => enumDef.addMember({name: n, value: i})
+                (n, i) => enumDef.addMember({name: n, value: `"${n}"`})
             );
          }
         return enumDef;
