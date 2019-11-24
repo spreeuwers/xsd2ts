@@ -5,7 +5,7 @@
         targetNamespace='jabber:x:data'
         xmlns='jabber:x:data'
         elementFormDefault='qualified'>
-
+    <xs:element name="form" type="Forms"></xs:element>
     <xs:annotation>
         <xs:documentation>
             The protocol documented by this schema is defined in

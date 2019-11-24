@@ -31,6 +31,7 @@ export declare class ClassGenerator {
     private traverse;
     private createField;
     private adjustField;
+    private createEnum;
     private createClass;
     private makeSortedFileDefinition;
     private addProtectedPropToClass;

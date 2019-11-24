@@ -1,7 +1,7 @@
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
-import {ClassDefinition, createFile, FileDefinition, ImportStructure} from "ts-code-generator";
+import {ClassDefinition, createFile, EnumDefinition, FileDefinition, ImportStructure} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
 
 enum xsdTypes {
@@ -23,6 +23,7 @@ const XS_ANNOTATION = "xs:annotation";
 const XS_DOCUMENTATION = "xs:documentation";
 const XS_ATTRIBUTE= "xs:attribute";
 const XS_ATTRGROUP ="xs:attributeGroup";
+const XS_ENUM ="xs:enum";
 const UNKNOWN = "Unknown";
 
 const GROUP_PREFIX = 'group_';
@@ -140,15 +141,17 @@ export class ClassGenerator {
         let sortedClasses = this.fileDef.classes.sort(
             (a, b) => a.name.localeCompare(b.name)
         );
-        //remove Schema class when not needed, when there are no toplevel elements
+        // remove Schema class when not needed, when there are no toplevel elements
         sortedClasses = sortedClasses.filter(c => (c.name == "Schema") ?  c.properties.length > 0 : true);
 
-        console.log('-------------------------------generated classes-------------------------------------');
-        console.log('Nr of classes generated: ', sortedClasses.length);
+        console.log("-------------------------------generated classes-------------------------------------");
+        console.log("Nr of classes generated: ", sortedClasses.length);
         sortedClasses.forEach(c => this.log(c.name));
 
         logLine();
-        return this.makeSortedFileDefinition(sortedClasses);
+        let outfile =  this.makeSortedFileDefinition(sortedClasses);
+        outfile.enums =this.fileDef.enums;
+        return outfile;
 
     }
 
@@ -165,21 +168,21 @@ export class ClassGenerator {
      * @param parent
      */
     private traverse(node: HTMLElement, state?: State, parent?: HTMLElement, indent?:string): string {
-        //console.log(node.name);
-        //let classDef = parentClassDef;
+        // console.log(node.name);
+        // let classDef = parentClassDef;
         if (!node?.tagName) {
             this.log(indent + `<!--   comment    -->`);
             return "";
         }
-        indent=indent||"";
+        indent=indent || "";
         state = new State(state);
         let superClassName:string;
-        //let arrayPostfix='';
-        //let newField:{name:string, type:string, parent: string};
-        //let newClass:{name:string, super:string, abstract: boolean};
+        // let arrayPostfix='';
+        // let newField:{name:string, type:string, parent: string};
+        // let newClass:{name:string, super:string, abstract: boolean};
         let fileDef = this.fileDef;
-        const nodeName = this.findAttrValue(node,'name');
-        //const parentName = this.findAttrValue(parent,'name');
+        const nodeName = this.findAttrValue(node,"name");
+        // const parentName = this.findAttrValue(parent,'name');
         const nodeType = this.findAttrValue(node,'type');
         const minOccurs = this.findAttrValue(node,'minOccurs');
         const maxOccurs = this.findAttrValue(node,'maxOccurs');
@@ -188,7 +191,7 @@ export class ClassGenerator {
         const nillable = this.findAttrValue(node,'nillable');
 
         const firstChild = (node?.children)?node.children[0]:null;
-        //const childName = this.nodeName(<HTMLElement>firstChild);
+        // const childName = this.nodeName(<HTMLElement>firstChild);
         this.log(indent + `<${node?.tagName} name="${nodeName}" type="${nodeType}">`);
         let createField= false;
 
@@ -204,10 +207,10 @@ export class ClassGenerator {
                 break
 
             case XS_EXTENSION:
-                //console.log(indent+"XS_EXTENSION");
-                //this.log('node  base: ' + superClassName);
-                //superClassName = nodeBase;
-                //classDef.addExtends(nodeBase);
+                // console.log(indent+"XS_EXTENSION");
+                // this.log('node  base: ' + superClassName);
+                // superClassName = nodeBase;
+                // classDef.addExtends(nodeBase);
                 superClassName = this.findAttrValue(node,'base');
                 fileDef.getClass(state.className)?.addExtends(superClassName);
 
@@ -223,14 +226,12 @@ export class ClassGenerator {
                 break;
             case XS_DOCUMENTATION:
                 break;
-
-
-
-
-
+            case XS_ENUM:
+                break
             case XS_SIMPLE_TYPE:
                 this.log(indent + "XS_SIMPLE_TYPE");
                 //make a typedef for string enums
+                this.createEnum(nodeName, indent);
                 let typeName = (nodeName) ? nodeName : capfirst(state.fieldName);
 
                 const simpleType = `export type ${typeName} `;
@@ -315,7 +316,7 @@ export class ClassGenerator {
                 } else {
                     let ref = this.findAttrValue(node,'ref');
                     if(ref){
-                        state.fieldType = GROUP_PREFIX + ref;
+                        state.fieldType = (XS_GROUP === node.tagName) ? GROUP_PREFIX + ref : capfirst(ref);
                         state.fieldName = nodeName || ref;
                     }
                     this.log(indent, 'createField:' , state);
@@ -360,7 +361,16 @@ export class ClassGenerator {
 
 
     /////////////////////////////////////////////////////////////////////////
+    private createEnum(name: string, indent: string): EnumDefinition {
+        let enumDef = null;//this.fileDef.getEnum(name);
+        if (!enumDef) {
+            this.log(indent, 'defining Enum: ', name);
+            enumDef = this.fileDef.addEnum({name: name});
+            enumDef.isExported = true;
 
+        }
+        return enumDef;
+    }
 
 
     private createClass(name: string, indent: string): ClassDefinition {
@@ -523,7 +533,7 @@ export class ClassGenerator {
                 console.log("namespace",ns);
             }
 
-            return result.replace(COLUMN,'.');
+            return result.replace(COLUMN, '.');
         } else {
             return 'any';
         }

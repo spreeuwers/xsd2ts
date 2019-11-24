@@ -14,6 +14,7 @@ let logClassDef = function (result: FileDefinition) {
     });
     console.log("\n-------------\n");
 };
+
 describe("ClassGenerator", () => {
     describe("ClassGenerator simpleClass", () => {
         let generator: ClassGenerator;
@@ -30,7 +31,7 @@ describe("ClassGenerator", () => {
             simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
             simpleInheritedClassXsd = fs.readFileSync('./test/simpleInheritedClass.xsd').toString();
             importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
-            formXsd = fs.readFileSync("./test/form.xsd").toString();
+            formXsd = fs.readFileSync("./test/xep-004.xsd").toString();
             typesXsd = fs.readFileSync("./test/types.xsd").toString();
             groupXsd = fs.readFileSync("./test/group.xsd").toString();
             elmXsd = fs.readFileSync("./test/element.xsd").toString();
@@ -90,18 +91,18 @@ describe("ClassGenerator", () => {
             expect(fld).toBeDefined();
         });
 
-        fit("ClassGenerator geeft een  classFile terug voor form met refs", () => {
+        it("ClassGenerator geeft een  classFile terug voor form met refs", () => {
             let classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(4);
-            let fld = classFile.getClass("Forms").getProperty("field");
-            expect(fld.type.text).toBe("Field");
-            expect(fld.name).toBe("field");
+            let fld = classFile.getClass("X").getProperty("field?");
+            expect(fld.type.text).toBe("Field[]");
+            expect(fld.name).toBe("field?");
 
-            fld = classFile.getClass("Forms").getProperty("option");
-            expect(fld.type.text).toBe("Option");
-            expect(fld.name).toBe("option");
+            fld = classFile.getClass("Field").getProperty("option?");
+            expect(fld.type.text).toBe("Option[]");
+            expect(fld.name).toBe("option?");
 
         });
         it("ClassGenerator returns a  classFile with special types from typesXsd", () => {
@@ -110,9 +111,8 @@ describe("ClassGenerator", () => {
             console.log("-------------------------------------\n");
             console.log(types,"\n\n", classFile.write());
             expect(classFile.classes.length).toBe(7);
-            let fld = classFile.getClass("Schema").getProperty("item");
+            let fld = classFile.getClass("Schema")?.getProperty("item");
             expect(fld.type.text).toBe("Item");
-
         });
 
         it("ClassGenerator geeft een  classFile terug voor een element", () => {
@@ -156,7 +156,7 @@ describe("ClassGenerator", () => {
             expect(c).toBeDefined();
 
         });
-        it("ClassGenerator returns a classFile for a simpleTypeXsd", () => {
+        fit("ClassGenerator returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(simpleTypeXsd,"",true);
             let types = generator.types.map((t) => `${t}`).join("\n");
