@@ -231,12 +231,13 @@ export class ClassGenerator {
             case XS_SIMPLE_TYPE:
                 this.log(indent + "XS_SIMPLE_TYPE");
                 //make a typedef for string enums
-                this.createEnum(nodeName, indent);
+
                 let typeName = (nodeName) ? nodeName : capfirst(state.fieldName);
 
                 const simpleType = `export type ${typeName} `;
                 let child = this.findFirstChild(node);//children[0];
                 let options = [];
+                let enums  = [];
                 let childName = this.nodeName(<HTMLElement>child);
                 let childBase = this.findAttrValue(<HTMLElement>child, 'base');
                 if (child && child.attributes) {
@@ -253,17 +254,27 @@ export class ClassGenerator {
                         ).forEach(
                             (c) => {
                                 const value = this.findAttrValue(<HTMLElement>c, 'value');
-                                options.push(`"${value}"`);
+
+                                if (value){
+                                    enums.push(value);
+                                } else {
+                                    options.push(`"${value}"`);
+                                }
                             }
                         );
                     }
                 }
-                if (options.length === 0) {
-                    options.push(this.getFieldType(childBase));
+
+                if (enums.length > 0) {
+                    this.createEnum(nodeName || capfirst(state.fieldName), enums, indent);
+                } else {
+                    if (options.length === 0) {
+                        options.push(this.getFieldType(childBase));
+                    }
+                    //convert to typedef statement
+                    this.types.push(simpleType + '= ' + options.join(' | ') + ';');
+                    this.log('  export types: ' + this.types);
                 }
-                //convert to typedef statement
-                this.types.push(simpleType + '= ' + options.join(' | ') + ';');
-                this.log('  export types: ' + this.types);
                 break;
 
 
@@ -361,14 +372,16 @@ export class ClassGenerator {
 
 
     /////////////////////////////////////////////////////////////////////////
-    private createEnum(name: string, indent: string): EnumDefinition {
+    private createEnum(name: string, names: string[], indent: string): EnumDefinition {
         let enumDef = null;//this.fileDef.getEnum(name);
         if (!enumDef) {
             this.log(indent, 'defining Enum: ', name);
             enumDef = this.fileDef.addEnum({name: name});
             enumDef.isExported = true;
-
-        }
+            names.forEach(
+                (n, i) => enumDef.addMember({name: n, value: i})
+            );
+         }
         return enumDef;
     }
 

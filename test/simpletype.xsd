@@ -8,4 +8,21 @@
         </xs:restriction>
     </xs:simpleType>
 </xs:element>
+ <xs:element name="option">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="A"/>
+                <xs:enumeration value="B"/>
+            </xs:restriction>
+        </xs:simpleType>
+ </xs:element>
+ <xs:element name="colors">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="RED"/>
+                <xs:enumeration value="GREEN"/>
+                <xs:enumeration value="BLUE"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
 </xs:schema>
