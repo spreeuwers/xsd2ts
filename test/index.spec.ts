@@ -7,7 +7,7 @@ import {generateTemplateClassesFromXSD} from "../src/index";
 
 describe("index", () => {
     describe("ClassGenerator simpleClass", () => {
-        let xsdFilePath = "test/element.xsd";
+        let xsdFilePath = "test/xsd/element.xsd";
         generateTemplateClassesFromXSD(xsdFilePath);
     })
 });

@@ -49,7 +49,7 @@
     </xs:complexType>
     <xs:complexType name="Base" abstract="true">
     </xs:complexType>
-
+    <xs:element name="test" type="Test"/>
 
 
 </xs:schema>

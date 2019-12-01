@@ -1,14 +1,13 @@
 {
   "name": "xsd2ts",
-  "version": "0.1.19",
+  "version": "0.2.0",
   "description": "generates template classes for xsd",
   "main": "index.js",
   "scripts": {
     "test:jasmine": "ts-node  -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "test:j-debug": "ts-node $NODE_DEBUG_OPTION  ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
     "compile": "tsc -p ./src",
-    "compile-gen": "tsc -p ./src/generated",
-
+    "compile-gen": "tsc -p ./src/generated --outDir ./compiled",
     "version": "npm version patch",
     "setup": "npm install",
     "publish": "npm publish"
@@ -27,7 +26,7 @@
     "ts-code-generator": "0.0.3",
     "ts-loader": "2.2.2",
     "ts-node": "^8.4.1",
-    "typescript": "3.7.0-beta",
+    "typescript": "^3.7.2",
     "xmldom-reborn": "^1.0.5"
   },
   "devDependencies": {

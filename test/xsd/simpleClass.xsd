@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="test" type="Test"/>
+    <xs:complexType name="Test">
+        <xs:sequence>
+            <xs:element name="intField" type="xs:integer"/>
+            <xs:element name="dateField" type="xs:dateTime"/>
+            <xs:element name="arrayField" maxOccurs="unbounded" type="xs:string"/>
+            <xs:element name="nestedFields" maxOccurs="1" minOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="nestedItem" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="nestedArray" maxOccurs="1" minOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="nestedItem" maxOccurs="unbounded" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

@@ -6,14 +6,15 @@ import {generateTemplateClassesFromXSD} from "../src/index";
 
 describe("generator", () => {
     describe("generator simpleClass", () => {
-        let simpleClassXsd = "";
-        let simpleInheritedClassXsd = "";
-        let formClassXsd = "";
+        //let simpleClassXsd = "";
+        //let simpleInheritedClassXsd = "";
+        //let formClassXsd = "";
+
 
         beforeEach(() => {
-            simpleClassXsd = fs.readFileSync("./test/simpleClass.xsd").toString();
-            simpleInheritedClassXsd = fs.readFileSync("./test/simpleInheritedClass.xsd").toString();
-            formClassXsd = fs.readFileSync("./test/form.xsd").toString();
+            //simpleClassXsd = fs.readFileSync("./test/simpleClass.xsd").toString();
+            //simpleInheritedClassXsd = fs.readFileSync("./test/simpleInheritedClass.xsd").toString();
+            //formClassXsd = fs.readFileSync("./test/form.xsd").toString();
         });
 
 
@@ -23,18 +24,30 @@ describe("generator", () => {
         });
 
         it("ClassGenerator heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/simpleClass.xsd"));
+            expect(generateTemplateClassesFromXSD("./test/xsd/simpleClass.xsd"));
         });
         it("ClassGenerator heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/importedClass.xsd", {dep: "xml-parser"} as Map<string, string>));
-        });
-
-        it("ClassGenerator heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/simpleInheritedClass.xsd", {dep: "xml-parser"} as Map<string, string>));
+            expect(generateTemplateClassesFromXSD("./test/xsd/importedClass.xsd",
+                {dep: "xml-parser"} as Map<string, string>));
         });
 
         it("ClassGenerator heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/form.xsd"));
+            expect(generateTemplateClassesFromXSD("./test/xsd/simpleInheritedClass.xsd",
+                {dep: "xml-parser"} as Map<string, string>));
+        });
+
+        it("ClassGenerator heeft een types property", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd"));
+        });
+        it("ClassGenerator heeft een types property", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/simpleType.xsd"));
+        });
+
+        it("ClassGenerator heeft een types property", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/group.xsd"));
+        });
+        it("ClassGenerator heeft een types property", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/types.xsd"));
         });
     });
 });

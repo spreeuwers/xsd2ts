@@ -16,7 +16,6 @@ let logClassDef = function (result: FileDefinition) {
 };
 
 describe("ClassGenerator", () => {
-    describe("ClassGenerator simpleClass", () => {
         let generator: ClassGenerator;
         let simpleClassXsd = ""
         let simpleInheritedClassXsd ="";
@@ -25,43 +24,45 @@ describe("ClassGenerator", () => {
         let typesXsd = "";
         let groupXsd = "";
         let elmXsd = "";
-        let simpleTypeXsd = '';
+        let simpleTypeXsd = "";
+        let singleElmXsd = "";
         beforeEach(() => {
             generator = new ClassGenerator(<Map<string,string>>{"dep":"xml-parser"});
-            simpleClassXsd = fs.readFileSync('./test/simpleClass.xsd').toString();
-            simpleInheritedClassXsd = fs.readFileSync('./test/simpleInheritedClass.xsd').toString();
-            importedClassXsd = fs.readFileSync('./test/importedClass.xsd').toString();
-            formXsd = fs.readFileSync("./test/xep-004.xsd").toString();
-            typesXsd = fs.readFileSync("./test/types.xsd").toString();
-            groupXsd = fs.readFileSync("./test/group.xsd").toString();
-            elmXsd = fs.readFileSync("./test/element.xsd").toString();
-            simpleTypeXsd = fs.readFileSync("./test/simpletype.xsd").toString();
+            simpleClassXsd = fs.readFileSync('./test/xsd/simpleClass.xsd').toString();
+            simpleInheritedClassXsd = fs.readFileSync('./test/xsd/simpleInheritedClass.xsd').toString();
+            importedClassXsd = fs.readFileSync('./test/xsd/importedClass.xsd').toString();
+            formXsd = fs.readFileSync("./test/xsd/xep-004.xsd").toString();
+            typesXsd = fs.readFileSync("./test/xsd/types.xsd").toString();
+            groupXsd = fs.readFileSync("./test/xsd/group.xsd").toString();
+            elmXsd = fs.readFileSync("./test/xsd/element.xsd").toString();
+            singleElmXsd = fs.readFileSync("./test/xsd/singleElm.xsd").toString();
+            simpleTypeXsd = fs.readFileSync("./test/xsd/simpletype.xsd").toString();
         });
 
-        it("ClassGenerator heeft een werkende constructor", () => {
+        it("heeft een werkende constructor", () => {
             expect(generator).toBeDefined();
         });
 
-        it("ClassGenerator heeft een generateClassFileDefition methode", () => {
+        it("heeft een generateClassFileDefition methode", () => {
             expect(generator.generateClassFileDefinition).toBeDefined();
         });
 
-        it("ClassGenerator heeft een types property", () => {
+        it("heeft een types property", () => {
             expect(generator.types).toBeDefined();
         });
 
-        it("ClassGenerator heeft een types property", () => {
+        it("heeft een types property", () => {
             expect(generator.generateClassFileDefinition("").classes.length).toBe(0);
         });
 
-        it("ClassGenerator returns a simple classFile ", () => {
+        it("returns a simple classFile ", () => {
             const result = generator.generateClassFileDefinition(simpleClassXsd);
             logClassDef(result);
             expect(result.classes.length).toBe(2);
 
         });
 
-        it("ClassGenerator geeft een inherited classFile terug", () => {
+        it("geeft een inherited classFile terug", () => {
             const result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
             logClassDef(result);
             expect(result.classes.length).toBe(5);
@@ -77,25 +78,20 @@ describe("ClassGenerator", () => {
             expect(test.getProperty("nestedFields").type.isArrayType()).toBe(false);
             expect(test.getProperty("nestedFields").type.text).toBe("NestedFields");
             expect(test.getProperty("strArrayField").type.text).toBe("string[]");
-
-            //test = result.getClass("MeldingIdentificatie");
-            //console.log(test.write());
-            //expect(test).toBeDefined();
-            //expect(test.getProperty("externeBrons").type.text).toBe("string[]");
         });
 
-        it("ClassGenerator geeft een  classFile terug met imports", () => {
+        it("geeft een  classFile terug met imports", () => {
             let importingClass =generator.generateClassFileDefinition(importedClassXsd,'',true);
             expect(importingClass.classes.length).toBe(1);
             let fld = importingClass.getClass("Test").getProperty("imported");
             expect(fld).toBeDefined();
         });
 
-        it("ClassGenerator geeft een  classFile terug voor form met refs", () => {
+        it("geeft een  classFile terug voor form met refs", () => {
             let classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(4);
+            expect(classFile.classes.length).toBe(3);
             let fld = classFile.getClass("X").getProperty("field?");
             expect(fld.type.text).toBe("Field[]");
             expect(fld.name).toBe("field?");
@@ -105,67 +101,59 @@ describe("ClassGenerator", () => {
             expect(fld.name).toBe("option?");
 
         });
-        it("ClassGenerator returns a  classFile with special types from typesXsd", () => {
+        it("returns a  classFile with special types from typesXsd", () => {
             let classFile = generator.generateClassFileDefinition(typesXsd, "", true);
             let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(types,"\n\n", classFile.write());
-            expect(classFile.classes.length).toBe(7);
-            let fld = classFile.getClass("Schema")?.getProperty("item");
-            expect(fld.type.text).toBe("Item");
+            expect(classFile.classes.length).toBe(6);
+            let fld = classFile.getClass("Module")?.getProperty("param");
+            expect(fld.type.text).toBe("Param");
         });
 
-        it("ClassGenerator geeft een  classFile terug voor een element", () => {
-            const elmXsd = `
-              <?xml version='1.0' encoding='UTF-8'?>
-                 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
-                   <xs:element name="naam" type="string"/>
-                 </xs:schema>
-                 
-             `
-            let classFile = generator.generateClassFileDefinition(elmXsd,"",true);
+        it("geeft een  classFile terug voor een enkel leeg element", () => {
+
+            let classFile = generator.generateClassFileDefinition(singleElmXsd, "", true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(1);
+            expect(classFile.classes.length).toBe(0);
             let c  = classFile.getClass("Naam");
             expect(c).toBeDefined();
 
         });
 
-        it("ClassGenerator returns a classFile for a groupXsd", () => {
+        it("returns a classFile for a groupXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(groupXsd, "", true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(3);
+            expect(classFile.classes.length).toBe(2);
             let c  = classFile.getClass("Ordertype");
             console.log('class:  ' ,  c.write());
             expect(c).toBeDefined();
             let p  = c.getProperty('customer');
-            //console.log('prop:  ' ,  p);
             expect(p.type).toBeDefined();
 
         });
-        it("ClassGenerator returns a classFile for a single element with nested type", () => {
+        it("returns a classFile for a single element with nested type", () => {
 
             let classFile = generator.generateClassFileDefinition(elmXsd, "", true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(2);
-            let c  = classFile.getClass("Naam");
-            expect(c).toBeDefined();
-
-        });
-        it("ClassGenerator returns a classFile for a simpleTypeXsd", () => {
-
-            let classFile = generator.generateClassFileDefinition(simpleTypeXsd,"",true);
-            let types = generator.types.map((t) => `${t}`).join("\n");
-            console.log("-------------------------------------\n");
-            console.log(types,"\n\n", classFile.write());
             expect(classFile.classes.length).toBe(1);
             let c  = classFile.getClass("Naam");
             expect(c).toBeDefined();
 
         });
-    });
+        it("returns a classFile for a simpleTypeXsd", () => {
+
+            let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
+            let types = generator.types.map((t) => `${t}`).join("\n");
+            console.log("-------------------------------------\n");
+            console.log(types,"\n\n", classFile.write());
+            expect(classFile.classes.length).toBe(0);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
 });
