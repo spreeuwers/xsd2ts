@@ -5,49 +5,42 @@ import * as fs from "fs";
 import {generateTemplateClassesFromXSD} from "../src/index";
 
 describe("generator", () => {
-    describe("generator simpleClass", () => {
-        //let simpleClassXsd = "";
-        //let simpleInheritedClassXsd = "";
-        //let formClassXsd = "";
-
-
-        beforeEach(() => {
-            //simpleClassXsd = fs.readFileSync("./test/simpleClass.xsd").toString();
-            //simpleInheritedClassXsd = fs.readFileSync("./test/simpleInheritedClass.xsd").toString();
-            //formClassXsd = fs.readFileSync("./test/form.xsd").toString();
-        });
-
 
 
         it(" has function generateTemplateClassesFromXSD", () => {
             expect(generateTemplateClassesFromXSD).toBeDefined();
         });
 
-        it("ClassGenerator heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/simpleClass.xsd"));
+        it("creates simpleClass.ts", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/simpleClass.xsd",{Xs: "./ns"}));
         });
-        it("ClassGenerator heeft een types property", () => {
+        it("creates importedClass.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/importedClass.xsd",
-                {dep: "xml-parser"} as Map<string, string>));
+                {Dep: "./ns"} as Map<string, string>));
         });
 
-        it("ClassGenerator heeft een types property", () => {
+        it("creates simpleInheritedClass.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/simpleInheritedClass.xsd",
-                {dep: "xml-parser"} as Map<string, string>));
+                {Xs: "./ns"} as Map<string, string>));
         });
 
-        it("ClassGenerator heeft een types property", () => {
+        it("creates xep-004.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd"));
         });
-        it("ClassGenerator heeft een types property", () => {
+        it("creates heeft een types property", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/simpleType.xsd"));
         });
 
-        it("ClassGenerator heeft een types property", () => {
+        it("creates group.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/group.xsd"));
         });
-        it("ClassGenerator heeft een types property", () => {
+
+        it("creates types.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/types.xsd"));
         });
-    });
+
+        it("creates element.ts", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/element.xsd",{ Xs : "./ns"} ));
+        });
+
 });

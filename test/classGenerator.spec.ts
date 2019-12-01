@@ -91,7 +91,7 @@ describe("ClassGenerator", () => {
             let classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(3);
+            expect(classFile.classes.length).toBe(5);
             let fld = classFile.getClass("X").getProperty("field?");
             expect(fld.type.text).toBe("Field[]");
             expect(fld.name).toBe("field?");
@@ -105,7 +105,7 @@ describe("ClassGenerator", () => {
             let classFile = generator.generateClassFileDefinition(typesXsd, "", true);
             let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
-            console.log(types,"\n\n", classFile.write());
+            console.log(types, "\n\n", classFile.write());
             expect(classFile.classes.length).toBe(6);
             let fld = classFile.getClass("Module")?.getProperty("param");
             expect(fld.type.text).toBe("Param");

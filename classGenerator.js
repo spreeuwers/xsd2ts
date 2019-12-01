@@ -457,4 +457,5 @@ var ClassGenerator = /** @class */ (function () {
     };
     return ClassGenerator;
 }());
+
 exports.ClassGenerator = ClassGenerator;
