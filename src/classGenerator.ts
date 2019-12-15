@@ -289,12 +289,13 @@ export class ClassGenerator {
                 //}
                 break;
             case XS_ATTRGROUP:
-            // treat as group
+                 // treat as group
             case XS_GROUP:
                 // console.log(indent, nodeName);
                 if (nodeName) {
                     state.className = GROUP_PREFIX + nodeName;
                     this.createClass(state.className, indent).isAbstract= true;
+                    this.specifiedClasses[state.className] = node.tagName
                     break;
                 }
                 //treat as element
@@ -330,11 +331,11 @@ export class ClassGenerator {
                 } else {
 
                     if (ref) {
-                        state.fieldType = (XS_GROUP === node.tagName) ? GROUP_PREFIX + ref : capfirst(ref);
+                        state.fieldType = [XS_GROUP, XS_ATTRGROUP].some(n => n === node.tagName) ? GROUP_PREFIX + ref : capfirst(ref);
                         state.fieldName = nodeName || ref;
                    }
-                    this.log(indent, 'createField:' , state);
-                    this.createField(state, arrayPostfix, requiredPostfix, indent);
+                   this.log(indent, 'createField:' , state);
+                   this.createField(state, arrayPostfix, requiredPostfix, indent);
 
                 }
 
@@ -479,6 +480,7 @@ export class ClassGenerator {
                 return;
             }
         }
+
 
         classDef.addProperty(
             {
