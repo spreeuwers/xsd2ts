@@ -1,7 +1,6 @@
 /**
  * Created by eddy spreeuwers 14-02-18.
  */import {FileDefinition} from "ts-code-generator";
-;
 import {ClassGenerator} from "../src/classGenerator";
 import * as fs from "fs";
 
