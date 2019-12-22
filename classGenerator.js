@@ -55,6 +55,8 @@ var ClassGenerator = /** @class */ (function () {
         this.pluralPostFix = 's';
         this.importMap = [];
         this.types = [];
+        this.specifiedClasses = {};
+        this.referencedClasses = {};
         this.dependencies = dependencies || {};
         log(JSON.stringify(this.dependencies));
     }
@@ -90,7 +92,7 @@ var ClassGenerator = /** @class */ (function () {
         var _this = this;
         if (pluralPostFix === void 0) { pluralPostFix = 's'; }
         var _a;
-        this.fileDef = ts_code_generator_1.createFile({ classes: [] });
+        this.fileDef = ts_code_generator_1.createFile();
         var xmlDom = new xmldom_reborn_1.DOMParser().parseFromString(xsd, 'application/xml');
         this.verbose = verbose;
         this.pluralPostFix = pluralPostFix;
@@ -98,17 +100,23 @@ var ClassGenerator = /** @class */ (function () {
         this.log('');
         this.log(xsd);
         this.log('');
-        // this.log(xmlDom);
-        // this.log(JSON.stringify(xmlDoc, null, ' '));
         this.log('-------------------------------------------------------------------------------------');
         if ((_a = xmlDom) === null || _a === void 0 ? void 0 : _a.documentElement) {
-            // console.log('start'+ xmlDom?.documentElement.firstChild.nextSibling);
-            // console.log('------------------------------------------------------');
             this.traverse(xmlDom.documentElement);
         }
-        var sortedClasses = this.fileDef.classes.sort(function (a, b) { return a.name.localeCompare(b.name); });
+        this.log('\nspecified: ', Object.keys(this.specifiedClasses).join(';'));
+        this.log('referenced:', Object.keys(this.referencedClasses).join(';'));
+        this.log('\n-----generated------');
+        var sortedClasses = this.fileDef.classes;
+        this.log(sortedClasses.map(function (c) { return '' + c.name; }).join(';').replace('[]', ''));
+        sortedClasses = sortedClasses
+            .filter(function (c) { return _this.specifiedClasses[c.name] || _this.referencedClasses[c.name]; })
+            .sort(function (a, b) { return a.name.localeCompare(b.name); });
+        this.log('\n----filtered----');
+        this.log(sortedClasses.map(function (c) { return c.name; }).join(';'));
+        this.log('--------');
         // remove Schema class when not needed, when there are no toplevel elements
-        sortedClasses = sortedClasses.filter(function (c) { return (c.name == "Schema") ? c.properties.length < 0 : true; });
+        sortedClasses = sortedClasses.filter(function (c) { return (c.name === "Schema") ? c.properties.length < 0 : true; });
         console.log("-------------------------------generated classes-------------------------------------");
         console.log("Nr of classes generated: ", sortedClasses.length);
         sortedClasses.forEach(function (c) { return _this.log(c.name); });
@@ -123,7 +131,7 @@ var ClassGenerator = /** @class */ (function () {
             optionalParams[_i - 1] = arguments[_i];
         }
         if (this.verbose) {
-            console.log(message, optionalParams);
+            console.log.apply(console, [message].concat(optionalParams));
         }
     };
     /**
@@ -156,8 +164,9 @@ var ClassGenerator = /** @class */ (function () {
         var abstract = this.findAttrValue(node, 'abstract');
         var final = this.findAttrValue(node, 'final');
         var nillable = this.findAttrValue(node, 'nillable');
-        // const firstChild = (node?.children)?node.children[0]:null;
-        // const childName = this.nodeName(<HTMLElement>firstChild);
+        var ref = this.findAttrValue(node, 'ref');
+        if (ref)
+            this.referencedClasses[capfirst(ref)] = node.tagName;
         this.log(indent + ("<" + ((_b = node) === null || _b === void 0 ? void 0 : _b.tagName) + " name=\"" + nodeName + "\" type=\"" + nodeType + "\">"));
         state.path = (state.path || '') + ((_c = node) === null || _c === void 0 ? void 0 : _c.tagName.replace('xs:', '/'));
         this.log(indent, ' path', state.path);
@@ -167,10 +176,6 @@ var ClassGenerator = /** @class */ (function () {
                 this.createClass(state.className, indent);
                 break;
             case XS_EXTENSION:
-                // console.log(indent+"XS_EXTENSION");
-                // this.log('node  base: ' + superClassName);
-                // superClassName = nodeBase;
-                // classDef.addExtends(nodeBase);
                 superClassName = this.findAttrValue(node, 'base');
                 (_d = fileDef.getClass(state.className)) === null || _d === void 0 ? void 0 : _d.addExtends(superClassName);
                 break;
@@ -205,7 +210,7 @@ var ClassGenerator = /** @class */ (function () {
                         this.findChildren(child).filter(function (c) { return (c.tagName === xsdTypes.XS_ENUM); }).forEach(function (c) {
                             var value = _this.findAttrValue(c, 'value');
                             if (value) {
-                                enums_1.push(value.toUpperCase().replace(/\W/g, "_"));
+                                enums_1.push(value.replace(/\W/g, "_"));
                             }
                             else {
                                 options_1.push("\"" + value + "\"");
@@ -237,6 +242,9 @@ var ClassGenerator = /** @class */ (function () {
                     state.className = capfirst(state.fieldName);
                 }
                 this.createClass(state.className, indent).isAbstract = /true/i.test(abstract);
+                //if  ('/schema/element/complexType' === state.path) {
+                this.specifiedClasses[state.className] = state.path;
+                //}
                 break;
             case XS_ATTRGROUP:
             // treat as group
@@ -245,6 +253,7 @@ var ClassGenerator = /** @class */ (function () {
                 if (nodeName) {
                     state.className = GROUP_PREFIX + nodeName;
                     this.createClass(state.className, indent).isAbstract = true;
+                    this.specifiedClasses[state.className] = node.tagName;
                     break;
                 }
             //treat as element
@@ -252,24 +261,28 @@ var ClassGenerator = /** @class */ (function () {
             // treat as element
             case XS_ELEMENT:
                 // console.log(indent+"XS_ELEMENT");
+                //could be referenced somewhere
+                var nrOfSiblings = this.findChildren(parent).filter(function (c) { return c.tagName === XS_ELEMENT; }).length;
+                if (nodeName && nodeType) {
+                    this.createClass(capfirst(nodeName), indent);
+                }
                 state.fieldName = nodeName;
                 state.fieldType = nodeType || capfirst(state.fieldName || "");
+                if (node.tagName === XS_ATTRIBUTE)
+                    state.fieldType = nodeType || "xs:string";
                 var requiredPostfix = ((minOccurs === "0") ? "?" : "");
                 var arrayPostfix = (maxOccurs === "unbounded") ? "[]" : "";
-                var nrOfElements = this.findChildren(parent).filter(function (c) { return c.tagName === XS_ELEMENT; }).length;
-                this.log(indent, 'elm siblings:', parent.tagName, nrOfElements);
-                var isArrayClass = nrOfElements === 1 && arrayPostfix;
+                this.log(indent, 'elm siblings:', parent.tagName, nrOfSiblings);
+                var isArrayClass = nrOfSiblings === 1 && arrayPostfix;
                 // nested field with nested class
                 if (isArrayClass) {
-                    this.log(indent, 'isArrayClass:', isArrayClass);
+                    this.log(indent, 'isArrayClass:', isArrayClass, state.className);
                     var fieldName = state.parentName + ((minOccurs === "0") ? "?" : "");
                     this.adjustField(state.parentClass, fieldName, nodeType, arrayPostfix, indent);
-                    this.fileDef.classes = this.fileDef.classes.filter(function (c) { return c.name !== state.className; });
                 }
                 else {
-                    var ref = this.findAttrValue(node, 'ref');
                     if (ref) {
-                        state.fieldType = (XS_GROUP === node.tagName) ? GROUP_PREFIX + ref : capfirst(ref);
+                        state.fieldType = [XS_GROUP, XS_ATTRGROUP].some(function (n) { return n === node.tagName; }) ? GROUP_PREFIX + ref : capfirst(ref);
                         state.fieldName = nodeName || ref;
                     }
                     this.log(indent, 'createField:', state);
@@ -277,6 +290,7 @@ var ClassGenerator = /** @class */ (function () {
                 }
         }
         ////////////////////////////////////////////////////////////////
+        //this.log("classes: " , this.fileDef.classes.map(c => c.name).join(';'));
         var elms = this.findChildren(node);
         elms.map(function (child) { return _this.traverse(child, state, node, indent + " "); });
     };
@@ -322,6 +336,7 @@ var ClassGenerator = /** @class */ (function () {
             this.log(indent, 'defining class: ', name);
             classDef = this.fileDef.addClass({ name: name });
             classDef.isExported = true;
+            this.log(indent, 'defined class: ', classDef.name);
         }
         return classDef;
     };
@@ -457,5 +472,4 @@ var ClassGenerator = /** @class */ (function () {
     };
     return ClassGenerator;
 }());
-
 exports.ClassGenerator = ClassGenerator;

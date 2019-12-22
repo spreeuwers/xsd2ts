@@ -12,6 +12,8 @@ export declare class ClassGenerator {
     private dependencies;
     private importMap;
     types: string[];
+    private specifiedClasses;
+    private referencedClasses;
     constructor(dependencies?: Map<string, string>, classPrefix?: string);
     private nsResolver;
     private findAttrValue;

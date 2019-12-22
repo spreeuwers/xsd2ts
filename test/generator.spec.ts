@@ -40,7 +40,7 @@ describe("generator", () => {
         it("creates types.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/types.xsd"));
             printFile("./src/generated/types.ts");
-            compile(["./src/generated/types.ts"]);
+            //compile(["./src/generated/types.ts"]);
         });
 
         it("creates element.ts", () => {

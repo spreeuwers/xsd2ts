@@ -62,7 +62,7 @@ describe("ClassGenerator", () => {
         });
 
         it("geeft een inherited classFile terug", () => {
-            const result = generator.generateClassFileDefinition(simpleInheritedClassXsd);
+            const result = generator.generateClassFileDefinition(simpleInheritedClassXsd, '', true);
             logClassDef(result);
             expect(result.classes.length).toBe(5);
             let test = result.getClass("Test");
@@ -80,17 +80,17 @@ describe("ClassGenerator", () => {
         });
 
         it("geeft een  classFile terug met imports", () => {
-            let importingClass =generator.generateClassFileDefinition(importedClassXsd,'',true);
+            let importingClass =generator.generateClassFileDefinition(importedClassXsd, '' , true);
             expect(importingClass.classes.length).toBe(1);
             let fld = importingClass.getClass("Test").getProperty("imported");
             expect(fld).toBeDefined();
         });
 
         it("geeft een  classFile terug voor form met refs", () => {
-            let classFile = generator.generateClassFileDefinition(formXsd, "", true);
+            const classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(5);
+            expect(classFile.classes.length).toBe(6);
             let fld = classFile.getClass("X").getProperty("field?");
             expect(fld.type.text).toBe("Field[]");
             expect(fld.name).toBe("field?");
@@ -105,7 +105,7 @@ describe("ClassGenerator", () => {
             let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(types, "\n\n", classFile.write());
-            expect(classFile.classes.length).toBe(6);
+            expect(classFile.classes.length).toBe(7);
             let fld = classFile.getClass("Module")?.getProperty("param");
             expect(fld.type.text).toBe("Param");
         });

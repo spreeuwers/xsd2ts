@@ -129,7 +129,7 @@ export class ClassGenerator {
 
         }
 
-        this.log('\ntoplevel', Object.keys(this.specifiedClasses).join(';'));
+        this.log('\nspecified: ', Object.keys(this.specifiedClasses).join(';'));
         this.log('referenced:',Object.keys(this.referencedClasses).join(';'));
 
         this.log('\n-----generated------');
@@ -247,7 +247,7 @@ export class ClassGenerator {
                                 const value = this.findAttrValue( c as HTMLElement, 'value');
 
                                 if (value) {
-                                    enums.push(value.toUpperCase().replace(/\W/g, "_"));
+                                    enums.push(value.replace(/\W/g, "_"));
                                 } else {
                                     options.push(`"${value}"`);
                                 }
@@ -558,6 +558,8 @@ export class ClassGenerator {
         }
 
     }
+
+
 
 }
 
