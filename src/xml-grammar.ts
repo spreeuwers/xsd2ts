@@ -32,7 +32,7 @@ abstract class Parsable {
 
 export class Terminal extends Parsable {
     private localName: string;
-    private node: Node = null;
+    //private node: Node = null;
 
     constructor(name: string, tagName: string) {
         super(name);
@@ -42,10 +42,9 @@ export class Terminal extends Parsable {
 
     public parse(node: Node, indent?: string): ASTNode {
         console.log(indent + 'Terminal: ',this.localName);
-        let child = findFirstChild(node);
-        console.log(indent + 'child: ', child?.nodeName);
-        if (xml(child)?.localName === this.localName){
-            this.node = child;
+        //let child = findFirstChild(node);
+        console.log(indent + 'child: ', node?.nodeName);
+        if (xml(node)?.localName === this.localName){
             return new ASTNode(this.localName);
         };
     }
@@ -65,8 +64,9 @@ class NonTerminal extends Parsable {
     }
 
     public parse(node: Node, indent?: string): ASTNode {
-        console.log(indent + 'ListOf:', node.nodeName);
-         return null;
+        const result = new ASTNode(this.name);
+        console.log(indent + this.name, node?.nodeName);
+        return result;
     };
 
 }
@@ -74,26 +74,28 @@ class NonTerminal extends Parsable {
 export class ListOf extends NonTerminal {
 
     public parse(node: Node, indent?: string){
-        console.log(indent + 'Parent:',this.name);
+
+        const result = this.parent.parse(node, indent);
+
+        console.log(indent + 'Parent:',this.parent.name);
         console.log(indent + 'ListOf:',this.parsable.name, node.nodeName);
 
-        const result = new ASTNode(this.name);
+
 
         let child = findFirstChild(node);
-        console.log(indent + 'child: ', child?.nodeName);
+        console.log(indent + ' first: ', child?.nodeName);
         let listItem = this.parsable.parse(child, indent + ' ');
-        if (!listItem ) {
-            return null;
-        }
 
-        console.log(indent + 'next elm:', child);
+        result.list = [];
+        console.log(indent + ' next elm:', child.nodeName);
 
-        while (listItem) {
+        while (child) {
            result.list.push(listItem);
-           listItem = this.parsable.parse(child.nextSibling, indent + ' ');
+           listItem = this.parsable.parse(child, indent + ' ');
+           child = child.nextSibling;
 
         }
-        console.log(indent + 'result:', result,'\n');
+        console.log(indent + ' result:', result,'\n');
         return result;
     }
 }
@@ -101,16 +103,20 @@ export class ListOf extends NonTerminal {
 export class Child extends NonTerminal {
 
     public parse(node: Node, indent?: string){
-        //console.log(indent + 'NonTerminal:',this.name);
+        let result = this.parent.parse(node, indent);
+
+        console.log(indent + 'parent:',this.parent?.name);
         console.log(indent + 'Child:',this.parsable.name, node.nodeName);
-        const result = new ASTNode(this.name);
+
+
+
         const fChild = findFirstChild(node);
 
         const fc = this.parsable.parse(fChild, indent + ' ');
         if (!fc ) {
-            return null;
+            result = null;
         }
-        result.child = fc;
+        //result.child = fc;
         return result;
     }
 }
@@ -118,11 +124,14 @@ export class Child extends NonTerminal {
 export class From extends NonTerminal {
 
     public parse(node: Node, indent?: string){
+        let result = this.parent.parse(node, indent);
+
         console.log(indent + 'parent:',this.parent?.name);
-        console.log(indent + 'From:',this.parsable.name, node.nodeName);
-        let result = null;
-        if (this.parsable.parse(node, indent + ' ')) {
-            result = new ASTNode(this.parent.name);
+        console.log(indent + 'From:',this.parsable.name, node?.nodeName);
+
+
+        if (node && this.parsable.parse(node, indent + ' ')) {
+             result = this.parent.parse(node, indent);
         };
 
         console.log(indent + 'result:', result);
@@ -155,7 +164,7 @@ export class Grammar {
         const complexType = new Terminal("complexType", "complexType");
         const sequence = new Terminal("sequence", "sequence");
         const FIELD  = new NonTerminal("FIELD").from(element);
-        const CLASS  = new NonTerminal("CLASS").holds(element.holds(complexType.holds(sequence))).listOf(FIELD);
+        const CLASS  = new NonTerminal("CLASS");//.holds(element);//.holds(complexType).holds(sequence);//.listOf(FIELD);
         const START = new NonTerminal("SCHEMA").listOf(CLASS);
         return START.parse(node, '');
 
