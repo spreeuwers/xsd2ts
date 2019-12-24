@@ -78,13 +78,15 @@ export class Eater extends Parsable {
 
     public parse(node: Node, indent?: string): ASTNode {
         let result = null;
-        console.log(indent, this.name, 'node: ', node?.nodeName);
-        const match= this.terminal.parse(node, indent + ' ');
+
+        const match = this.terminal.parse(node, indent + ' ');
+        console.log(indent, this.name, 'node: ', node?.nodeName, 'match:', match);
 
         if (match && this.next) {
-           return this.next.parse(findFirstChild(node), indent + ' ');
+            console.log(indent, 'match on:' , this.name);
+            return this.next.parse(findFirstChild(node), indent + ' ');
         }
-        return null;
+        return match;
     }
 
 
@@ -105,8 +107,9 @@ class NonTerminal extends Parsable {
         let result = new ASTNode(this.name);
         console.log(indent + this.name, node?.nodeName);
         let child = this.next?.parse(node, indent + ' ') ;
+
         if (child){
-            child.child = child;
+            result.child = child;
         } else {
             result = null;
         }
@@ -126,16 +129,17 @@ export class ListOf extends NonTerminal {
         result.list= [];
 
         while (sibbling) {
-            console.log(indent + ' item:', sibbling?.nodeName);
+            console.log(indent + 'list sibbling:', sibbling?.nodeName);
 
             const listItem = this.parsable.parse(sibbling, indent + '  ');
             if (listItem) {
                 result.list.push(listItem);
+                console.log(indent + 'added item:', listItem);
             }
             sibbling = findNextChild(sibbling);
 
         }
-        console.log(indent + ' result:', result);
+        console.log(indent + 'result:', JSON.stringify(result || '') );
         return result;
     }
 }
@@ -195,7 +199,7 @@ export class Grammar {
         const schema = new Terminal("schema");
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
-        const FIELD  = new NonTerminal("FIELD").eat(complexType);
+        const FIELD  = new NonTerminal("FIELD").eat(element);
         const CLASS  = new NonTerminal("CLASS").eat(element).eat(complexType).eat(sequence).listOf(FIELD);
         const START = new NonTerminal("SCHEMA").eat(schema).listOf(CLASS);
         const result = START.parse(node, '');

@@ -41,7 +41,7 @@ fdescribe("grammar", () => {
         let xmlNode = xmlDom.documentElement;
 
         let ast = grammar.parse(xmlNode);
-        console.log('ast:',JSON.stringify(ast||''));
+        console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
         expect(ast).toBeDefined();
     });
 
