@@ -11,7 +11,7 @@ abstract class Parsable {
         this.name = name;
     }
 
-    public abstract parse(node: Node, indent?: string): [ASTNode, Node];
+    public abstract parse(node: Node, indent?: string): ASTNode;
 
     //Add child at and of child chain recursively
     public addNext(p: Parsable) {
@@ -40,25 +40,51 @@ abstract class Parsable {
         return this;
     }
 
+    public eat(t: Terminal) {
+        const next = new Eater('EAT' , t);
+        this.addNext(next);
+        return this;
+    }
+
 
 }
 
 export class Terminal extends Parsable {
-    private localName: string;
 
-    constructor(name: string, tagName: string) {
+    constructor(tagName: string) {
+        super(tagName);
+    }
+
+    public parse(node: Node, indent?: string): ASTNode{
+        let result = null;
+        console.log(indent + 'Terminal: ', this.name, 'node: ', node?.nodeName);
+        if (xml(node)?.localName === this.name){
+            result =  new ASTNode(this.name);
+        }
+        return result;
+    }
+
+
+}
+
+export class Eater extends Parsable {
+    private terminal: Terminal;
+
+    constructor(name: string, t: Terminal) {
         super(name);
-        this.localName = tagName;
+        this.terminal = t;
 
     }
 
-    public parse(node: Node, indent?: string): [ASTNode, Node] {
+    public parse(node: Node, indent?: string): ASTNode {
         let result = null;
-        console.log(indent + 'Terminal: ', this.localName, 'node: ', node?.nodeName);
-        if (xml(node)?.localName === this.localName){
-            result =  new ASTNode(this.localName);
+        console.log(indent, this.name, 'node: ', node?.nodeName);
+        const match= this.terminal.parse(node, indent + ' ');
+
+        if (match && this.next) {
+           return this.next.parse(findFirstChild(node), indent + ' ');
         }
-        return [result, node];
+        return null;
     }
 
 
@@ -75,75 +101,75 @@ class NonTerminal extends Parsable {
         this.parsable = p;
     }
 
-    public parse(node: Node, indent?: string): [ASTNode, Node] {
+    public parse(node: Node, indent?: string): ASTNode {
         const result = new ASTNode(this.name);
         console.log(indent + this.name, node?.nodeName);
-        let [child, token] = this.next?.parse(node,indent + ' ') || [];
+        let child = this.next?.parse(node, indent + ' ') ;
         if (child){
-            result.child = child;
+            child.child = child;
         }
-        return [result, node];
+        return result;
     };
 
 }
 
 export class ListOf extends NonTerminal {
 
-    public parse(node: Node, indent?: string) : [ASTNode, Node] {
+    public parse(node: Node, indent?: string): ASTNode{
 
-        console.log(indent + 'LISTOF:',this.parsable.name, node.nodeName);
-
-        let child = findFirstChild(node);
-        console.log(indent + ' first: ', child?.nodeName);
-        let [listItem, tkn] = this.parsable.parse(child, indent + '  ') || [];
+        console.log(indent + 'LISTOF:', this.parsable.name, node.nodeName);
+        let sibbling = node;
 
         const result = new ASTNode("items");
         result.list= [];
 
-        while (child && listItem) {
-            console.log(indent + ' item:', child?.nodeName);
-            result.list.push(listItem);
-            [listItem, tkn] = this.parsable.parse(child, indent + '  ');
-            child = findNextChild(node);
+        while (sibbling) {
+            console.log(indent + ' item:', sibbling?.nodeName);
 
+            const listItem = this.parsable.parse(sibbling, indent + '  ');
+            if (listItem) {
+                result.list.push(listItem);
+            }
+            sibbling = findNextChild(sibbling);
 
         }
         console.log(indent + ' result:', result);
-        return [result, node];
+        return result;
     }
 }
 
 export class Child extends NonTerminal {
 
-    public parse(node: Node, indent?: string) : [ASTNode, Node] {
+    public parse(node: Node, indent?: string): ASTNode {
 
         const fChild = findFirstChild(node);
         console.log(indent + 'CHILD:',this.parsable.name, fChild?.nodeName ,'parent:', this.parent?.name);
         let result = new ASTNode("CHILD");
-        const [fc, token] = this.parsable.parse(fChild, indent + ' ');
+        const fc = this.parsable.parse(fChild, indent + ' ');
         if (!fc ) {
            result = null;
         }
         //result.child = fc;
-        return [result, token];
+        return result;
     }
 }
 
 export class From extends NonTerminal {
 
-    public parse(node: Node, indent?: string):[ASTNode, Node]{
+    public parse(node: Node, indent?: string):ASTNode{
 
         console.log(indent + 'FROM:', this.parsable.name, node?.nodeName);
 
         let result = null;
-        let token = null;
         if (node)  {
-            [result, token] = this.parsable.parse(node, indent = '   ');
+            result= this.parsable.parse(node, indent = '   ');
         }
         console.log(indent + 'FROM result:', result);
-        return [result, token];
+        return result;
     }
 }
+
+
 
 
 
@@ -163,14 +189,14 @@ export class Grammar {
 
     public parse(node: Node): ASTNode {
 
-        const element = new Terminal("element", "element");
-        const schema = new Terminal("schema", "schema");
-        const complexType = new Terminal("complexType", "complexType");
-        const sequence = new Terminal("sequence", "sequence");
-        const FIELD  = new NonTerminal("FIELD").from(element);
-        const CLASS  = new NonTerminal("CLASS").from(element).holds(complexType).holds(sequence);//.listOf(FIELD);
-        const START = new NonTerminal("SCHEMA").listOf(CLASS);
-        const [result, tkn] = START.parse(node, '');
+        const element = new Terminal("element");
+        const schema = new Terminal("schema");
+        const complexType = new Terminal("complexType");
+        const sequence = new Terminal("sequence");
+        const FIELD  = new NonTerminal("FIELD").eat(element);
+        const CLASS  = new NonTerminal("CLASS").eat(element).eat(complexType).eat(sequence).listOf(FIELD);
+        const START = new NonTerminal("SCHEMA").eat(schema).listOf(CLASS);
+        const result = START.parse(node, '');
         return result;
 
     }
@@ -188,11 +214,12 @@ function findFirstChild(node: Node): Node {
 }
 
 function findNextChild(node: Node): Node {
-    node = node?.nextSibling;
-    if (node && node.nodeType == node.TEXT_NODE) {
-        node = findNextChild(node);
+    let result = node?.nextSibling as Node;
+    if (result && result.nodeType == node.TEXT_NODE) {
+        result = findNextChild(result);
     }
-    return node;
+    //console.log('found', result?.nodeName);
+    return result;
 }
 
 
