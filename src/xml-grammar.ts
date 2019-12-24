@@ -102,11 +102,13 @@ class NonTerminal extends Parsable {
     }
 
     public parse(node: Node, indent?: string): ASTNode {
-        const result = new ASTNode(this.name);
+        let result = new ASTNode(this.name);
         console.log(indent + this.name, node?.nodeName);
         let child = this.next?.parse(node, indent + ' ') ;
         if (child){
             child.child = child;
+        } else {
+            result = null;
         }
         return result;
     };
@@ -193,7 +195,7 @@ export class Grammar {
         const schema = new Terminal("schema");
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
-        const FIELD  = new NonTerminal("FIELD").eat(element);
+        const FIELD  = new NonTerminal("FIELD").eat(complexType);
         const CLASS  = new NonTerminal("CLASS").eat(element).eat(complexType).eat(sequence).listOf(FIELD);
         const START = new NonTerminal("SCHEMA").eat(schema).listOf(CLASS);
         const result = START.parse(node, '');
