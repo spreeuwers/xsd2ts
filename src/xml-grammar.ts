@@ -2,6 +2,9 @@
  * Created by eddyspreeuwers on 12/18/19.
  */
 
+type NodeHandler = (n: Node) => ASTNode;
+var fieldHandler = (n) => new ASTNode('Field').prop('name', attribs(n).name).prop('type', attribs(n).type);
+
 abstract class Parsable {
     public name: string;
     public parent: Parsable;
@@ -51,15 +54,18 @@ abstract class Parsable {
 
 export class Terminal extends Parsable {
 
-    constructor(tagName: string) {
+    private nodeHandler = (n) => new ASTNode(this.name);
+
+    constructor(tagName: string, handler?: NodeHandler) {
         super(tagName);
+        this.nodeHandler = handler || this.nodeHandler;
     }
 
     public parse(node: Node, indent?: string): ASTNode{
         let result = null;
         console.log(indent + 'Terminal: ', this.name, 'node: ', node?.nodeName);
         if (xml(node)?.localName === this.name){
-            result =  new ASTNode(this.name);
+            result =  this.nodeHandler(node);
         }
         return result;
     }
@@ -189,17 +195,24 @@ export class ASTNode {
       this.name = name;
     }
 
+    public prop(key, value){
+        this[key] = value;
+        return this;
+    }
+
 }
+
 
 export class Grammar {
 
     public parse(node: Node): ASTNode {
 
+        const field = new Terminal("element", fieldHandler);
         const element = new Terminal("element");
         const schema = new Terminal("schema");
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
-        const FIELD  = new NonTerminal("FIELD").eat(element);
+        const FIELD  = new NonTerminal("FIELD").eat(field);
         const CLASS  = new NonTerminal("CLASS").eat(element).eat(complexType).eat(sequence).listOf(FIELD);
         const START = new NonTerminal("SCHEMA").eat(schema).listOf(CLASS);
         const result = START.parse(node, '');
@@ -208,7 +221,6 @@ export class Grammar {
     }
 
 }
-
 
 
 function findFirstChild(node: Node): Node {
@@ -247,6 +259,22 @@ function xml(n:Node): XMLNode{
 
 interface XMLNode extends Node {
     localName: string;
+}
+
+interface INamed extends Node {
+    name: string;
+    type: string
+}
+
+function attribs(node: Node): INamed {
+    const attr = (node as HTMLElement)?.attributes;
+    //console.log('getNamedItem', attr);
+    const result = {
+        name: attr.getNamedItem('name')?.value,
+        type: attr.getNamedItem('type')?.value,
+    };
+    //console.log('attribs', result);
+    return result as INamed;
 }
 
 
