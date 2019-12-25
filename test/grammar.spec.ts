@@ -33,10 +33,22 @@ fdescribe("grammar", () => {
 
 
 
-    fit(" has function generateTemplateClassesFromXSD", () => {
+    fit(" can parse a simle class starting with Element ", () => {
 
         const grammar = new Grammar();
         console.log('src:',elmXsd);
+        const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
+        let xmlNode = xmlDom.documentElement;
+
+        let ast = grammar.parse(xmlNode);
+        console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
+        expect(ast).toBeDefined();
+    });
+
+    it(" can parse a simle class staeting with complexType", () => {
+
+        const grammar = new Grammar();
+        console.log('src:',simpleClassXsd);
         const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
         let xmlNode = xmlDom.documentElement;
 

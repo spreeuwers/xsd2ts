@@ -3,14 +3,13 @@
  */
 
 type NodeHandler = (n: Node) => ASTNode;
-var fieldHandler:NodeHandler = (n) => new ASTNode('Field').prop('name', attribs(n).name).prop('type', attribs(n).type);
-var classHandler:NodeHandler = (n) => new ASTNode('Class').prop('name', attribs(n).name);
-type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
-var propertiesMerger: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
-var classesMerger: Merger  = (r1, r2) => { (r1 as any).classes = r2; return r1};
-var schemaMerger: Merger  = (r1, r2) => {(r1 as any).classes = r2.list; return r1; };
+const fieldHandler: NodeHandler = (n) => new ASTNode('Field').prop('fieldName', attribs(n).name).prop('type', attribs(n).type);
+const classHandler: NodeHandler = (n) => new ASTNode('Class').prop('name', attribs(n).name);
 
-var fieldsMerger: Merger  = (r1, r2) => { (r1 as any).fields = r2; return r1};
+type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
+const returnMergedResult  : Merger  = (r1, r2) => (Object as any).assign(r2, r1);
+const schemaMerger        : Merger  = (r1, r2) => {(r1 as any).classes = r2.list; return r1; };
+const returnChildResult   : Merger  = (r1, r2) => r2;
 
 abstract class Parsable {
     public name: string;
@@ -72,7 +71,7 @@ export class Terminal extends Parsable {
 
 export class Child extends Parsable {
     private terminal: Terminal;
-    private merger: Merger = propertiesMerger;
+    private merger: Merger = returnMergedResult;
 
     constructor(name: string, t: Terminal, m?: Merger) {
         super(name);
@@ -125,7 +124,7 @@ class NonTerminal extends Parsable {
 class Parent extends Parsable {
 
 
-    public merger: Merger = propertiesMerger;
+    public merger: Merger = returnMergedResult;
 
     constructor(name: string, m?: Merger) {
         super(name);
@@ -198,15 +197,26 @@ export class Grammar {
 
     public parse(node: Node): ASTNode {
 
-        const field = new Terminal("element", fieldHandler);
-        const classElement = new Terminal("element", classHandler);
-        const schema = new Terminal("schema");
-        const complexType = new Terminal("complexType");
-        const sequence = new Terminal("sequence");
-        const FIELD  = new NonTerminal("FIELD").child(field);
-        const CLASS = new Parent("CLASS",classesMerger).child(classElement, propertiesMerger).child(complexType).child(sequence).children(FIELD);
-        const START = new Parent("SCHEMA", schemaMerger).child(schema).children(CLASS);
-        const result = START.parse(node, '');
+        //Terminals
+        const fieldElement  = new Terminal("element", fieldHandler);
+        const classElement  = new Terminal("element", classHandler);
+        const schema        = new Terminal("schema");
+        const complexType   = new Terminal("complexType");
+        const sequence      = new Terminal("sequence");
+
+
+        //NonTerminals
+        const FIELD   = new Parent("FIELD").child(fieldElement);
+
+        const CLASS0  = new Parent("CLASS", returnChildResult);
+        const CLASS1  = CLASS0.child(classElement, returnMergedResult);
+        const CLASS2  = CLASS1.child(complexType);
+        const CLASS3  = CLASS2.child(sequence);
+        const CLASS   = CLASS3.children(FIELD);
+
+        const SCHEMA  = new Parent("SCHEMA", schemaMerger)
+        const START   = SCHEMA.child(schema).children(CLASS);
+        const result  = START.parse(node, '');
         return result;
 
     }
