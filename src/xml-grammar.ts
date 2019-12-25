@@ -8,6 +8,7 @@ var classHandler:NodeHandler = (n) => new ASTNode('Class').prop('name', attribs(
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 var propertiesMerger: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
 var classesMerger: Merger  = (r1, r2) => { (r1 as any).classes = r2; return r1};
+var fieldsMerger: Merger  = (r1, r2) => { (r1 as any).fields = r2; return r1};
 
 abstract class Parsable {
     public name: string;
@@ -246,7 +247,7 @@ export class Grammar {
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
         const FIELD  = new NonTerminal("FIELD").eat(field);
-        const CLASS  = new NonTerminal("CLASS").eat(classElement, propertiesMerger).eat(complexType).eat(sequence).listOf(FIELD);
+        const CLASS = new Given("CLASS",classesMerger).eat(classElement, propertiesMerger).eat(complexType).eat(sequence).listOf(FIELD);
         const START = new Given("SCHEMA", classesMerger).eat(schema).listOf(CLASS);
         const result = START.parse(node, '');
         return result;
