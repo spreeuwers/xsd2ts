@@ -39,7 +39,7 @@ abstract class Parsable {
 
 
     public child(t: Terminal, m?: Merger) {
-        const next = new Eater('EAT' , t, m);
+        const next = new Child('EAT' , t, m);
         this.addNext(next);
         return this;
     }
@@ -68,7 +68,7 @@ export class Terminal extends Parsable {
 
 }
 
-export class Eater extends Parsable {
+export class Child extends Parsable {
     private terminal: Terminal;
     private merger: Merger = propertiesMerger;
 
@@ -120,7 +120,7 @@ class NonTerminal extends Parsable {
 
 }
 
-class Given extends Parsable {
+class Parent extends Parsable {
 
 
     public merger: Merger = propertiesMerger;
@@ -202,8 +202,8 @@ export class Grammar {
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
         const FIELD  = new NonTerminal("FIELD").child(field);
-        const CLASS = new Given("CLASS",classesMerger).child(classElement, propertiesMerger).child(complexType).child(sequence).children(FIELD);
-        const START = new Given("SCHEMA", classesMerger).child(schema).children(CLASS);
+        const CLASS = new Parent("CLASS",classesMerger).child(classElement, propertiesMerger).child(complexType).child(sequence).children(FIELD);
+        const START = new Parent("SCHEMA", classesMerger).child(schema).children(CLASS);
         const result = START.parse(node, '');
         return result;
 
