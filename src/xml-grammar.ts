@@ -3,7 +3,11 @@
  */
 
 type NodeHandler = (n: Node) => ASTNode;
-var fieldHandler = (n) => new ASTNode('Field').prop('name', attribs(n).name).prop('type', attribs(n).type);
+var fieldHandler:NodeHandler = (n) => new ASTNode('Field').prop('name', attribs(n).name).prop('type', attribs(n).type);
+var classHandler:NodeHandler = (n) => new ASTNode('Class').prop('name', attribs(n).name);
+type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
+var propertiesMerger: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
+var classesMerger: Merger  = (r1, r2) => { (r1 as any).classes = r2; return r1};
 
 abstract class Parsable {
     public name: string;
@@ -43,8 +47,8 @@ abstract class Parsable {
         return this;
     }
 
-    public eat(t: Terminal) {
-        const next = new Eater('EAT' , t);
+    public eat(t: Terminal, m?: Merger) {
+        const next = new Eater('EAT' , t, m);
         this.addNext(next);
         return this;
     }
@@ -75,24 +79,25 @@ export class Terminal extends Parsable {
 
 export class Eater extends Parsable {
     private terminal: Terminal;
+    private merger: Merger = propertiesMerger;
 
-    constructor(name: string, t: Terminal) {
+    constructor(name: string, t: Terminal, m?: Merger) {
         super(name);
+        this.merger = m || this.merger;
         this.terminal = t;
 
     }
 
     public parse(node: Node, indent?: string): ASTNode {
-        let result = null;
+        let result  = this.terminal.parse(node, indent + ' ');
+        console.log(indent, this.name, 'node: ', node?.nodeName, 'match:', result);
 
-        const match = this.terminal.parse(node, indent + ' ');
-        console.log(indent, this.name, 'node: ', node?.nodeName, 'match:', match);
-
-        if (match && this.next) {
+        if (result && this.next) {
             console.log(indent, 'match on:' , this.name);
-            return this.next.parse(findFirstChild(node), indent + ' ');
+            let nextResult =  this.next.parse(findFirstChild(node), indent + ' ')
+            result = this.merger(result, nextResult);
         }
-        return match;
+        return result;
     }
 
 
@@ -124,6 +129,33 @@ class NonTerminal extends Parsable {
 
 }
 
+class Given extends Parsable {
+
+
+    public merger: Merger = propertiesMerger;
+
+    constructor(name: string, m?: Merger) {
+        super(name);
+        this.merger = m || this.merger;
+    }
+
+    public parse(node: Node, indent?: string): ASTNode {
+        let result = new ASTNode(this.name);
+        console.log(indent + this.name, node?.nodeName);
+        let nextResult = this.next?.parse(node, indent + ' ') ;
+
+        if (nextResult){
+            //this.result.child = child;
+            result = this.merger(result, nextResult);
+        } else {
+            result = null;
+        }
+        return result;
+    };
+
+}
+
+
 export class ListOf extends NonTerminal {
 
     public parse(node: Node, indent?: string): ASTNode{
@@ -140,12 +172,12 @@ export class ListOf extends NonTerminal {
             const listItem = this.parsable.parse(sibbling, indent + '  ');
             if (listItem) {
                 result.list.push(listItem);
-                console.log(indent + 'added item:', listItem);
+                //console.log(indent + 'added item:', listItem);
             }
             sibbling = findNextChild(sibbling);
 
         }
-        console.log(indent + 'result:', JSON.stringify(result || '') );
+        //console.log(indent + 'result:', JSON.stringify(result || '') );
         return result;
     }
 }
@@ -189,6 +221,7 @@ export class ASTNode {
     public name: string;
     public child: ASTNode;
     public list: ASTNode[];
+    public merger : Merger;
 
 
     constructor(name: string){
@@ -208,13 +241,13 @@ export class Grammar {
     public parse(node: Node): ASTNode {
 
         const field = new Terminal("element", fieldHandler);
-        const element = new Terminal("element");
+        const classElement = new Terminal("element", classHandler);
         const schema = new Terminal("schema");
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
         const FIELD  = new NonTerminal("FIELD").eat(field);
-        const CLASS  = new NonTerminal("CLASS").eat(element).eat(complexType).eat(sequence).listOf(FIELD);
-        const START = new NonTerminal("SCHEMA").eat(schema).listOf(CLASS);
+        const CLASS  = new NonTerminal("CLASS").eat(classElement, propertiesMerger).eat(complexType).eat(sequence).listOf(FIELD);
+        const START = new Given("SCHEMA", classesMerger).eat(schema).listOf(CLASS);
         const result = START.parse(node, '');
         return result;
 
