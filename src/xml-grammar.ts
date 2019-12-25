@@ -30,25 +30,15 @@ abstract class Parsable {
         }
     }
 
-    public listOf(p: Parsable) {
+    public children(p: Parsable) {
 
         const next = new ListOf(this.name, p);
         this.addNext(next);
         return this;
     }
 
-    public holds(p: Parsable) {
-        const next =  new Child(this.name, p);
-        this.addNext(next);
-        return this;
-    }
-    public from(p: Parsable) {
-        const next = new From(this.name, p);
-        this.addNext(next);
-        return this;
-    }
 
-    public eat(t: Terminal, m?: Merger) {
+    public child(t: Terminal, m?: Merger) {
         const next = new Eater('EAT' , t, m);
         this.addNext(next);
         return this;
@@ -183,47 +173,12 @@ export class ListOf extends NonTerminal {
     }
 }
 
-export class Child extends NonTerminal {
-
-    public parse(node: Node, indent?: string): ASTNode {
-
-        const fChild = findFirstChild(node);
-        console.log(indent + 'CHILD:',this.parsable.name, fChild?.nodeName ,'parent:', this.parent?.name);
-        let result = new ASTNode("CHILD");
-        const fc = this.parsable.parse(fChild, indent + ' ');
-        if (!fc ) {
-           result = null;
-        }
-        //result.child = fc;
-        return result;
-    }
-}
-
-export class From extends NonTerminal {
-
-    public parse(node: Node, indent?: string):ASTNode{
-
-        console.log(indent + 'FROM:', this.parsable.name, node?.nodeName);
-
-        let result = null;
-        if (node)  {
-            result= this.parsable.parse(node, indent = '   ');
-        }
-        console.log(indent + 'FROM result:', result);
-        return result;
-    }
-}
-
-
-
 
 
 export class ASTNode {
     public name: string;
     public child: ASTNode;
     public list: ASTNode[];
-    public merger : Merger;
-
 
     constructor(name: string){
       this.name = name;
@@ -246,9 +201,9 @@ export class Grammar {
         const schema = new Terminal("schema");
         const complexType = new Terminal("complexType");
         const sequence = new Terminal("sequence");
-        const FIELD  = new NonTerminal("FIELD").eat(field);
-        const CLASS = new Given("CLASS",classesMerger).eat(classElement, propertiesMerger).eat(complexType).eat(sequence).listOf(FIELD);
-        const START = new Given("SCHEMA", classesMerger).eat(schema).listOf(CLASS);
+        const FIELD  = new NonTerminal("FIELD").child(field);
+        const CLASS = new Given("CLASS",classesMerger).child(classElement, propertiesMerger).child(complexType).child(sequence).children(FIELD);
+        const START = new Given("SCHEMA", classesMerger).child(schema).children(CLASS);
         const result = START.parse(node, '');
         return result;
 
