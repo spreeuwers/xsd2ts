@@ -32,8 +32,7 @@ fdescribe("grammar", () => {
 
 
 
-
-    fit(" can parse a simle class starting with Element ", () => {
+    fit(" can parse a simple class starting with Element ", () => {
 
         const grammar = new Grammar();
         console.log('src:',elmXsd);
@@ -43,18 +42,21 @@ fdescribe("grammar", () => {
         let ast = grammar.parse(xmlNode);
         console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
         expect(ast).toBeDefined();
+        expect(ast.name).toBe('SCHEMA');
+        expect((ast as any).classes.length).toBe(1);
     });
 
-    it(" can parse a simle class staeting with complexType", () => {
+    it(" can parse a simple class starting with complexType", () => {
 
         const grammar = new Grammar();
         console.log('src:',simpleClassXsd);
-        const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
+        const xmlDom = new DOMParser().parseFromString(simpleClassXsd, 'application/xml');
         let xmlNode = xmlDom.documentElement;
 
         let ast = grammar.parse(xmlNode);
         console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
         expect(ast).toBeDefined();
+        expect(ast.name).toBe('SCHEMA');
     });
 
 

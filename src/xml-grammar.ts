@@ -1,15 +1,20 @@
 /**
  * Created by eddyspreeuwers on 12/18/19.
  */
+import {findFirstChild, findNextChild, attribs, xml} from './xml-utils';
 
 type NodeHandler = (n: Node) => ASTNode;
 const fieldHandler: NodeHandler = (n) => new ASTNode('Field').prop('fieldName', attribs(n).name).prop('type', attribs(n).type);
 const classHandler: NodeHandler = (n) => new ASTNode('Class').prop('name', attribs(n).name);
 
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
-const returnMergedResult  : Merger  = (r1, r2) => (Object as any).assign(r2, r1);
-const schemaMerger        : Merger  = (r1, r2) => {(r1 as any).classes = r2.list; return r1; };
-const returnChildResult   : Merger  = (r1, r2) => r2;
+const returnMergedResult: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
+const schemaMerger: Merger  = (r1, r2) => {(r1 as any).classes = r2.list; return r1; };
+const returnChildResult: Merger  = (r1, r2) => r2;
+
+function log(...parms: any) {
+    console.log.apply(console, parms);
+}
 
 abstract class Parsable {
     public name: string;
@@ -45,6 +50,12 @@ abstract class Parsable {
         return this;
     }
 
+    public oneOf(...options: Parsable[]){
+        const next = new OneOf('ONE OFF' , options);
+        this.addNext(next);
+        return this;
+    }
+
 
 }
 
@@ -59,7 +70,7 @@ export class Terminal extends Parsable {
 
     public parse(node: Node, indent?: string): ASTNode{
         let result = null;
-        console.log(indent + 'Terminal: ', this.name, 'node: ', node?.nodeName);
+        log(indent + 'Terminal: ', this.name, 'node: ', node?.nodeName);
         if (xml(node)?.localName === this.name){
             result =  this.nodeHandler(node);
         }
@@ -82,12 +93,15 @@ export class Child extends Parsable {
 
     public parse(node: Node, indent?: string): ASTNode {
         let result  = this.terminal.parse(node, indent + ' ');
-        console.log(indent, this.name, 'node: ', node?.nodeName, 'match:', result);
+        log(indent, this.name, 'node: ', node?.nodeName, 'match:', result);
 
         if (result && this.next) {
-            console.log(indent, 'match on:' , this.name);
-            let nextResult =  this.next.parse(findFirstChild(node), indent + ' ')
-            result = this.merger(result, nextResult);
+
+            log(indent, 'match on:' , this.name);
+            const nextResult =  this.next.parse(findFirstChild(node), indent + ' ');
+            if (nextResult) {
+                result = this.merger(result, nextResult);
+            }
         }
         return result;
     }
@@ -108,8 +122,8 @@ class NonTerminal extends Parsable {
 
     public parse(node: Node, indent?: string): ASTNode {
         let result = new ASTNode(this.name);
-        console.log(indent + this.name, node?.nodeName);
-        let child = this.next?.parse(node, indent + ' ') ;
+        log(indent + this.name, node?.nodeName);
+        const child = this.next?.parse(node, indent + ' ') ;
 
         if (child){
             result.child = child;
@@ -133,11 +147,10 @@ class Parent extends Parsable {
 
     public parse(node: Node, indent?: string): ASTNode {
         let result = new ASTNode(this.name);
-        console.log(indent + this.name, node?.nodeName);
-        let nextResult = this.next?.parse(node, indent + ' ') ;
+        log(indent + this.name, node?.nodeName);
+        const nextResult = this.next?.parse(node, indent + ' ') ;
 
         if (nextResult){
-            //this.result.child = child;
             result = this.merger(result, nextResult);
         } else {
             result = null;
@@ -152,25 +165,48 @@ export class ListOf extends NonTerminal {
 
     public parse(node: Node, indent?: string): ASTNode{
 
-        console.log(indent + 'LISTOF:', this.parsable.name, node.nodeName);
+        log(indent + 'LISTOF:', this.parsable.name, node.nodeName);
         let sibbling = node;
 
         const result = new ASTNode("items");
-        result.list= [];
+        result.list = [];
 
         while (sibbling) {
-            console.log(indent + 'list sibbling:', sibbling?.nodeName);
+            log(indent + 'list sibbling:', sibbling?.nodeName);
 
             const listItem = this.parsable.parse(sibbling, indent + '  ');
             if (listItem) {
                 result.list.push(listItem);
-                //console.log(indent + 'added item:', listItem);
             }
             sibbling = findNextChild(sibbling);
 
         }
-        //console.log(indent + 'result:', JSON.stringify(result || '') );
         return result;
+    }
+}
+
+export class OneOf extends Parsable {
+
+    public options: Parsable[];
+
+    constructor(name: string, options: Parsable[]) {
+        super(name);
+        this.options = options;
+    }
+
+    public parse(node: Node, indent?: string): ASTNode{
+
+        log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node.nodeName);
+        let result = null;
+
+        for (let option of this.options || []) {
+            log(indent + ' try:', option.name);
+            result = option.parse(node, indent + '  ');
+            if (result) {
+                break;
+            }
+       }
+       return result;
     }
 }
 
@@ -202,17 +238,19 @@ export class Grammar {
         const classElement  = new Terminal("element", classHandler);
         const schema        = new Terminal("schema");
         const complexType   = new Terminal("complexType");
+        const classType     = new Terminal("complexType",classHandler);
         const sequence      = new Terminal("sequence");
 
 
         //NonTerminals
         const FIELD   = new Parent("FIELD").child(fieldElement);
 
-        const CLASS0  = new Parent("CLASS", returnChildResult);
-        const CLASS1  = CLASS0.child(classElement, returnMergedResult);
-        const CLASS2  = CLASS1.child(complexType);
-        const CLASS3  = CLASS2.child(sequence);
-        const CLASS   = CLASS3.children(FIELD);
+        const P_CLASS  = new Parent("CLASS", returnChildResult);
+        const E_CLASS  = P_CLASS.child(classElement, returnMergedResult);
+        const CLASS1   = E_CLASS.child(complexType).child(sequence).children(FIELD);
+
+        const CLASS2   = P_CLASS.child(classType).child(sequence).children(FIELD);
+        const CLASS    = P_CLASS.oneOf(CLASS1, CLASS2);
 
         const SCHEMA  = new Parent("SCHEMA", schemaMerger)
         const START   = SCHEMA.child(schema).children(CLASS);
@@ -224,58 +262,5 @@ export class Grammar {
 }
 
 
-function findFirstChild(node: Node): Node {
-    node = node?.firstChild;
-    if (node && node.nodeType == node.TEXT_NODE) {
-        node = findNextChild(node);
-    }
-    return node;
-}
-
-function findNextChild(node: Node): Node {
-    let result = node?.nextSibling as Node;
-    if (result && result.nodeType == node.TEXT_NODE) {
-        result = findNextChild(result);
-    }
-    //console.log('found', result?.nodeName);
-    return result;
-}
-
-
-
-function findChildren(node: Node){
-    const result:Node[] = [];
-    let child = findFirstChild(node);
-    while (child) {
-        result.push(child);
-        child = findNextChild(child);
-    }
-    return result;
-}
-
-
-function xml(n:Node): XMLNode{
-    return n as XMLNode;
-}
-
-interface XMLNode extends Node {
-    localName: string;
-}
-
-interface INamed extends Node {
-    name: string;
-    type: string
-}
-
-function attribs(node: Node): INamed {
-    const attr = (node as HTMLElement)?.attributes;
-    //console.log('getNamedItem', attr);
-    const result = {
-        name: attr.getNamedItem('name')?.value,
-        type: attr.getNamedItem('type')?.value,
-    };
-    //console.log('attribs', result);
-    return result as INamed;
-}
 
 
