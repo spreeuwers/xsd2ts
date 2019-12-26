@@ -14,6 +14,7 @@ type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 const returnMergedResult: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
 const classesMerger: Merger  = (r1, r2) => {r1.obj.classes = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
+const fieldMerger: Merger = (r1, r2) => {r1.obj.fieldName = r2.obj.fieldName; r1.obj.fieldType = r2.obj.fieldType;return r1; };
 
 const returnChildResult: Merger  = (r1, r2) => r2;
 
@@ -89,35 +90,6 @@ export class Terminal extends Parslet {
 
 }
 
-export class Child extends Parslet {
-    private terminal: Terminal;
-    private merger: Merger = returnMergedResult;
-
-    constructor(name: string, t: Terminal, m?: Merger) {
-        super(name);
-        this.merger = m || this.merger;
-        this.terminal = t;
-
-    }
-
-    public parse(node: Node, indent?: string): ASTNode {
-        let result  = this.terminal.parse(node, indent + ' ');
-        log(indent, this.name, this.terminal.name, 'node: ', node?.nodeName, 'match:', result);
-
-        if (result && this.next) {
-
-            log(indent, 'match on:' , this.name);
-            const nextResult =  this.next.parse(findFirstChild(node), indent + ' ');
-            if (nextResult) {
-                result = this.merger(result, nextResult);
-            }
-        }
-        return result;
-    }
-
-
-}
-
 
 class NonTerminal extends Parslet {
 
@@ -143,6 +115,37 @@ class NonTerminal extends Parslet {
     };
 
 }
+
+export class Child extends Parslet {
+    private terminal: Terminal;
+    private merger: Merger = returnMergedResult;
+
+    constructor(name: string, t: Terminal, m?: Merger) {
+        super(name);
+        this.merger = m || this.merger;
+        this.terminal = t;
+
+    }
+
+    public parse(node: Node, indent?: string): ASTNode {
+        let result  = this.terminal.parse(node, indent + ' ');
+        log(indent, this.name, this.terminal.name, 'node: ', node?.nodeName, 'match:', result);
+
+        if (result && this.next) {
+            const nextResult =  this.next.parse(findFirstChild(node), indent + ' ');
+            if (nextResult) {
+                result = this.merger(result, nextResult);
+            }
+        }
+        log(indent, this.name, 'result: ', JSON.stringify(result));
+        return result;
+    }
+
+
+}
+
+
+
 
 class Parent extends Parslet {
 
@@ -256,7 +259,8 @@ export class Grammar {
 
 
         //NonTerminals
-        const FIELD   = new Parent("FIELD").child(fieldElement).child(complexType).child(sequence).child(fieldElement);
+        const FIELD   = new Parent("FIELD").child(fieldElement,fieldMerger);
+        FIELD.child(complexType).child(sequence).child(fieldElement);
 
         const P_CLASS  = new Parent("CLASS", returnChildResult);
         const E_CLASS  = new Parent("CLASS", returnChildResult);
