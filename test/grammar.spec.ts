@@ -32,7 +32,7 @@ fdescribe("grammar", () => {
 
 
 
-    fit(" can parse a simple class starting with Element ", () => {
+    it(" can parse a simple class starting with Element ", () => {
 
         const grammar = new Grammar();
         console.log('src:',elmXsd);
@@ -46,7 +46,7 @@ fdescribe("grammar", () => {
         expect((ast as any).classes.length).toBe(1);
     });
 
-    it(" can parse a simple class starting with complexType", () => {
+    fit(" can parse a simple class starting with complexType", () => {
 
         const grammar = new Grammar();
         console.log('src:',simpleClassXsd);
