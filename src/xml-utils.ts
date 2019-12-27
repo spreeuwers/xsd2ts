@@ -5,15 +5,15 @@
 export function findFirstChild(node: Node): Node {
     node = node?.firstChild;
     if (node && node.nodeType == node.TEXT_NODE) {
-        node = findNextChild(node);
+        node = findNextSibbling(node);
     }
     return node;
 }
 
-export function findNextChild(node: Node): Node {
+export function findNextSibbling(node: Node): Node {
     let result = node?.nextSibling as Node;
     if (result && result.nodeType == node.TEXT_NODE) {
-        result = findNextChild(result);
+        result = findNextSibbling(result);
     }
     //console.log('found', result?.nodeName);
     return result;
@@ -26,7 +26,7 @@ export function findChildren(node: Node){
     let child = findFirstChild(node);
     while (child) {
         result.push(child);
-        child = findNextChild(child);
+        child = findNextSibbling(child);
     }
     return result;
 }
