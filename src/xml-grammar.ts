@@ -13,7 +13,7 @@ const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode(
 
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 const returnMergedResult: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
-const classesMerger: Merger  = (r1, r2) => {r1.obj.classes = r2.list; return r1; };
+const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
 const fieldMerger: Merger = (r1, r2) => {
     r1.obj.fieldName = r1.obj.fieldName || r2.obj.fieldName;
@@ -26,9 +26,6 @@ function log(...parms: any) {
     console.log.apply(console, parms);
 }
 
-function parent(){
-    return new Parent('PARENT');
-}
 
 function oneOf(...options: Parslet[]){
    return new OneOf('ONE OFF' , options);
@@ -120,29 +117,12 @@ export class Terminal implements Parsable {
 
 abstract class NonTerminal extends Parslet {
 
-
-    public parsable: Parslet;
+   public parsable: Parslet;
 
     constructor(name: string, p?: Parslet) {
         super(name);
         this.parsable = p;
     }
-
-    //public abstract nextNode(node: Node): Node;
-
-    public parse(node: Node, indent?: string): ASTNode {
-        let result = new ASTNode(this.name);
-        log(indent + this.name, node?.nodeName);
-        const child = this.nextParslet?.parse(node, indent + ' ') ;
-
-        if (child){
-            result.child = child;
-        } else {
-            result = null;
-        }
-        return result;
-    };
-
 }
 
 export class Match extends Parslet {
@@ -181,35 +161,6 @@ export class Match extends Parslet {
 
 
 }
-
-
-
-
-class Parent extends Parslet {
-
-
-    public merger: Merger = returnChildResult;
-
-    constructor(name: string, m?: Merger) {
-        super(name);
-        this.merger = m || this.merger;
-    }
-
-    public parse(node: Node, indent?: string): ASTNode {
-        let result = new ASTNode(this.name);
-        log(indent + this.name, node?.nodeName);
-        const nextResult = this.nextParslet?.parse(node, indent + ' ') ;
-
-        if (nextResult){
-            result = this.merger(result, nextResult);
-        } else {
-            result = null;
-        }
-        return result;
-    };
-
-}
-
 
 export class Children extends NonTerminal {
 
@@ -305,11 +256,10 @@ export class Grammar {
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence).children(FIELD);
         const ENUMTYPE = match(enumElement).child(simpleType).child(restriction).children(match(enumElement));
-        const CLASS    = oneOf(E_CLASS, C_CLASS, ENUMTYPE);
+        const TYPES    = oneOf(E_CLASS, C_CLASS, ENUMTYPE);
 
-        const SCHEMA   = match(schema, classesMerger).children(CLASS);
-        //const START   = SCHEMA.match(schema);
-        const result  = SCHEMA.parse(node, '');
+        const SCHEMA   = match(schema, typesMerger).children(TYPES);
+        const result   = SCHEMA.parse(node, '');
         return result;
 
     }

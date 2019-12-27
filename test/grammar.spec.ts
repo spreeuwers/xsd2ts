@@ -7,6 +7,7 @@ import {Grammar} from "../src/xml-grammar";
 import {DOMParser} from "xmldom-reborn";
 
 
+
 fdescribe("grammar", () => {
 
     let simpleClassXsd = ""
@@ -33,43 +34,19 @@ fdescribe("grammar", () => {
 
 
     it(" can parse a simple class starting with Element ", () => {
-
-        const grammar = new Grammar();
-        console.log('src:',elmXsd);
-        const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
-        const xmlNode = xmlDom.documentElement;
-
-        let ast = grammar.parse(xmlNode);
-        console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
-        expect(ast).toBeDefined();
-        expect(ast.name).toBe('schema');
-        expect((ast as any).classes.length).toBe(1);
+        let ast = testGrammar(elmXsd);
+        expect((ast as any).types.length).toBe(1);
     });
 
     it(" can parse a simple class starting with complexType", () => {
 
-        const grammar = new Grammar();
-        console.log('src:',simpleClassXsd);
-        const xmlDom = new DOMParser().parseFromString(simpleClassXsd, 'application/xml');
-        const xmlNode = xmlDom.documentElement;
-
-        let ast = grammar.parse(xmlNode);
-        console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
-        expect(ast).toBeDefined();
-        expect(ast.name).toBe('schema');
+        let ast = testGrammar(simpleClassXsd);
+        expect((ast as any).types.length).toBe(1);
     });
 
-    fit(" can parse a simple enumeration  starting with element", () => {
-
-        const grammar = new Grammar();
-        console.log('src:',simpleTypeXsd);
-        const xmlDom = new DOMParser().parseFromString(simpleTypeXsd, 'application/xml');
-        const xmlNode = xmlDom.documentElement;
-
-        let ast = grammar.parse(xmlNode);
-        console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
-        expect(ast).toBeDefined();
-        expect(ast.name).toBe('schema');
+    it(" can parse a simple enumeration  starting with element", () => {
+        let ast = testGrammar(simpleTypeXsd);
+        //expect((ast as any).classes.length).toBe(1);
     });
 
 
@@ -82,6 +59,21 @@ function printFile(fname:string) {
     const s = fs.readFileSync(fname).toString();
     console.log(s);
 }
+
+
+function testGrammar (elmXsd: string) {
+    const grammar = new Grammar();
+    console.log('src:', elmXsd);
+    const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
+    const xmlNode = xmlDom.documentElement;
+
+    let ast = grammar.parse(xmlNode);
+    console.log('\n-----\nast:', JSON.stringify((ast || ''), null, ' '));
+    expect(ast).toBeDefined();
+    expect(ast.name).toBe('schema');
+    return ast;
+}
+
 
 function compile(tsFiles: string[] ){
     _compile(tsFiles, {
