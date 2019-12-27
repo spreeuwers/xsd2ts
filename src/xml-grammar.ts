@@ -43,6 +43,8 @@ function match(t: Terminal, m?: Merger) {
 interface Parsable {
     parse(node: Node, indent?: string): ASTNode;
 }
+
+
 abstract class Parslet implements Parsable {
     public name: string;
     public fnNextNode: FindNextNode;
@@ -72,7 +74,7 @@ abstract class Parslet implements Parsable {
 
 
     public child(t: Terminal, m?: Merger) {
-        const next = new Child('CHILD' , t, m);
+        const next = new Match('MATCH' , t, m);
         this.addNext(next, findFirstChild);
         return this;
     }
@@ -92,20 +94,21 @@ abstract class Parslet implements Parsable {
 
 }
 
-export class Terminal extends Parslet {
+export class Terminal implements Parsable {
 
-    private nodeHandler = (n) => new ASTNode(this.name);
+    public tagName: string
+    private nodeHandler = (n) => new ASTNode(this.tagName);
 
     constructor(tagName: string, handler?: NodeHandler) {
-        super(tagName);
+        this.tagName = tagName;
         this.nodeHandler = handler || this.nodeHandler;
     }
 
 
-    public parse(node: Node, indent?: string): ASTNode{
+    public parse(node: Node, indent?: string): ASTNode {
         let result = null;
-        log(indent + 'Terminal: ', this.name, 'node: ', node?.nodeName);
-        if (xml(node)?.localName === this.name){
+        log(indent + 'Terminal: ', this.tagName, 'node: ', node?.nodeName);
+        if (xml(node)?.localName === this.tagName){
             result =  this.nodeHandler(node);
         }
         return result;
@@ -142,46 +145,6 @@ abstract class NonTerminal extends Parslet {
 
 }
 
-export class Child extends Parslet {
-
-    private terminal: Terminal;
-    private merger: Merger = returnMergedResult;
-
-    constructor(name: string, t: Terminal, m?: Merger) {
-        super(name);
-        this.merger = m || this.merger;
-        this.terminal = t;
-
-    }
-
-
-    public parse(node: Node, indent?: string): ASTNode {
-        let sibbling = node;
-        let result : ASTNode;
-
-        //find the first sibbling matching the terminal
-        while (sibbling){
-            result  = this.terminal.parse(node, indent + ' ');
-            if (result) break;
-            sibbling = findNextSibbling(sibbling);
-        }
-
-        log(indent, this.name, this.terminal.name, 'node: ', node?.nodeName, 'match:', JSON.stringify(result));
-
-        if (result && this.nextParslet) {
-            log('fnNextNode: ', this.nextParslet.fnNextNode);
-            const nextResult =  this.nextParslet.parse(this.fnNextNode(node), indent + ' ');
-            if (nextResult) {
-                result = this.merger(result, nextResult);
-            }
-        }
-        //log(indent, this.name, 'result: ', JSON.stringify(result));
-        return result;
-    }
-
-
-}
-
 export class Match extends Parslet {
     private terminal: Terminal;
     private merger: Merger = returnMergedResult;
@@ -204,7 +167,7 @@ export class Match extends Parslet {
             sibbling = findNextSibbling(sibbling);
         }
 
-        log(indent, this.name, this.terminal.name, 'node: ', node?.nodeName, 'match:', JSON.stringify(result));
+        log(indent, this.name, this.terminal.tagName, 'node: ', node?.nodeName, 'match:', JSON.stringify(result));
 
         if (result && this.nextParslet) {
             const nextResult =  this.nextParslet.parse(this.fnNextNode(node), indent + ' ');
