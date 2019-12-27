@@ -290,24 +290,22 @@ export class Grammar {
         //Terminals
         const fieldElement  = new Terminal("element", fieldHandler);
         const classElement  = new Terminal("element", classHandler);
+        const enumElement   = new Terminal("element", classHandler);
         const schema        = new Terminal("schema");
         const complexType   = new Terminal("complexType");
+        const simpleType    = new Terminal("simpleType");
+        const restriction   = new Terminal("restriction");
+        const enumeration   = new Terminal("enumeration");
         const classType     = new Terminal("complexType", classHandler);
         const sequence      = new Terminal("sequence");
 
 
         //NonTerminals
-        const FIELD   = new Parent("FIELD").child(fieldElement, fieldMerger);
-        FIELD.child(complexType).child(sequence).child(fieldElement);
-
-        const P_CLASS  = new Parent("CLASS");
-        const E_CLASS  = new Parent("CLASS");
-
-        E_CLASS.child(classElement);
-        E_CLASS.child(complexType).child(sequence, fieldsMerger).children(FIELD);
-
-        const C_CLASS  = parent().child(classType).child(sequence).children(FIELD);
-        const CLASS    = oneOf(E_CLASS, C_CLASS);
+        const FIELD    = match(fieldElement, fieldMerger).child(complexType).child(sequence).child(fieldElement);
+        const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
+        const C_CLASS  = match(classType).child(sequence).children(FIELD);
+        const ENUMTYPE = match(enumElement).child(simpleType).child(restriction).children(match(enumElement));
+        const CLASS    = oneOf(E_CLASS, C_CLASS, ENUMTYPE);
 
         const SCHEMA   = match(schema, classesMerger).children(CLASS);
         //const START   = SCHEMA.match(schema);

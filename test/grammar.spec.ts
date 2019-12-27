@@ -32,12 +32,12 @@ fdescribe("grammar", () => {
 
 
 
-    fit(" can parse a simple class starting with Element ", () => {
+    it(" can parse a simple class starting with Element ", () => {
 
         const grammar = new Grammar();
         console.log('src:',elmXsd);
         const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
-        let xmlNode = xmlDom.documentElement;
+        const xmlNode = xmlDom.documentElement;
 
         let ast = grammar.parse(xmlNode);
         console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
@@ -51,7 +51,20 @@ fdescribe("grammar", () => {
         const grammar = new Grammar();
         console.log('src:',simpleClassXsd);
         const xmlDom = new DOMParser().parseFromString(simpleClassXsd, 'application/xml');
-        let xmlNode = xmlDom.documentElement;
+        const xmlNode = xmlDom.documentElement;
+
+        let ast = grammar.parse(xmlNode);
+        console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
+        expect(ast).toBeDefined();
+        expect(ast.name).toBe('schema');
+    });
+
+    fit(" can parse a simple enumeration  starting with element", () => {
+
+        const grammar = new Grammar();
+        console.log('src:',simpleTypeXsd);
+        const xmlDom = new DOMParser().parseFromString(simpleTypeXsd, 'application/xml');
+        const xmlNode = xmlDom.documentElement;
 
         let ast = grammar.parse(xmlNode);
         console.log('\n-----\nast:', JSON.stringify( (ast || '') , null, ' '));
