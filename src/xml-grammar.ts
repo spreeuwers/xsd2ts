@@ -14,7 +14,7 @@ const enumHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('
 
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
-const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r2, r1); return r2};
+const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r1, r2); return r1};
 
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
@@ -157,7 +157,7 @@ export class Matcher extends Parslet {
                 result = null;
             }
         }
-        //log(indent, this.name, 'result: ', JSON.stringify(result));
+        log(indent, this.name, 'result: ', JSON.stringify(result));
         return result;
     }
 
@@ -209,6 +209,7 @@ export class OneOf extends Parslet {
                 break;
             }
        }
+       //log(indent,'result:',JSON.stringify(result));
        return result;
     }
 }
