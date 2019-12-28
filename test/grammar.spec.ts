@@ -33,7 +33,7 @@ fdescribe("grammar", () => {
 
 
 
-    it(" can parse a simple class starting with Element ", () => {
+    fit(" can parse a simple class starting with Element ", () => {
         let ast = testGrammar(elmXsd);
         expect((ast as any).types.length).toBe(1);
     });
@@ -70,7 +70,7 @@ function testGrammar (elmXsd: string) {
     let ast = grammar.parse(xmlNode);
     console.log('\n-----\nast:', JSON.stringify((ast || ''), null, ' '));
     expect(ast).toBeDefined();
-    expect(ast.name).toBe('schema');
+    expect(ast.type).toBe('schema');
     return ast;
 }
 

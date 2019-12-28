@@ -10,15 +10,14 @@ const fieldHandler: NodeHandler = (n) => new ASTNode('Field')
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') );
 
 const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Class').prop('name', attribs(n).name);
+const enumHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
 
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
-const returnMergedResult: Merger  = (r1, r2) => (Object as any).assign(r2, r1);
+
+const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r2, r1); return r2};
+
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
-const fieldMerger: Merger = (r1, r2) => {
-    r1.obj.fieldName = r1.obj.fieldName || r2.obj.fieldName;
-    r1.obj.fieldType = r2.obj.fieldType;return r1;
-};
 
 const returnChildResult: Merger  = (r1, r2) => r2;
 
@@ -33,7 +32,7 @@ function oneOf(...options: Parslet[]){
 
 
 function match(t: Terminal, m?: Merger) {
-    return new Match('MATCH' , t, m);
+    return new Matcher('MATCH' , t, m);
 }
 
 
@@ -71,13 +70,13 @@ abstract class Parslet implements Parsable {
 
 
     public child(t: Terminal, m?: Merger) {
-        const next = new Match('MATCH' , t, m);
+        const next = new Matcher('MATCH' , t, m);
         this.addNext(next, findFirstChild);
         return this;
     }
 
     public match(t: Terminal, m?: Merger) {
-        const next = new Match('MATCH' , t, m);
+        const next = new Matcher('MATCH' , t, m);
         this.addNext(next, n => n);
         return this;
     }
@@ -125,7 +124,7 @@ abstract class NonTerminal extends Parslet {
     }
 }
 
-export class Match extends Parslet {
+export class Matcher extends Parslet {
     private terminal: Terminal;
     private merger: Merger = returnMergedResult;
 
@@ -142,7 +141,7 @@ export class Match extends Parslet {
 
         //find the first sibbling matching the terminal
         while (sibbling){
-            result  = this.terminal.parse(node, indent + ' ');
+            result  = this.terminal.parse(sibbling, indent + ' ');
             if (result) break;
             sibbling = findNextSibbling(sibbling);
         }
@@ -153,6 +152,9 @@ export class Match extends Parslet {
             const nextResult =  this.nextParslet.parse(this.fnNextNode(node), indent + ' ');
             if (nextResult) {
                 result = this.merger(result, nextResult);
+            } else {
+                log(indent,'no next result' ,this.name);
+                result = null;
             }
         }
         //log(indent, this.name, 'result: ', JSON.stringify(result));
@@ -214,12 +216,13 @@ export class OneOf extends Parslet {
 
 
 export class ASTNode {
+    public type: string;
     public name: string;
     public child: ASTNode;
     public list: ASTNode[];
 
-    constructor(name: string){
-      this.name = name;
+    constructor(type: string){
+      this.type = type;
     }
 
     public prop(key, value){
@@ -227,7 +230,7 @@ export class ASTNode {
         return this;
     }
 
-    get obj() : any {
+    get obj(): any {
         return this as any;
     }
 
@@ -241,7 +244,7 @@ export class Grammar {
         //Terminals
         const fieldElement  = new Terminal("element", fieldHandler);
         const classElement  = new Terminal("element", classHandler);
-        const enumElement   = new Terminal("element", classHandler);
+        const enumElement   = new Terminal("element", enumHandler);
         const schema        = new Terminal("schema");
         const complexType   = new Terminal("complexType");
         const simpleType    = new Terminal("simpleType");
@@ -252,11 +255,12 @@ export class Grammar {
 
 
         //NonTerminals
-        const FIELD    = match(fieldElement, fieldMerger).child(complexType).child(sequence).child(fieldElement);
+        const SUBFIELD = match(fieldElement).child(complexType).child(sequence).child(fieldElement);
+        const FIELD    = match(fieldElement).oneOf(SUBFIELD, match(fieldElement));
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence).children(FIELD);
         const ENUMTYPE = match(enumElement).child(simpleType).child(restriction).children(match(enumElement));
-        const TYPES    = oneOf(E_CLASS, C_CLASS, ENUMTYPE);
+        const TYPES    = oneOf(ENUMTYPE, E_CLASS, C_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');
