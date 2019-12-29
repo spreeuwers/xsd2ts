@@ -5,9 +5,14 @@ import {findFirstChild, findNextSibbling, attribs, xml} from './xml-utils';
 
 type FindNextNode = (n: Node) => Node;
 type NodeHandler = (n: Node) => ASTNode;
-const fieldHandler: NodeHandler = (n) => new ASTNode('Field')
+const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? new ASTNode('Field')
     .prop('fieldName', attribs(n).name)
-    .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') );
+    .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
+
+const arrayFldHandler: NodeHandler = (n) => (attribs(n).type) ? new ASTNode('Field')
+    .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
+
+const cmpFldHandler: NodeHandler = (n) => new ASTNode('Field').prop('fieldName', attribs(n).name)
 
 const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Class').prop('name', attribs(n).name);
 const enumHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
@@ -19,7 +24,8 @@ const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r1, r2);
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
 
-const returnChildResult: Merger  = (r1, r2) => r2;
+//const returnChildResult: Merger  = (r1, r2) => r2;
+//const suppressFldName : Merger  = (r1, r2) => {delete(r2.obj.fieldName); return returnMergedResult(r1, r2);};
 
 function log(...parms: any) {
     console.log.apply(console, parms);
@@ -244,6 +250,8 @@ export class Grammar {
 
         //Terminals
         const fieldElement  = new Terminal("element", fieldHandler);
+        const cmpFldElement  = new Terminal("element", cmpFldHandler);
+        const arrFldElement  = new Terminal("element", arrayFldHandler);
         const classElement  = new Terminal("element", classHandler);
         const enumElement   = new Terminal("element", enumHandler);
         const schema        = new Terminal("schema");
@@ -256,8 +264,8 @@ export class Grammar {
 
 
         //NonTerminals
-        const SUBFIELD = match(fieldElement).child(complexType).child(sequence).child(fieldElement);
-        const FIELD    = match(fieldElement).oneOf(SUBFIELD, match(fieldElement));
+        const SUBFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement);
+        const FIELD    = oneOf(SUBFIELD, match(fieldElement));
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence).children(FIELD);
         const ENUMTYPE = match(enumElement).child(simpleType).child(restriction).children(match(enumElement));
