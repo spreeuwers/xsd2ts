@@ -1,7 +1,7 @@
 /**
  * Created by eddyspreeuwers on 12/18/19.
  */
-import {findFirstChild, findNextSibbling, attribs, xml} from './xml-utils';
+import {findFirstChild, findNextSibbling, attribs, xml, capFirst} from './xml-utils';
 
 type FindNextNode = (n: Node) => Node;
 type NodeHandler = (n: Node) => ASTNode;
@@ -9,10 +9,14 @@ const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? new ASTNode('Field'
     .prop('fieldName', attribs(n).name)
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
 
-const arrayFldHandler: NodeHandler = (n) => (attribs(n).type) ? new ASTNode('Field')
+const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs=="unbounded") ? new ASTNode('Field')
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
 
-const cmpFldHandler: NodeHandler = (n) => new ASTNode('Field').prop('fieldName', attribs(n).name)
+
+
+const cmpFldHandler: NodeHandler = (n) => new ASTNode('Field')
+    .prop('fieldName', attribs(n).name)
+    .prop('fieldType', capFirst(attribs(n).name))
 
 const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Class').prop('name', attribs(n).name);
 const enumHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
@@ -23,9 +27,10 @@ const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r1, r2);
 
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
+//const subclassMerger
 
 //const returnChildResult: Merger  = (r1, r2) => r2;
-//const suppressFldName : Merger  = (r1, r2) => {delete(r2.obj.fieldName); return returnMergedResult(r1, r2);};
+const subclassMerger: Merger  = (r1, r2) => {r1.type='Field';r1.obj.subClass= {name: r1.obj.fieldType, list: r2.list}; return r1; };
 
 function log(...parms: any) {
     console.log.apply(console, parms);
@@ -127,6 +132,23 @@ abstract class NonTerminal extends Parslet {
     constructor(name: string, p?: Parslet) {
         super(name);
         this.parsable = p;
+    }
+}
+
+class Proxy extends Parslet {
+
+    public parsable: Parslet;
+
+    constructor(name: string) {
+        super(name);
+
+    }
+    set parslet(p: Parslet) {
+        this.parsable = p;
+    }
+
+    public parse(node: Node, indent?: string): ASTNode {
+        return this.parsable.parse(node)
     }
 }
 
@@ -249,9 +271,10 @@ export class Grammar {
     public parse(node: Node): ASTNode {
 
         //Terminals
+        const FIELDPROXY    = new Proxy('Field Proxy');
         const fieldElement  = new Terminal("element", fieldHandler);
-        const cmpFldElement  = new Terminal("element", cmpFldHandler);
-        const arrFldElement  = new Terminal("element", arrayFldHandler);
+        const cmpFldElement = new Terminal("element", cmpFldHandler);
+        const arrFldElement = new Terminal("element", arrayFldHandler);
         const classElement  = new Terminal("element", classHandler);
         const enumElement   = new Terminal("element", enumHandler);
         const schema        = new Terminal("schema");
@@ -264,8 +287,12 @@ export class Grammar {
 
 
         //NonTerminals
-        const SUBFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement);
-        const FIELD    = oneOf(SUBFIELD, match(fieldElement));
+        const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement);
+
+        const CMPFIELD = match(cmpFldElement, subclassMerger).child(complexType).child(sequence).children(FIELDPROXY);
+
+        const FIELD    = oneOf(ARRFIELD,  match(fieldElement), CMPFIELD); FIELDPROXY.parslet = FIELD;
+
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence).children(FIELD);
         const ENUMTYPE = match(enumElement).child(simpleType).child(restriction).children(match(enumElement));

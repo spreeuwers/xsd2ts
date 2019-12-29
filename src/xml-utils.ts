@@ -2,6 +2,10 @@
  * Created by eddyspreeuwers on 12/26/19.
  */
 
+export function capFirst (s: string) {
+    return s[0].toUpperCase() + s.substr(1);
+}
+
 export function findFirstChild(node: Node): Node {
     node = node?.firstChild;
     if (node && node.nodeType == node.TEXT_NODE) {
