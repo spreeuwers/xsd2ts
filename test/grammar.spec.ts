@@ -38,13 +38,13 @@ fdescribe("grammar", () => {
         expect((ast as any).types.length).toBe(1);
     });
 
-    fit(" can parse a simple class starting with complexType", () => {
+    it(" can parse a simple class starting with complexType", () => {
 
         let ast = testGrammar(simpleClassXsd);
         expect((ast as any).types.length).toBe(1);
     });
 
-    it(" can parse a simple enumeration  starting with element", () => {
+    fit(" can parse a simple enumeration  starting with element", () => {
         let ast = testGrammar(simpleTypeXsd);
         //expect((ast as any).classes.length).toBe(1);
     });

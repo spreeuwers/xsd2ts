@@ -19,18 +19,21 @@ const cmpFldHandler: NodeHandler = (n) => new ASTNode('Field')
     .prop('fieldType', capFirst(attribs(n).name))
 
 const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Class').prop('name', attribs(n).name);
-const enumHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
+const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
+const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode('EnumValue').prop('value', attribs(n).value):null;
 
-type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
+
+    type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
 const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r1, r2); return r1};
 
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
+const enumMerger: Merger = (r1, r2) => {r1.type = 'Enumeration'; r1.obj.values = r2.list; return r1; };
 //const subclassMerger
 
 //const returnChildResult: Merger  = (r1, r2) => r2;
-const subclassMerger: Merger  = (r1, r2) => {r1.type='Field';r1.obj.subClass= {name: r1.obj.fieldType, list: r2.list}; return r1; };
+const nestedClassMerger: Merger  = (r1, r2) => {r1.type='Field';r1.obj.subClass= {name: r1.obj.fieldType, list: r2.list}; return r1; };
 
 function log(...parms: any) {
     console.log.apply(console, parms);
@@ -199,7 +202,7 @@ export class Children extends NonTerminal {
         log(indent + 'CHILDREN:', this.parsable.name, node.nodeName);
         let sibbling = node;
 
-        const result = new ASTNode("items");
+        const result = new ASTNode("Children");
         result.list = [];
 
         while (sibbling) {
@@ -276,26 +279,26 @@ export class Grammar {
         const cmpFldElement = new Terminal("element", cmpFldHandler);
         const arrFldElement = new Terminal("element", arrayFldHandler);
         const classElement  = new Terminal("element", classHandler);
-        const enumElement   = new Terminal("element", enumHandler);
+        const enumElement   = new Terminal("element", enumElmHandler);
         const schema        = new Terminal("schema");
         const complexType   = new Terminal("complexType");
         const simpleType    = new Terminal("simpleType");
         const restriction   = new Terminal("restriction");
-        const enumeration   = new Terminal("enumeration");
+        const enumeration   = new Terminal("enumeration",enumerationHandler);
         const classType     = new Terminal("complexType", classHandler);
         const sequence      = new Terminal("sequence");
 
 
-        //NonTerminals
+        // NonTerminals
         const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement);
 
-        const CMPFIELD = match(cmpFldElement, subclassMerger).child(complexType).child(sequence).children(FIELDPROXY);
+        const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY);
 
         const FIELD    = oneOf(ARRFIELD,  match(fieldElement), CMPFIELD); FIELDPROXY.parslet = FIELD;
 
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence).children(FIELD);
-        const ENUMTYPE = match(enumElement).child(simpleType).child(restriction).children(match(enumElement));
+        const ENUMTYPE = match(enumElement,enumMerger).child(simpleType).child(restriction).children(match(enumeration));
         const TYPES    = oneOf(ENUMTYPE, E_CLASS, C_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
