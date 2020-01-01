@@ -9,7 +9,7 @@ const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? new ASTNode('Field'
     .prop('fieldName', attribs(n).name)
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
 
-const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs=="unbounded") ? new ASTNode('Field')
+const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs == "unbounded") ? new ASTNode('Field')
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
 
 
@@ -25,15 +25,15 @@ const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode
 
     type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
-const returnMergedResult: Merger  = (r1, r2) => {(Object as any).assign(r1, r2); return r1};
+const returnMergedResult: Merger  = (r1, r2) => r1.merge(r2);
 
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
-const enumMerger: Merger = (r1, r2) => {r1.type = 'Enumeration'; r1.obj.values = r2.list; return r1; };
+const enumMerger: Merger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.obj.values = r2.list; return r1; };
 //const subclassMerger
 
 //const returnChildResult: Merger  = (r1, r2) => r2;
-const nestedClassMerger: Merger  = (r1, r2) => {r1.type='Field';r1.obj.subClass= {name: r1.obj.fieldType, list: r2.list}; return r1; };
+const nestedClassMerger: Merger  = (r1, r2) => {r1.nodeType='Field';r1.obj.subClass= {name: r1.obj.fieldType, list: r2.list}; return r1; };
 
 function log(...parms: any) {
     console.log.apply(console, parms);
@@ -248,13 +248,13 @@ export class OneOf extends Parslet {
 
 
 export class ASTNode {
-    public type: string;
+    public nodeType: string;
     public name: string;
     public child: ASTNode;
     public list: ASTNode[];
 
     constructor(type: string){
-      this.type = type;
+      this.nodeType = type;
     }
 
     public prop(key, value){
@@ -264,6 +264,13 @@ export class ASTNode {
 
     get obj(): any {
         return this as any;
+    }
+    public merge (other: ASTNode){
+        let result = new ASTNode(this.nodeType);
+        result =  (Object as any).assign(result, this);
+        result =  (Object as any).assign(result, other);
+        result.nodeType = this.nodeType;
+        return result;
     }
 
 }
