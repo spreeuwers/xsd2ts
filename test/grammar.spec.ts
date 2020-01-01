@@ -33,16 +33,27 @@ fdescribe("grammar", () => {
 
 
 
-    fit(" can parse a simple class starting with Element ", () => {
+    it(" can parse a simple class starting with Element ", () => {
         let ast = testGrammar(elmXsd);
         expect((ast as any).types.length).toBe(1);
         expect((ast as any).types[0].nodeType).toBe('Class');
+        expect((ast as any).types[0].name).toBe('classname');
+        expect((ast as any).types[0].fields).toBeDefined();
+        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:integer');
     });
 
     it(" can parse a simple class starting with complexType", () => {
 
         let ast = testGrammar(simpleClassXsd);
         expect((ast as any).types.length).toBe(1);
+        expect((ast as any).types[0].nodeType).toBe('Class');
+        expect((ast as any).types[0].name).toBe('Test');
+        expect((ast as any).types[0].fields).toBeDefined();
+        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:integer');
     });
 
     it(" can parse a simple enumeration  starting with element", () => {

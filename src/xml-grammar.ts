@@ -304,7 +304,7 @@ export class Grammar {
         const FIELD    = oneOf(ARRFIELD,  match(fieldElement), CMPFIELD); FIELDPROXY.parslet = FIELD;
 
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
-        const C_CLASS  = match(classType).child(sequence).children(FIELD);
+        const C_CLASS  = match(classType).child(sequence, fieldsMerger).children(FIELD);
         const ENUMTYPE = match(enumElement,enumMerger).child(simpleType).child(restriction).children(match(enumeration));
         const TYPES    = oneOf(ENUMTYPE, E_CLASS, C_CLASS );
 
