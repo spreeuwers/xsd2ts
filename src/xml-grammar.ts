@@ -22,7 +22,7 @@ const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode(
 const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
 const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode('EnumValue').prop('value', attribs(n).value):null;
 
-const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'number'): null;
+const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'integer'): null;
 const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'number'): null;
 
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
