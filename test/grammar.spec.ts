@@ -58,7 +58,12 @@ fdescribe("grammar", () => {
 
     it(" can parse a simple enumeration  starting with element", () => {
         let ast = testGrammar(simpleTypeXsd);
-        //expect((ast as any).classes.length).toBe(1);
+        expect((ast as any).types[1].nodeType).toBe('Enumeration');
+        expect((ast as any).types[1].name).toBe('option');
+        expect((ast as any).types[1].values).toBeDefined();
+        expect((ast as any).types[1].values[0].value).toBe('A');
+        expect((ast as any).types[1].values[1].value).toBe('B');
+
     });
 
 
