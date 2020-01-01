@@ -22,14 +22,18 @@ const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode(
 const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
 const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode('EnumValue').prop('value', attribs(n).value):null;
 
+const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'number'): null;
+const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'number'): null;
 
-    type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
+type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
 const returnMergedResult: Merger  = (r1, r2) => r1.merge(r2);
 
 const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
 const enumMerger: Merger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.obj.values = r2.list; return r1; };
+const typeMerger: Merger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.obj.type = r2.obj.value; return r1; };
+
 //const subclassMerger
 
 //const returnChildResult: Merger  = (r1, r2) => r2;
@@ -281,19 +285,22 @@ export class Grammar {
     public parse(node: Node): ASTNode {
 
         //Terminals
-        const FIELDPROXY    = new Proxy('Field Proxy');
-        const fieldElement  = new Terminal("element", fieldHandler);
-        const cmpFldElement = new Terminal("element", cmpFldHandler);
-        const arrFldElement = new Terminal("element", arrayFldHandler);
-        const classElement  = new Terminal("element", classHandler);
-        const enumElement   = new Terminal("element", enumElmHandler);
-        const schema        = new Terminal("schema");
-        const complexType   = new Terminal("complexType");
-        const simpleType    = new Terminal("simpleType");
-        const restriction   = new Terminal("restriction");
-        const enumeration   = new Terminal("enumeration",enumerationHandler);
-        const classType     = new Terminal("complexType", classHandler);
-        const sequence      = new Terminal("sequence");
+        const FIELDPROXY     = new Proxy('Field Proxy');
+        const fieldElement   = new Terminal("element", fieldHandler);
+        const cmpFldElement  = new Terminal("element", cmpFldHandler);
+        const arrFldElement  = new Terminal("element", arrayFldHandler);
+        const classElement   = new Terminal("element", classHandler);
+        const enumElement    = new Terminal("element", enumElmHandler);
+        const schema         = new Terminal("schema");
+        const complexType    = new Terminal("complexType");
+        const simpleType     = new Terminal("simpleType");
+
+        const enumeration    = new Terminal("enumeration",enumerationHandler);
+
+        const strRestriction = new Terminal("restriction", strRestrictionHandler);
+        const intRestriciton = new Terminal("restriction", intRestrictionHandler);
+        const classType      = new Terminal("complexType", classHandler);
+        const sequence       = new Terminal("sequence");
 
 
         // NonTerminals
@@ -305,8 +312,9 @@ export class Grammar {
 
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence, fieldsMerger).children(FIELD);
-        const ENUMTYPE = match(enumElement,enumMerger).child(simpleType).child(restriction).children(match(enumeration));
-        const TYPES    = oneOf(ENUMTYPE, E_CLASS, C_CLASS );
+        const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
+        const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
+        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');

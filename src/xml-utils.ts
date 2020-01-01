@@ -47,6 +47,7 @@ export interface XMLNode extends Node {
 export interface IAttributes extends Node {
     name: string;
     type: string;
+    base: string;
     value: string;
     maxOccurs:string;
 }
@@ -57,8 +58,10 @@ export function attribs(node: Node): IAttributes {
     const result = {
         name: attr.getNamedItem('name')?.value,
         type: attr.getNamedItem('type')?.value,
+        base: attr.getNamedItem('base')?.value,
         value: attr.getNamedItem('value')?.value,
         maxOccurs: attr.getNamedItem('maxOccurs')?.value
     };
     return result as IAttributes;
 }
+
