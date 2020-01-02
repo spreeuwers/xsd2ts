@@ -70,7 +70,7 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields[2].fieldType).toBe('dep:Node');
     });
 
-    it(" can parse a simple simple Inherited Class", () => {
+    fit(" can parse a simple simple Inherited Class", () => {
         let ast = testGrammar(simpleInheritedClassXsd);
         expect((ast as any).types.length).toBe(1);
         expect((ast as any).types[0].nodeType).toBe('Class');
@@ -98,7 +98,7 @@ fdescribe("grammar", () => {
 
     });
 
-    fit(" can parse a group tag", () => {
+    it(" can parse a group tag", () => {
         let ast = testGrammar(groupXsd);
         expect((ast as any).types[0].nodeType).toBe('Class');
         expect((ast as any).types[0].name).toBe('group_custGroup');

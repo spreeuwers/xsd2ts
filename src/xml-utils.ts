@@ -49,6 +49,7 @@ export interface IAttributes extends Node {
     type: string;
     base: string;
     value: string;
+    ref:string;
     maxOccurs:string;
 }
 
@@ -60,6 +61,7 @@ export function attribs(node: Node): IAttributes {
         type: attr.getNamedItem('type')?.value,
         base: attr.getNamedItem('base')?.value,
         value: attr.getNamedItem('value')?.value,
+        ref: attr.getNamedItem('ref')?.value,
         maxOccurs: attr.getNamedItem('maxOccurs')?.value
     };
     return result as IAttributes;
