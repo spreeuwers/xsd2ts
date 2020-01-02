@@ -23,8 +23,8 @@ const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNod
 const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode('EnumValue').prop('value', attribs(n).value):null;
 const extensionHandler: NodeHandler = (n) => new ASTNode('Extesnsion').prop('extends', attribs(n).base);
 
-const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'number'): null;
-const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'number'): null;
+const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'integer'): null;
+const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'string'): null;
 
 
 const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  new ASTNode('Class').prop('name','group_' + attribs(n).name): null;

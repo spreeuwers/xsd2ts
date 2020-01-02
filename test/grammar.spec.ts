@@ -37,7 +37,7 @@ fdescribe("grammar", () => {
         let ast = testGrammar(elmXsd);
         expect((ast as any).types.length).toBe(1);
         expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('classname');
+        expect((ast as any).types[0].name).toBe('Classname');
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
@@ -70,7 +70,7 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields[2].fieldType).toBe('dep:Node');
     });
 
-    fit(" can parse a simple simple Inherited Class", () => {
+    it(" can parse a simple simple Inherited Class", () => {
         let ast = testGrammar(simpleInheritedClassXsd);
         expect((ast as any).types.length).toBe(1);
         expect((ast as any).types[0].nodeType).toBe('Class');
