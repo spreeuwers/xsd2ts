@@ -26,6 +26,9 @@ const extensionHandler: NodeHandler = (n) => new ASTNode('Extesnsion').prop('ext
 const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'number'): null;
 const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'number'): null;
 
+
+const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  new ASTNode('Class').prop('name','group_' + attribs(n).name): null;
+
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
 const returnMergedResult: Merger  = (r1, r2) => r1.merge(r2);
@@ -192,7 +195,7 @@ export class Matcher extends Parslet {
         log(indent, this.name, this.terminal.tagName, 'node: ', node?.nodeName, 'match:', JSON.stringify(result));
 
         if (result && this.nextParslet) {
-            const nextResult =  this.nextParslet.parse(this.fnNextNode(node), indent + ' ');
+            const nextResult =  this.nextParslet.parse(this.fnNextNode(sibbling), indent + ' ');
             if (nextResult) {
                 result = this.merger(result, nextResult);
             } else {
@@ -300,6 +303,7 @@ export class Grammar {
         const classElement   = new Terminal("element:class", classHandler);
         const enumElement    = new Terminal("element:enum", enumElmHandler);
         const schema         = new Terminal("schema");
+        const namedGroup     = new Terminal("group:named", namedGroupHandler);
         const complexType    = new Terminal("complexType");
         const simpleType     = new Terminal("simpleType");
         const complexContent = new Terminal("complexContent");
@@ -323,9 +327,10 @@ export class Grammar {
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence, fieldsMerger).children(FIELD);
         const X_CLASS  = match(classType).child(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD);
+        const N_GROUP  = match(namedGroup).child(sequence, fieldsMerger).children(FIELD);
         const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
         const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
-        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS );
+        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');
