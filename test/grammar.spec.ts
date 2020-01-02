@@ -56,6 +56,34 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields[0].fieldType).toBe('xs:integer');
     });
 
+    it(" can parse a simple class starting with an imported type namspace", () => {
+        let ast = testGrammar(importedClassXsd);
+        expect((ast as any).types.length).toBe(1);
+        expect((ast as any).types[0].nodeType).toBe('Class');
+        expect((ast as any).types[0].name).toBe('Test');
+        expect((ast as any).types[0].fields).toBeDefined();
+        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[0].fieldName).toBe('firstName');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:string');
+        expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[2].fieldName).toBe('imported');
+        expect((ast as any).types[0].fields[2].fieldType).toBe('dep:Node');
+    });
+
+    fit(" can parse a simple simple Inherited Class", () => {
+        let ast = testGrammar(simpleInheritedClassXsd);
+        expect((ast as any).types.length).toBe(1);
+        expect((ast as any).types[0].nodeType).toBe('Class');
+        expect((ast as any).types[0].name).toBe('Test');
+        expect((ast as any).types[0].fields).toBeDefined();
+        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[0].fieldName).toBe('firstName');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:string');
+        expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[2].fieldName).toBe('imported');
+        expect((ast as any).types[0].fields[2].fieldType).toBe('dep:Node');
+    });
+
     it(" can parse a simple enumeration  starting with element", () => {
         let ast = testGrammar(simpleTypeXsd);
         expect((ast as any).types[0].nodeType).toBe('AliasType');

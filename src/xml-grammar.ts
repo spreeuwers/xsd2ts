@@ -21,8 +21,9 @@ const cmpFldHandler: NodeHandler = (n) => new ASTNode('Field')
 const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Class').prop('name', attribs(n).name);
 const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
 const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode('EnumValue').prop('value', attribs(n).value):null;
+const extensionHandler: NodeHandler = (n) => new ASTNode('Extesnsion').prop('extends', attribs(n).base);
 
-const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'integer'): null;
+const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'number'): null;
 const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'number'): null;
 
 type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
@@ -33,6 +34,7 @@ const typesMerger: Merger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: Merger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
 const enumMerger: Merger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.obj.values = r2.list; return r1; };
 const typeMerger: Merger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.obj.type = r2.obj.value; return r1; };
+
 
 //const subclassMerger
 
@@ -93,6 +95,7 @@ abstract class Parslet implements Parsable {
         return this;
     }
 
+
     public match(t: Terminal, m?: Merger) {
         const next = new Matcher('MATCH' , t, m);
         this.addNext(next, n => n);
@@ -110,19 +113,24 @@ abstract class Parslet implements Parsable {
 
 export class Terminal implements Parsable {
 
-    public tagName: string
+    public tagName: string;
+    public label: string;
     private nodeHandler = (n) => new ASTNode(this.tagName);
 
     constructor(tagName: string, handler?: NodeHandler) {
-        this.tagName = tagName;
+        let tmp = tagName.split(':');
+        this.tagName = tmp[0];
+        this.label = tmp[1] || '_';
+
         this.nodeHandler = handler || this.nodeHandler;
     }
 
 
     public parse(node: Node, indent?: string): ASTNode {
         let result = null;
-        log(indent + 'Terminal: ', this.tagName, 'node: ', node?.nodeName);
-        if (xml(node)?.localName === this.tagName){
+        const isElement = xml(node)?.localName === this.tagName;
+        log(indent + 'Terminal: ', this.tagName + ':' + this.label, 'node: ', node?.nodeName, 'found: ', isElement);
+        if (isElement) {
             result =  this.nodeHandler(node);
         }
         return result;
@@ -155,7 +163,7 @@ class Proxy extends Parslet {
     }
 
     public parse(node: Node, indent?: string): ASTNode {
-        return this.parsable.parse(node)
+        return this.parsable.parse(node, indent + ' ');
     }
 }
 
@@ -236,9 +244,9 @@ export class OneOf extends Parslet {
 
         log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node.nodeName);
         let result = null;
-
+        let count = 1
         for (let option of this.options || []) {
-            log(indent + ' try:', option.name);
+            log(indent + ' try:', option.name , '#' , count++);
             result = option.parse(node, indent + '  ');
             if (result) {
                 break;
@@ -286,14 +294,16 @@ export class Grammar {
 
         //Terminals
         const FIELDPROXY     = new Proxy('Field Proxy');
-        const fieldElement   = new Terminal("element", fieldHandler);
-        const cmpFldElement  = new Terminal("element", cmpFldHandler);
-        const arrFldElement  = new Terminal("element", arrayFldHandler);
-        const classElement   = new Terminal("element", classHandler);
-        const enumElement    = new Terminal("element", enumElmHandler);
+        const fieldElement   = new Terminal("element:fld", fieldHandler);
+        const cmpFldElement  = new Terminal("element:comp", cmpFldHandler);
+        const arrFldElement  = new Terminal("element:array", arrayFldHandler);
+        const classElement   = new Terminal("element:class", classHandler);
+        const enumElement    = new Terminal("element:enum", enumElmHandler);
         const schema         = new Terminal("schema");
         const complexType    = new Terminal("complexType");
         const simpleType     = new Terminal("simpleType");
+        const complexContent = new Terminal("complexContent");
+        const extension      = new Terminal("extension",extensionHandler);
 
         const enumeration    = new Terminal("enumeration",enumerationHandler);
 
@@ -308,13 +318,14 @@ export class Grammar {
 
         const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY);
 
-        const FIELD    = oneOf(ARRFIELD,  match(fieldElement), CMPFIELD); FIELDPROXY.parslet = FIELD;
+        const FIELD    = oneOf(CMPFIELD, ARRFIELD,  match(fieldElement) ); FIELDPROXY.parslet = FIELD;
 
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
         const C_CLASS  = match(classType).child(sequence, fieldsMerger).children(FIELD);
+        const X_CLASS  = match(classType).child(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD);
         const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
         const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
-        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS );
+        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');
