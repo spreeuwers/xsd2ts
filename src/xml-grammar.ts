@@ -9,6 +9,13 @@ const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? new ASTNode('Field'
     .prop('fieldName', attribs(n).name)
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
 
+const topFieldHandler: NodeHandler = (n) => /xs:/.test(attribs(n).type) ? new ASTNode('Class')
+    .prop('name', 'Unknown')
+    .prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]) : null;
+
+
+
+
 const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs == "unbounded") ? new ASTNode('Field')
     .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
 
@@ -303,6 +310,7 @@ export class Grammar {
         const cmpFldElement  = new Terminal("element:comp", cmpFldHandler);
         const arrFldElement  = new Terminal("element:array", arrayFldHandler);
         const classElement   = new Terminal("element:class", classHandler);
+        const topFldElement  = new Terminal("element:topFld", topFieldHandler);
         const enumElement    = new Terminal("element:enum", enumElmHandler);
         const schema         = new Terminal("schema");
         const namedGroup     = new Terminal("group:named", namedGroupHandler);
@@ -331,10 +339,11 @@ export class Grammar {
         const C_CLASS  = match(classType).child(sequence, fieldsMerger).children(FIELD);
         const X_CLASS  = match(classType).child(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD);
         const R_CLASS  = match(classType).child(refGroup);
+        const F_CLASS  = match(topFldElement);
         const N_GROUP  = match(namedGroup).child(sequence, fieldsMerger).children(FIELD);
         const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
         const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
-        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, R_CLASS );
+        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, R_CLASS, F_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');

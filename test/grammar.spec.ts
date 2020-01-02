@@ -32,6 +32,16 @@ fdescribe("grammar", () => {
     });
 
 
+    it(" can parse a single elements  ", () => {
+        let ast = testGrammar(singleElmXsd);
+        expect((ast as any).types.length).toBe(1);
+        expect((ast as any).types[0].nodeType).toBe('Class');
+        expect((ast as any).types[0].name).toBe('Unknown');
+        expect((ast as any).types[0].fields).toBeDefined();
+        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
+        expect((ast as any).types[0].fields[0].fieldName).toBe('naam');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:string');
+    });
 
     it(" can parse a simple class starting with Element ", () => {
         let ast = testGrammar(elmXsd);
