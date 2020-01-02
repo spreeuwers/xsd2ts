@@ -77,11 +77,11 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].name).toBe('Test');
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[0].fieldName).toBe('firstName');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:string');
+        expect((ast as any).types[0].fields[0].fieldName).toBe('nestedFields');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('NestedFields');
         expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[2].fieldName).toBe('imported');
-        expect((ast as any).types[0].fields[2].fieldType).toBe('dep:Node');
+        expect((ast as any).types[0].fields[2].fieldName).toBe('dateField');
+        expect((ast as any).types[0].fields[2].fieldType).toBe('xs:dateTime');
     });
 
     it(" can parse a simple enumeration  starting with element", () => {
