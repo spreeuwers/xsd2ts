@@ -102,6 +102,8 @@ fdescribe("grammar", () => {
         let ast = testGrammar(groupXsd);
         expect((ast as any).types[0].nodeType).toBe('Class');
         expect((ast as any).types[0].name).toBe('group_custGroup');
+        expect((ast as any).types[1].nodeType).toBe('Class');
+        expect((ast as any).types[1].name).toBe('Ordertype');
         //expect((ast as any).types[0].type).toBe('group_custGroup');
 
 
