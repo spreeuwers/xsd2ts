@@ -120,6 +120,18 @@ fdescribe("grammar", () => {
 
     });
 
+    it(" can parse an attribute group tag", () => {
+        let ast = testGrammar(typesXsd);
+        expect((ast as any).types[0].nodeType).toBe('Class');
+        expect((ast as any).types[0].name).toBe('group_BaseView');
+        expect((ast as any).types[1].nodeType).toBe('Class');
+        expect((ast as any).types[1].name).toBe('View');
+        //expect((ast as any).types[0].type).toBe('group_custGroup');
+
+
+
+    });
+
 
 
 

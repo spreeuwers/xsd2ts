@@ -2,8 +2,9 @@
  * Created by eddyspreeuwers on 12/26/19.
  */
 
-export function capFirst (s: string) {
-    return s[0].toUpperCase() + s.substr(1);
+
+export function log(...parms: any) {
+    console.log.apply(console, parms);
 }
 
 export function findFirstChild(node: Node): Node {
@@ -44,12 +45,18 @@ export interface XMLNode extends Node {
     localName: string;
 }
 
+export function capFirst (s: string) {
+    return s[0].toUpperCase() + s.substr(1);
+}
+
+
 export interface IAttributes extends Node {
     name: string;
     type: string;
     base: string;
     value: string;
     ref:string;
+    minOccurs:string;
     maxOccurs:string;
 }
 
@@ -62,6 +69,7 @@ export function attribs(node: Node): IAttributes {
         base: attr.getNamedItem('base')?.value,
         value: attr.getNamedItem('value')?.value,
         ref: attr.getNamedItem('ref')?.value,
+        minOccurs: attr.getNamedItem('minOccurs')?.value,
         maxOccurs: attr.getNamedItem('maxOccurs')?.value
     };
     return result as IAttributes;
