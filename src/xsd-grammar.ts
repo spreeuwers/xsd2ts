@@ -1,11 +1,8 @@
 /**
  * Created by eddyspreeuwers on 12/18/19.
  */
-import {findFirstChild, findNextSibbling, xml, attribs ,capFirst, log} from './xml-utils';
-import {
-    Parsable, ASTNode, Parslet, Proxy, NodeHandler, FindNextNode, OneOf, Terminal, Matcher, Merger,
-    astNode, match, oneOf
-} from './parsing';
+import {attribs , capFirst} from './xml-utils';
+import { ASTNode,Proxy, NodeHandler, Terminal, Merger, astNode, match, oneOf} from './parsing';
 
 
 const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? astNode('Field').addField(n) : null;
@@ -18,26 +15,26 @@ const topFieldHandler: NodeHandler = (n) => /xs:/.test(attribs(n).type) ? astNod
 const attrHandler: NodeHandler = (n) =>  astNode('Field').addField(n);
 
 
-const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? new ASTNode('Field')
-    .prop('fieldType', attribs(n).type + ((attribs(n).maxOccurs === 'unbounded') ? '[]' : '') ) : null;
+const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? astNode('Field')
+    .addField(n) : null;
 
 
 
-const cmpFldHandler: NodeHandler = (n) => new ASTNode('Field')
+const cmpFldHandler: NodeHandler = (n) => astNode('Field')
     .prop('fieldName', attribs(n).name)
     .prop('fieldType', capFirst(attribs(n).name))
 
 const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : astNode('Class').addName(n);
-const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : new ASTNode('Enum').prop('name', attribs(n).name);
-const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  new ASTNode('EnumValue').prop('value', attribs(n).value):null;
-const extensionHandler: NodeHandler = (n) => new ASTNode('Extesnsion').prop('extends', attribs(n).base);
+const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : astNode('Enum').prop('name', attribs(n).name);
+const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  astNode('EnumValue').prop('value', attribs(n).value):null;
+const extensionHandler: NodeHandler = (n) => astNode('Extesnsion').prop('extends', attribs(n).base);
 
-const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  new ASTNode('AliasType').prop('value', 'integer'): null;
-const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  new ASTNode('EnumType').prop('value', 'string'): null;
+const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'integer'): null;
+const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string'): null;
 
 
-const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  new ASTNode('Class').prop('name','group_' + attribs(n).name): null;
-const refGroupHandler: NodeHandler = (n) => (attribs(n).ref) ?  new ASTNode('Fields').prop('ref','group_' + attribs(n).ref):null
+const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  astNode('Class').prop('name','group_' + attribs(n).name): null;
+const refGroupHandler: NodeHandler = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref','group_' + attribs(n).ref):null
 
 
 
@@ -54,18 +51,7 @@ const nestedClassMerger: Merger  = (r1, r2) => {r1.nodeType='Field';r1.obj.subCl
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-export class Grammar {
+export class XsdGrammar {
 
     public parse(node: Node): ASTNode {
 

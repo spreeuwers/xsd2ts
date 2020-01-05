@@ -3,7 +3,7 @@
  */
 import * as fs from "fs";
 import * as ts from "typescript";
-import {Grammar} from "../src/xml-grammar";
+import {XsdGrammar} from "../src/xsd-grammar";
 import {DOMParser} from "xmldom-reborn";
 
 
@@ -84,7 +84,7 @@ fdescribe("grammar", () => {
         let ast = testGrammar(simpleInheritedClassXsd);
         expect((ast as any).types.length).toBe(1);
         expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('Test');
+        expect((ast as any).types[0].name).toBe('InheridedClass');
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[0].fieldName).toBe('nestedFields');
@@ -145,7 +145,7 @@ function printFile(fname:string) {
 
 
 function testGrammar (elmXsd: string) {
-    const grammar = new Grammar();
+    const grammar = new XsdGrammar();
     console.log('src:', elmXsd);
     const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
     const xmlNode = xmlDom.documentElement;
