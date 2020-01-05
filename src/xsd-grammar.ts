@@ -2,38 +2,35 @@
  * Created by eddyspreeuwers on 12/18/19.
  */
 import {attribs , capFirst} from './xml-utils';
-import { ASTNode,Proxy, NodeHandler, Terminal, Merger, astNode, match, oneOf} from './parsing';
+import {
+    ASTNode, Proxy, NodeHandler, Terminal, Merger, astNode, match, oneOf, astClass, astField,
+    astEnum, astEnumValue
+} from './parsing';
 
 
 const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? astNode('Field').addField(n) : null;
 
 
-const topFieldHandler: NodeHandler = (n) => /xs:/.test(attribs(n).type) ? astNode('Class')
-    .prop('name', 'Unknown')
-    .prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]) : null;
+const topFieldHandler: NodeHandler = (n) => /xs:/.test(attribs(n).type) ? astClass().named('Unknown').addFields(n) : null;
 
 const attrHandler: NodeHandler = (n) =>  astNode('Field').addField(n);
 
 
-const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? astNode('Field')
-    .addField(n) : null;
+const arrayFldHandler: NodeHandler = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? astNode('Field').addField(n) : null;
 
 
+const cmpFldHandler: NodeHandler = (n) => astField().prop('fieldName', attribs(n).name).prop('fieldType', capFirst(attribs(n).name));
 
-const cmpFldHandler: NodeHandler = (n) => astNode('Field')
-    .prop('fieldName', attribs(n).name)
-    .prop('fieldType', capFirst(attribs(n).name))
-
-const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : astNode('Class').addName(n);
-const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : astNode('Enum').prop('name', attribs(n).name);
-const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  astNode('EnumValue').prop('value', attribs(n).value):null;
+const classHandler: NodeHandler = (n) => (attribs(n).type) ? null : astClass(n);
+const enumElmHandler: NodeHandler = (n) => (attribs(n).type) ? null : astEnum(n);
+const enumerationHandler: NodeHandler = (n) => (attribs(n).value) ?  astEnumValue(n): null;
 const extensionHandler: NodeHandler = (n) => astNode('Extesnsion').prop('extends', attribs(n).base);
 
 const intRestrictionHandler: NodeHandler = (n) => /integer/.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'integer'): null;
 const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string'): null;
 
 
-const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  astNode('Class').prop('name','group_' + attribs(n).name): null;
+const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  astClass().prop('name', 'group_' + attribs(n).name): null;
 const refGroupHandler: NodeHandler = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref','group_' + attribs(n).ref):null
 
 

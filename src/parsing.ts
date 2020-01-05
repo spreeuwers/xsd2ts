@@ -16,6 +16,24 @@ export function astNode(s:string) {
     return new ASTNode(s);
 }
 
+export function astClass(n?: Node) {
+    let result = astNode('Class');
+    if (n) result.addName(n);
+    return result;
+}
+
+export function astEnum(n:Node) {
+    return astNode('Enum').named(attribs(n).name);
+}
+
+export function astEnumValue(n: Node){
+    return astNode('EnumValue').prop('value', attribs(n).value);
+}
+
+export function astField() {
+    return astNode('Class');
+}
+
 
 export function oneOf(...options: Parslet[]){
     return new OneOf('ONE OFF' , options);
@@ -46,6 +64,16 @@ export class ASTNode {
         return this;
     }
 
+    public named(name:string): ASTNode {
+        this.name = name;
+        return this;
+    }
+
+    public addFields(n:Node): ASTNode {
+        return this.prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]);
+    }
+
+
     public addName(node: Node){
         return this.prop('name', capFirst(attribs(node).name));
     }
@@ -68,6 +96,23 @@ export class ASTNode {
         return result;
     }
 
+}
+
+export class ASTClass extends ASTNode {
+
+
+    constructor(n: Node) {
+        super ("Class");
+        this.addName(n);
+    }
+
+    get nodeType(){
+        return 'Class;';
+    }
+
+    public static fromNamedElement(n:Node): ASTClass {
+        return new ASTClass(n);
+    }
 }
 
 export abstract class Parslet implements Parsable {
