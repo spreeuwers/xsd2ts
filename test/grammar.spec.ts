@@ -51,7 +51,7 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:integer');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('number');
     });
 
     it(" can parse a simple class starting with complexType", () => {
@@ -63,7 +63,7 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:integer');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('number');
     });
 
     it(" can parse a simple class starting with an imported type namspace", () => {
@@ -74,10 +74,10 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[0].fieldName).toBe('firstName');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:string');
+        expect((ast as any).types[0].fields[0].fieldType).toBe('string');
         expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[2].fieldName).toBe('imported');
-        expect((ast as any).types[0].fields[2].fieldType).toBe('dep:Node');
+        expect((ast as any).types[0].fields[2].fieldType).toBe('dep.Node');
     });
 
     it(" can parse a simple simple Inherited Class", () => {
@@ -91,7 +91,7 @@ fdescribe("grammar", () => {
         expect((ast as any).types[0].fields[0].fieldType).toBe('NestedFields');
         expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[2].fieldName).toBe('dateField');
-        expect((ast as any).types[0].fields[2].fieldType).toBe('xs:dateTime');
+        expect((ast as any).types[0].fields[2].fieldType).toBe('Date');
     });
 
     it(" can parse a simple enumeration  starting with element", () => {

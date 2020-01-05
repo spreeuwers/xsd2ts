@@ -75,3 +75,19 @@ export function attribs(node: Node): IAttributes {
     return result as IAttributes;
 }
 
+
+export function getFieldType(type: string): string {
+    const key = type?.toLowerCase().split(':').reverse()[0];
+    const typeMap = {
+        string: "string",
+        float: "number",
+        double: "number",
+        int: "number",
+        integer: "number",
+        datetime: "Date",
+        date: "Date",
+        base64bBinary: "string",
+        boolean: "boolean",
+    }
+    return typeMap[key] || type?.replace(':','.') || 'any';
+}

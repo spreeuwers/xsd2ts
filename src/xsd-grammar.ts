@@ -31,7 +31,7 @@ const strRestrictionHandler: NodeHandler = (n) => /string/.test(attribs(n).base)
 
 
 const namedGroupHandler: NodeHandler = (n) => (attribs(n).name) ?  astClass().prop('name', 'group_' + attribs(n).name): null;
-const refGroupHandler: NodeHandler = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref','group_' + attribs(n).ref):null
+const refGroupHandler: NodeHandler = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', 'group_' + attribs(n).ref):null
 
 
 

@@ -1,8 +1,9 @@
 /**
  * Created by eddyspreeuwers on 1/5/20.
  */
-import {capFirst, attribs, findFirstChild, xml, log, findNextSibbling} from './xml-utils';
+import {capFirst, attribs, findFirstChild, xml, log, findNextSibbling, getFieldType} from './xml-utils';
 
+const UNBOUNDED = 'unbounded';
 
 
 export type FindNextNode = (n: Node) => Node;
@@ -10,8 +11,11 @@ export type NodeHandler = (n: Node) => ASTNode;
 export type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
 const returnMergedResult: Merger  = (r1, r2) => r1.merge(r2);
+let ns = 'xs';
 
-
+export function setNamespace(namespace: string) {
+    ns = namespace;
+}
 export function astNode(s:string) {
     return new ASTNode(s);
 }
@@ -79,9 +83,11 @@ export class ASTNode {
     }
 
     public addField(node: Node) {
-        let type = attribs(node).type || 'xs:string';
+
+        let type = getFieldType(attribs(node).type);
+
         this.prop('fieldName', attribs(node).name + ((attribs(node).minOccurs === '0') ? '?' : ''))
-            .prop('fieldType', type + ((attribs(node).maxOccurs === 'unbounded') ? '[]' : ''));
+            .prop('fieldType', type + ((attribs(node).maxOccurs === UNBOUNDED) ? '[]' : ''));
         return this;
     }
 
@@ -174,7 +180,7 @@ export class Terminal implements Parsable {
     constructor(tagName: string, handler?: NodeHandler) {
         let tmp = tagName.split(':');
         this.tagName = tmp[0];
-        this.label = tmp[1] || '_';
+        this.label = tmp[1] ?? '_';
 
         this.nodeHandler = handler || this.nodeHandler;
     }
@@ -308,7 +314,6 @@ export class OneOf extends Parslet {
                 break;
             }
         }
-        //log(indent,'result:',JSON.stringify(result));
         return result;
     }
 }
