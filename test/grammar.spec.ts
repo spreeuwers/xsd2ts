@@ -36,7 +36,7 @@ fdescribe("grammar", () => {
         let ast = testGrammar(singleElmXsd);
         expect((ast as any).types.length).toBe(1);
         expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('Unknown');
+        expect((ast as any).types[0].name).toBe('ForNaam');
         expect((ast as any).types[0].fields).toBeDefined();
         expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
         expect((ast as any).types[0].fields[0].fieldName).toBe('naam');

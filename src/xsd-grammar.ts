@@ -11,7 +11,7 @@ import {
 const fieldHandler: NodeHandler = (n) => (attribs(n).type) ? astNode('Field').addField(n) : null;
 
 
-const topFieldHandler: NodeHandler = (n) => /xs:/.test(attribs(n).type) ? astClass().named('Unknown').addFields(n) : null;
+const topFieldHandler: NodeHandler = (n) => /xs:/.test(attribs(n).type) ? astClass().addName(n, 'For').addFields(n) : null;
 
 const attrHandler: NodeHandler = (n) =>  astNode('Field').addField(n);
 

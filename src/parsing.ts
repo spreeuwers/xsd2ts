@@ -73,13 +73,19 @@ export class ASTNode {
         return this;
     }
 
+    public capNamed(name: string): ASTNode {
+        this.name = capFirst(name);
+        return this;
+    }
+
+
     public addFields(n:Node): ASTNode {
         return this.prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]);
     }
 
 
-    public addName(node: Node){
-        return this.prop('name', capFirst(attribs(node).name));
+    public addName(node: Node, prefix?: string): ASTNode{
+        return this.prop('name', (prefix || '') + capFirst(attribs(node).name));
     }
 
     public addField(node: Node) {
