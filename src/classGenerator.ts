@@ -61,22 +61,22 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
-function addClass(fileDef: FileDefinition, astNode: any) {
+function addClass(fileDef: FileDefinition, astNode: any, indent ='') {
     let c = fileDef.addClass({name: astNode.name});
-    console.log('created: ', astNode.name, ', fields: ', astNode?.fields?.length);
-    (astNode.obj?.fields || []).forEach(
+    console.log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.fields?.length);
+    (astNode.fields || []).forEach(
         f => {
-            console.log('  adding field:', {name: f.fieldName, type: f.fieldType});
+            console.log(indent + 'adding field:', {name: f.fieldName, type: f.fieldType});
             c.addProperty({name: f.fieldName, type: f.fieldType, scope: "protected"});
             const typeParts = f.fieldType.split('.');
             if (typeParts.length == 2) {
                 const ns = typeParts[0];
                 fileDef.addImport({moduleSpecifier: this.dependencies[ns], starImportName: ns});
             }
-            console.log('nested class', f.nestedClass);
+            console.log(indent + 'nested class', f.fieldName, JSON.stringify(f.nestedClass,));
             if ( f.nestedClass ){
 
-                addClass(fileDef, f.nestedClass);
+                addClass(fileDef, f.nestedClass, indent + ' ');
             }
         }
     )
