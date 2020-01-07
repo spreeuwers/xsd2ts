@@ -44,7 +44,7 @@ const typeMerger: Merger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.obj.type =
 //const subclassMerger
 
 //const returnChildResult: Merger  = (r1, r2) => r2;
-const nestedClassMerger: Merger  = (r1, r2) => {r1.nodeType='Field';r1.obj.subClass= {name: r1.obj.fieldType, list: r2.list}; return r1; };
+const nestedClassMerger: Merger  = (r1, r2) => {r1.nodeType='Field';r1.obj.nestedClass= {name: r1.obj.fieldType, fields: r2.list}; return r1; };
 
 
 

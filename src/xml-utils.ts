@@ -46,7 +46,10 @@ export interface XMLNode extends Node {
 }
 
 export function capFirst (s: string) {
-    return s[0].toUpperCase() + s.substr(1);
+    if (s && s[0]){
+        return s[0].toUpperCase() + s.substr(1);
+    }
+    return s;
 }
 
 

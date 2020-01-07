@@ -3,6 +3,7 @@
  */
 import {ClassDefinition, createFile, EnumDefinition, FileDefinition} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
+import {XsdGrammar} from "./xsd-grammar";
 
 enum xsdTypes {
     XS_STRING = 'xs:string',
@@ -60,6 +61,26 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
+function addClass(fileDef: FileDefinition, astNode: any) {
+    let c = fileDef.addClass({name: astNode.name});
+    console.log('created: ', astNode.name, ', fields: ', astNode?.fields?.length);
+    (astNode.obj?.fields || []).forEach(
+        f => {
+            console.log('  adding field:', {name: f.fieldName, type: f.fieldType});
+            c.addProperty({name: f.fieldName, type: f.fieldType, scope: "protected"});
+            const typeParts = f.fieldType.split('.');
+            if (typeParts.length == 2) {
+                const ns = typeParts[0];
+                fileDef.addImport({moduleSpecifier: this.dependencies[ns], starImportName: ns});
+            }
+            console.log('nested class', f.nestedClass);
+            if ( f.nestedClass ){
+
+                addClass(fileDef, f.nestedClass);
+            }
+        }
+    )
+};
 export class ClassGenerator {
     private fileDef = createFile({classes: []});
     private verbose = false;
@@ -129,12 +150,14 @@ export class ClassGenerator {
 
         }
 
+
+
         this.log('\nspecified: ', Object.keys(this.specifiedClasses).join(';'));
         this.log('referenced:',Object.keys(this.referencedClasses).join(';'));
 
         this.log('\n-----generated------');
         let sortedClasses = this.fileDef.classes;
-        this.log(sortedClasses.map(c =>  ''+ c.name).join(';').replace('[]', ''));
+        this.log(sortedClasses.map(c =>  '' + c.name).join(';').replace('[]', ''));
 
         sortedClasses = sortedClasses
             .filter(c => this.specifiedClasses[c.name] || this.referencedClasses[c.name] )
@@ -151,9 +174,55 @@ export class ClassGenerator {
         sortedClasses.forEach(c => this.log(c.name));
 
         logLine();
+
         const outfile =  this.makeSortedFileDefinition(sortedClasses);
         outfile.enums = this.fileDef.enums;
         return outfile;
+
+    }
+
+    public generateClassFileDefinition2(xsd: string, pluralPostFix= 's',  verbose?: boolean): FileDefinition {
+        const fileDef = createFile();
+        const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
+
+        this.verbose = verbose;
+        this.pluralPostFix = pluralPostFix;
+
+
+        this.log('--------------------generating classFile definition for----------------------------------');
+        this.log('');
+        this.log(xsd);
+        this.log('');
+        this.log('-------------------------------------------------------------------------------------');
+        let ast = this.parseXsd(xsd);
+        console.log(JSON.stringify(ast,null,3));
+        (ast.obj.types || [])
+            .filter(t => t.nodeType === 'Class')
+            .forEach(t => addClass(fileDef, t) );
+        (ast.obj.types || [])
+            .filter(t => t.nodeType === 'AliasType')
+            .forEach( t => fileDef.addTypeAlias({name: t.name, type:t.type}) );
+
+        (ast.obj.types || [])
+            .filter(t => t.nodeType === 'Enumeration')
+            .forEach(t => {
+                let e = fileDef.addEnum({name: t.name});
+                t.obj.values.forEach (
+                    m => { e.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
+                );
+            });
+
+        let tmp = this.makeSortedFileDefinition(fileDef.classes);
+        fileDef.classes = tmp.classes;
+        return fileDef;
+    }
+
+
+    private parseXsd(xsd:string){
+        const xsdGrammar = new XsdGrammar();
+        const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
+        const xmlNode = xmlDom?.documentElement;
+        return xsdGrammar.parse(xmlNode);
 
     }
 

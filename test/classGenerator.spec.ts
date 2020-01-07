@@ -100,6 +100,7 @@ describe("ClassGenerator", () => {
             expect(fld.name).toBe("option?");
 
         });
+
         it("returns a  classFile with special types from typesXsd", () => {
             let classFile = generator.generateClassFileDefinition(typesXsd, "", true);
             let types = generator.types.map((t) => `${t}`).join("\n");
@@ -154,5 +155,39 @@ describe("ClassGenerator", () => {
             let c  = classFile.getClass("Naam");
             expect(c).toBeDefined();
 
+        });
+
+        it("returns a classFile for a simpleTypeXsd", () => {
+
+            let classFile = generator.generateClassFileDefinition2(simpleClassXsd, "", true);
+            let types = generator.types.map((t) => `${t}`).join("\n");
+            console.log("-------------------------------------\n");
+            console.log(types,"\n\n", classFile.write());
+            expect(classFile.classes.length).toBe(1);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
+
+        it("returns a classFile for a simpleTypeXsd", () => {
+
+            let classFile = generator.generateClassFileDefinition2(simpleTypeXsd, "", true);
+            let types = generator.types.map((t) => `${t}`).join("\n");
+            console.log("-------------------------------------\n");
+            console.log(types,"\n\n", classFile.write());
+            expect(classFile.classes.length).toBe(0);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
+
+        it("returns a  classFile with special types from typesXsd", () => {
+            let classFile = generator.generateClassFileDefinition2(typesXsd, "", true);
+            //let types = generator.types.map((t) => `${t}`).join("\n");
+            console.log("-------------------------------------\n");
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(7);
+            let fld = classFile.getClass("Module")?.getProperty("param");
+            expect(fld?.type?.text).toBe("Param");
         });
 });

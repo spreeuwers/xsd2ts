@@ -3,48 +3,52 @@
  */
 import * as fs from "fs";
 import * as ts from "typescript";
-import {generateTemplateClassesFromXSD} from "../src/index";
+import {generateTemplateClassesFromXSD2} from "../src/index";
 
 
-describe("generator", () => {
+fdescribe("generator", () => {
 
 
         it(" has function generateTemplateClassesFromXSD", () => {
-            expect(generateTemplateClassesFromXSD).toBeDefined();
+            expect(generateTemplateClassesFromXSD2).toBeDefined();
         });
 
         it("creates simpleClass.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/simpleClass.xsd",{Xs: "./ns"}));
-        });
-        it("creates importedClass.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/importedClass.xsd",
-                {Dep: "./ns"} as Map<string, string>));
+            expect(generateTemplateClassesFromXSD2("./test/xsd/simpleClass.xsd",{Xs: "./ns"}));
+            printFile("./src/generated/simpleClass.ts");
         });
 
-        it("creates simpleInheritedClass.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/simpleInheritedClass.xsd",
+        it("creates importedClass.ts", () => {
+            expect(generateTemplateClassesFromXSD2("./test/xsd/importedClass.xsd",
+                {dep: "./ns"} as Map<string, string>));
+            printFile("./src/generated/importedClass.ts");
+        });
+
+        fit("creates simpleInheritedClass.ts", () => {
+            expect(generateTemplateClassesFromXSD2("./test/xsd/simpleInheritedClass.xsd",
                 {Xs: "./ns"} as Map<string, string>));
+            printFile("./src/generated/simpleInheritedClass.ts");
         });
 
         it("creates xep-004.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd"));
+            expect(generateTemplateClassesFromXSD2("./test/xsd/xep-004.xsd"));
         });
         it("creates heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/simpleType.xsd"));
+            expect(generateTemplateClassesFromXSD2("./test/xsd/simpleType.xsd"));
         });
 
         it("creates group.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/group.xsd"));
+            expect(generateTemplateClassesFromXSD2("./test/xsd/group.xsd"));
         });
 
         it("creates types.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/types.xsd"));
+            expect(generateTemplateClassesFromXSD2("./test/xsd/types.xsd"));
             printFile("./src/generated/types.ts");
             //compile(["./src/generated/types.ts"]);
         });
 
         it("creates element.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/element.xsd",{ Xs : "./ns"} ));
+            expect(generateTemplateClassesFromXSD2("./test/xsd/element.xsd",{ Xs : "./ns"} ));
         });
 
 
