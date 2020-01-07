@@ -32,6 +32,7 @@ fdescribe("generator", () => {
 
         it("creates xep-004.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/xep-004.xsd"));
+            printFile("./src/generated/xep-004.ts");
         });
         it("creates heeft een types property", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/simpleType.xsd"));

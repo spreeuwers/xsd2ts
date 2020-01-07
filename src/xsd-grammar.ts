@@ -92,11 +92,12 @@ export class XsdGrammar {
         const G_CLASS  = match(attributeGroup).children(match(attribute));
 
         const R_CLASS  = match(classType).child(refGroup);
+        const S_CLASS  = match(classType); //simple empty class
         const F_CLASS  = match(topFldElement);
         const N_GROUP  = match(namedGroup).child(sequence, fieldsMerger).children(FIELD);
         const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
         const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
-        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, R_CLASS, F_CLASS, G_CLASS, A_CLASS );
+        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, R_CLASS, F_CLASS, G_CLASS, A_CLASS, S_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');

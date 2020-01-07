@@ -61,7 +61,7 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
-function addClass(fileDef: FileDefinition, astNode: any, indent ='') {
+function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent ='') {
     let c = fileDef.addClass({name: astNode.name});
     console.log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.fields?.length);
     (astNode.fields || []).forEach(
@@ -76,7 +76,7 @@ function addClass(fileDef: FileDefinition, astNode: any, indent ='') {
             console.log(indent + 'nested class', f.fieldName, JSON.stringify(f.nestedClass,));
             if ( f.nestedClass ){
 
-                addClass(fileDef, f.nestedClass, indent + ' ');
+                addClassForASTNode(fileDef, f.nestedClass, indent + ' ');
             }
         }
     )
@@ -198,7 +198,7 @@ export class ClassGenerator {
         console.log(JSON.stringify(ast,null,3));
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Class')
-            .forEach(t => addClass(fileDef, t) );
+            .forEach(t => addClassForASTNode(fileDef, t) );
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'AliasType')
             .forEach( t => fileDef.addTypeAlias({name: t.name, type:t.type}) );
