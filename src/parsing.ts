@@ -7,10 +7,10 @@ const UNBOUNDED = 'unbounded';
 
 
 export type FindNextNode = (n: Node) => Node;
-export type NodeHandler = (n: Node) => ASTNode;
-export type Merger = (r1: ASTNode, r2: ASTNode) => ASTNode;
+export type AstNodeFactory = (n: Node) => ASTNode;
+export type AstNodeMerger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
-const returnMergedResult: Merger  = (r1, r2) => r1.merge(r2);
+const returnMergedResult: AstNodeMerger  = (r1, r2) => r1.merge(r2);
 let ns = 'xs';
 
 export function setNamespace(namespace: string) {
@@ -44,11 +44,11 @@ export function oneOf(...options: Parslet[]){
 }
 
 
-export function match(t: Terminal, m?: Merger) {
+export function match(t: Terminal, m?: AstNodeMerger) {
     return new Matcher('MATCH' , t, m);
 }
 
-export interface Parsable {
+export interface IParsable {
     parse(node: Node, indent?: string): ASTNode;
 }
 
@@ -127,18 +127,19 @@ export class ASTClass extends ASTNode {
     }
 }
 
-export abstract class Parslet implements Parsable {
+export abstract class Parslet implements IParsable {
     public name: string;
     public fnNextNode: FindNextNode;
     public nextParslet: Parslet;
 
     constructor(name: string) {
         this.name = name;
+        this.fnNextNode = x => x;
     }
 
     public abstract parse(node: Node, indent?: string): ASTNode;
 
-    //Add child at and of child chain recursively
+    // Add child at and of child chain recursively
     public addNext(p: Parslet, fnn: FindNextNode) {
         if (this.nextParslet) {
             this.nextParslet.addNext(p, fnn);
@@ -146,23 +147,24 @@ export abstract class Parslet implements Parsable {
             this.nextParslet = p;
             this.fnNextNode = fnn;
         }
+        return this;
     }
 
-    public children(p: Parslet) {
-        const next = new Children(this.name, p);
+    public children(...options: Parslet[]) {
+        const next = new Sibblings(this.name, options);
         this.addNext(next, findFirstChild);
         return this;
     }
 
 
-    public child(t: Terminal, m?: Merger) {
+    public child(t: Terminal, m?: AstNodeMerger) {
         const next = new Matcher('MATCH' , t, m);
         this.addNext(next, findFirstChild);
         return this;
     }
 
 
-    public match(t: Terminal, m?: Merger) {
+    public match(t: Terminal, m?: AstNodeMerger) {
         const next = new Matcher('MATCH' , t, m);
         this.addNext(next, n => n);
         return this;
@@ -170,50 +172,44 @@ export abstract class Parslet implements Parsable {
 
     public oneOf(...options: Parslet[]){
         const next = new OneOf('ONE OFF' , options);
-        this.addNext(next, n => n);
+        this.addNext(next, (n) => n);
+        return this;
+    }
+
+    public childIsOneOf(...options: Parslet[]) {
+        const next = new OneOf('ONE OFF' , options);
+        this.addNext(next, findFirstChild);
         return this;
     }
 
 
 }
 
-export class Terminal implements Parsable {
-
+export class Terminal implements IParsable {
+    public name:string;
     public tagName: string;
-    public label: string;
-    private nodeHandler = (n) => new ASTNode(this.tagName);
 
-    constructor(tagName: string, handler?: NodeHandler) {
-        let tmp = tagName.split(':');
-        this.tagName = tmp[0];
-        this.label = tmp[1] ?? '_';
+    private astNodeFactory = (n) => new ASTNode(this.tagName);
 
-        this.nodeHandler = handler || this.nodeHandler;
+    constructor(name: string, handler?: AstNodeFactory) {
+        this.name = name;
+        this.tagName = name.split(':').shift();
+
+        this.astNodeFactory = handler || this.astNodeFactory;
     }
 
 
     public parse(node: Node, indent?: string): ASTNode {
         let result = null;
         const isElement = xml(node)?.localName === this.tagName;
-        log(indent + 'Terminal: ', this.tagName + ':' + this.label, 'node: ', node?.nodeName, 'found: ', isElement);
+        log(indent + 'Terminal: ', this.name +  ', node: ', node?.nodeName, 'found: ', isElement);
         if (isElement) {
-            result =  this.nodeHandler(node);
+            result =  this.astNodeFactory(node);
         }
         return result;
     }
 
 
-}
-
-
-abstract class NonTerminal extends Parslet {
-
-    public parsable: Parslet;
-
-    constructor(name: string, p?: Parslet) {
-        super(name);
-        this.parsable = p;
-    }
 }
 
 export class Proxy extends Parslet {
@@ -233,12 +229,14 @@ export class Proxy extends Parslet {
     }
 }
 
+
+
 export class Matcher extends Parslet {
     private terminal: Terminal;
-    private merger: Merger = returnMergedResult;
+    private merger: AstNodeMerger = returnMergedResult;
 
 
-    constructor(name: string, t: Terminal, m?: Merger) {
+    constructor(name: string, t: Terminal, m?: AstNodeMerger) {
         super(name);
         this.merger = m || this.merger;
         this.terminal = t;
@@ -275,20 +273,63 @@ export class Matcher extends Parslet {
 
 }
 
-export class Children extends NonTerminal {
+export class OneOf extends Parslet {
+
+    public options: Parslet[];
+
+    constructor(name: string, options: Parslet[]) {
+        super(name);
+        this.options = options;
+    }
+
+    public parse(node: Node, indent?: string): ASTNode {
+        const nextNode = this.fnNextNode(node);
+        log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node.nodeName, nextNode.nodeName);
+        let result = null;
+        let count = 1;
+        for (let option of this.options || []) {
+            log(indent + ' try:', option.name , '#' , count++);
+            result = option.parse(nextNode, indent + '  ');
+            if (result) {
+                break;
+            }
+        }
+        return result;
+    }
+}
+
+export class Sibblings extends Parslet {
+
+    //public parsable: Parslet;
+    public options: Parslet[];
+
+    constructor(name: string, options: Parslet[]) {
+        super(name);
+        this.options = options;
+    }
 
     public parse(node: Node, indent?: string): ASTNode{
 
-        log(indent + 'CHILDREN:', this.parsable.name, node.nodeName);
+        log(indent + 'Collect all :', this.options.map(x => x.name).join(','), node.nodeName);
         let sibbling = node;
 
-        const result = new ASTNode("Children");
+        const result = new ASTNode("Sibblings");
         result.list = [];
 
         while (sibbling) {
             log(indent + 'list sibbling:', sibbling?.nodeName);
 
-            const listItem = this.parsable.parse(sibbling, indent + '  ');
+            //const listItem = this.parsable.parse(sibbling, indent + '  ');
+            let listItem = null;
+            let count = 0;
+            for (let option of this.options || []) {
+                log(indent + ' try:', option.name , '#' , count++);
+                listItem = option.parse(sibbling, indent + '  ');
+                if (listItem) {
+                    break;
+                }
+            }
+
             if (listItem) {
                 result.list.push(listItem);
             }
@@ -299,30 +340,7 @@ export class Children extends NonTerminal {
     }
 }
 
-export class OneOf extends Parslet {
 
-    public options: Parslet[];
-
-    constructor(name: string, options: Parslet[]) {
-        super(name);
-        this.options = options;
-    }
-
-    public parse(node: Node, indent?: string): ASTNode{
-
-        log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node.nodeName);
-        let result = null;
-        let count = 1
-        for (let option of this.options || []) {
-            log(indent + ' try:', option.name , '#' , count++);
-            result = option.parse(node, indent + '  ');
-            if (result) {
-                break;
-            }
-        }
-        return result;
-    }
-}
 
 
 

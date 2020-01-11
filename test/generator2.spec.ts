@@ -5,16 +5,19 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import {generateTemplateClassesFromXSD2} from "../src/index";
 
-
-fdescribe("generator", () => {
+function xsdPath(name: string){
+  return   `./test/xsd/${name}.xsd`;
+}
+describe("generator", () => {
 
 
         it(" has function generateTemplateClassesFromXSD", () => {
             expect(generateTemplateClassesFromXSD2).toBeDefined();
+
         });
 
         it("creates simpleClass.ts", () => {
-            expect(generateTemplateClassesFromXSD2("./test/xsd/simpleClass.xsd",{Xs: "./ns"}));
+            expect(generateTemplateClassesFromXSD2(xsdPath("simpleClass"),{Xs: "./ns"}));
             printFile("./src/generated/simpleClass.ts");
         });
 
@@ -24,7 +27,7 @@ fdescribe("generator", () => {
             printFile("./src/generated/importedClass.ts");
         });
 
-        fit("creates simpleInheritedClass.ts", () => {
+        it("creates simpleInheritedClass.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/simpleInheritedClass.xsd",
                 {Xs: "./ns"} as Map<string, string>));
             printFile("./src/generated/simpleInheritedClass.ts");
@@ -36,10 +39,14 @@ fdescribe("generator", () => {
         });
         it("creates heeft een types property", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/simpleType.xsd"));
+            printFile("./src/generated/simpleType.ts");
+            compile(["./src/generated/types.ts"]);
         });
 
-        it("creates group.ts", () => {
+        fit("creates group.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/group.xsd"));
+            printFile("./src/generated/group.ts");
+            compile(["./src/generated/group.ts"]);
         });
 
         it("creates types.ts", () => {

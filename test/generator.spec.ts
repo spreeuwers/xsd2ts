@@ -16,6 +16,7 @@ describe("generator", () => {
         it("creates simpleClass.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/simpleClass.xsd",{Xs: "./ns"}));
         });
+
         it("creates importedClass.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/importedClass.xsd",
                 {Dep: "./ns"} as Map<string, string>));

@@ -184,7 +184,7 @@ export class ClassGenerator {
     public generateClassFileDefinition2(xsd: string, pluralPostFix= 's',  verbose?: boolean): FileDefinition {
         const fileDef = createFile();
         const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
-
+        const groups: { [key: string]: object }= {};
         this.verbose = verbose;
         this.pluralPostFix = pluralPostFix;
 
@@ -196,6 +196,9 @@ export class ClassGenerator {
         this.log('-------------------------------------------------------------------------------------');
         let ast = this.parseXsd(xsd);
         console.log(JSON.stringify(ast,null,3));
+        (ast.obj.types || [])
+            .filter(t => t.nodeType === 'Group')
+            .forEach(t => groups[t.name] = t);
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
