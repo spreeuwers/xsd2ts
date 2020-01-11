@@ -108,7 +108,7 @@ export class XsdGrammar {
         const N_GROUP  = match(namedGroup).child(sequence, fieldsMerger).children(FIELD);
         const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
         const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
-        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, F_CLASS, G_CLASS, A_CLASS, S_CLASS, R_CLASS );
+        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, F_CLASS, G_CLASS, A_CLASS,  R_CLASS, S_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');

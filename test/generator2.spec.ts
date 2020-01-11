@@ -43,7 +43,7 @@ describe("generator", () => {
             compile(["./src/generated/types.ts"]);
         });
 
-        it("creates group.ts", () => {
+        fit("creates group.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/group.xsd"));
             printFile("./src/generated/group.ts");
             compile(["./src/generated/group.ts"]);
