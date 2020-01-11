@@ -284,7 +284,7 @@ export class OneOf extends Parslet {
 
     public parse(node: Node, indent?: string): ASTNode {
         const nextNode = this.fnNextNode(node);
-        log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node.nodeName, nextNode.nodeName);
+        log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node?.nodeName, nextNode?.nodeName);
         let result = null;
         let count = 1;
         for (let option of this.options || []) {

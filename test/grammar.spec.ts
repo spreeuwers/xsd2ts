@@ -8,7 +8,7 @@ import {DOMParser} from "xmldom-reborn";
 
 
 
-describe("grammar", () => {
+fdescribe("grammar", () => {
 
     let simpleClassXsd = ""
     let simpleInheritedClassXsd ="";
@@ -82,7 +82,7 @@ describe("grammar", () => {
 
     it(" can parse a simple simple Inherited Class", () => {
         let ast = testGrammar(simpleInheritedClassXsd);
-        expect((ast as any).types.length).toBe(1);
+        expect((ast as any).types.length).toBe(2);
         expect((ast as any).types[0].nodeType).toBe('Class');
         expect((ast as any).types[0].name).toBe('InheridedClass');
         expect((ast as any).types[0].fields).toBeDefined();
@@ -98,7 +98,7 @@ describe("grammar", () => {
         let ast = testGrammar(simpleTypeXsd);
         expect((ast as any).types[0].nodeType).toBe('AliasType');
         expect((ast as any).types[0].name).toBe('age');
-        expect((ast as any).types[0].type).toBe('integer');
+        expect((ast as any).types[0].type).toBe('number');
 
         expect((ast as any).types[1].nodeType).toBe('Enumeration');
         expect((ast as any).types[1].name).toBe('option');
@@ -110,8 +110,8 @@ describe("grammar", () => {
 
     it(" can parse a group tag", () => {
         let ast = testGrammar(groupXsd);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('group_custGroup');
+        expect((ast as any).types[0].nodeType).toBe('Group');
+        expect((ast as any).types[0].name).toBe('CustGroup');
         expect((ast as any).types[1].nodeType).toBe('Class');
         expect((ast as any).types[1].name).toBe('Ordertype');
         //expect((ast as any).types[0].type).toBe('group_custGroup');
@@ -122,8 +122,8 @@ describe("grammar", () => {
 
     it(" can parse an attribute group tag", () => {
         let ast = testGrammar(typesXsd);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('group_BaseView');
+        expect((ast as any).types[0].nodeType).toBe('Group');
+        expect((ast as any).types[0].name).toBe('BaseView');
         expect((ast as any).types[1].nodeType).toBe('Class');
         expect((ast as any).types[1].name).toBe('View');
         //expect((ast as any).types[0].type).toBe('group_custGroup');
