@@ -129,6 +129,7 @@ export class ASTClass extends ASTNode {
 
 export abstract class Parslet implements IParsable {
     public name: string;
+    public label: string;
     public fnNextNode: FindNextNode;
     public nextParslet: Parslet;
 
@@ -182,7 +183,24 @@ export abstract class Parslet implements IParsable {
         return this;
     }
 
+    public empty(){
+        const next = new Empty('');
+        this.addNext(next, findFirstChild);
+        return this;
+    }
+    public labeled(s:string){
+        this.label = s;
+        return this;
+    }
 
+
+}
+
+export  class Empty extends  Parslet {
+    public parse(node: Node, indent?: string): ASTNode {
+        log(indent + 'Empty:, node: ', node?.nodeName);
+        return (node) ? null : new ASTNode('Empty');
+    }
 }
 
 export class Terminal implements IParsable {
@@ -256,7 +274,7 @@ export class Matcher extends Parslet {
         result  = this.terminal.parse(sibbling, indent + ' ');
 
         log(indent, this.name, this.terminal.tagName, 'node: ', node?.nodeName, 'match:', JSON.stringify(result));
-
+        log(indent, this.name, 'next: ', this.nextParslet?.name, this.nextParslet?.label || '');
         if (result && this.nextParslet) {
             const nextResult =  this.nextParslet.parse(this.fnNextNode(sibbling), indent + ' ');
             if (nextResult) {
@@ -284,11 +302,11 @@ export class OneOf extends Parslet {
 
     public parse(node: Node, indent?: string): ASTNode {
         const nextNode = this.fnNextNode(node);
-        log(indent + 'ONE OFF:', this.options.map(o => o.name).join(','), node?.nodeName, nextNode?.nodeName);
+        log(indent + 'ONE OFF:', this.options.map(o => o.label).join(','), node?.nodeName, nextNode?.nodeName);
         let result = null;
         let count = 1;
         for (let option of this.options || []) {
-            log(indent + ' try:', option.name , '#' , count++);
+            log(indent + ' try:', option.name , '#' , count++, option.label || '');
             result = option.parse(nextNode, indent + '  ');
             if (result) {
                 break;
@@ -323,7 +341,7 @@ export class Sibblings extends Parslet {
             let listItem = null;
             let count = 0;
             for (let option of this.options || []) {
-                log(indent + ' try:', option.name , '#' , count++);
+                log(indent + ' try:', option.name ,  '#' , count++, option.label||'');
                 listItem = option.parse(sibbling, indent + '  ');
                 if (listItem) {
                     break;

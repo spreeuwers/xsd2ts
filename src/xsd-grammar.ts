@@ -76,39 +76,39 @@ export class XsdGrammar {
 
         // NonTerminals
 
-        const REFGROUP = match(refGroup);
-        const ATTRIBUTE= match(attribute);
-        const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement);
+        const REFGROUP = match(refGroup).labeled('REFGROUP');
+        const ATTRIBUTE= match(attribute).labeled('ATTRIBUTE');
+        const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement).labeled('ARRFIELD');
 
-        const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY);
+        const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY).labeled('CMPFIELD');
 
-        const FIELD    = oneOf(CMPFIELD, ARRFIELD,  match(fieldElement), REFGROUP ); FIELDPROXY.parslet = FIELD;
+        const FIELD    = oneOf(CMPFIELD, ARRFIELD,  match(fieldElement), REFGROUP ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
 
-        const A_CLASS  = match(classElement).child(complexType).children(match(attribute));
+        const A_CLASS  = match(classElement).child(complexType).children(match(attribute)).labeled('A_CLASS')
         // element class
-        const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD);
+        const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD).labeled('E_CLASS');
 
         // group class
-        const G_CLASS  = match(attributeGroup).children(match(attribute));
+        const G_CLASS  = match(attributeGroup).children(match(attribute)).labeled('G_CLASS');
 
         // coplex type class
-        const SEQUENCE = match(sequence, fieldsMerger).children(FIELD);
-        const CCONTENT = match(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD);
+        const SEQUENCE = match(sequence, fieldsMerger).children(FIELD).labeled('SEQUENCE');
+        const CCONTENT = match(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD).labeled('CCONTENT');
 
-        const R_CLASS  = match(classType).children(REFGROUP, ATTRIBUTE);
-        const C_CLASS  = match(classType).childIsOneOf(SEQUENCE, CCONTENT);
+        const R_CLASS  = match(classType).children(REFGROUP, ATTRIBUTE).labeled('R_CLASS');
+        const C_CLASS  = match(classType).childIsOneOf(SEQUENCE, CCONTENT).labeled('C_CLASS');
 
         //extended class
-        const X_CLASS  = match(classType).child(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD);
+        const X_CLASS  = match(classType).child(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD).labeled('X_CLASS');
 
 
         //const R_CLASS  = match(classType).child(refGroup);
-        const S_CLASS  = match(classType); //simple empty class
-        const F_CLASS  = match(topFldElement);
-        const N_GROUP  = match(namedGroup).child(sequence, fieldsMerger).children(FIELD);
-        const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration));
-        const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton);
-        const TYPES    = oneOf(ALIASTYPE, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, F_CLASS, G_CLASS, A_CLASS,  R_CLASS, S_CLASS );
+        const S_CLASS  = match(classType).empty().labeled('EMPTY_CLASS'); //simple empty class
+        const F_CLASS  = match(topFldElement).labeled('F_CLASS');
+        const N_GROUP  = match(namedGroup).child(sequence, fieldsMerger).children(FIELD).labeled('N_GROUP');
+        const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
+        const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton).labeled('ALIAS');
+        const TYPES    = oneOf(ALIASTYPE, S_CLASS, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, F_CLASS, G_CLASS, A_CLASS,  R_CLASS );
 
         const SCHEMA   = match(schema, typesMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');
