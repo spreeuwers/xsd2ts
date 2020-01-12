@@ -8,7 +8,8 @@ import {generateTemplateClassesFromXSD2} from "../src/index";
 function xsdPath(name: string){
   return   `./test/xsd/${name}.xsd`;
 }
-describe("generator", () => {
+
+fdescribe("generator", () => {
 
 
         it(" has function generateTemplateClassesFromXSD", () => {

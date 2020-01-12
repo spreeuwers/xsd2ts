@@ -4,6 +4,7 @@
 import {ClassDefinition, createFile, EnumDefinition, FileDefinition} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
 import {XsdGrammar} from "./xsd-grammar";
+import {log} from "./xml-utils";
 
 enum xsdTypes {
     XS_STRING = 'xs:string',
@@ -43,14 +44,12 @@ class State {
 
     }
 }
-
+type Fields = {fields:[]};
+const groups: { [key: string]: Fields } = {};
 
 export type namespaceResolver = (ns:string) => void;
 
 
-function log(s: string) {
-    console.log(s);
-}
 
 function logLine() {
     const line = "-------------------------------------------------------------------------------------";
@@ -61,25 +60,30 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
-function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent ='') {
+function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') {
     let c = fileDef.addClass({name: astNode.name});
-    console.log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.fields?.length);
-    (astNode.fields || []).forEach(
-        f => {
-            console.log(indent + 'adding field:', {name: f.fieldName, type: f.fieldType});
+    log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.fields?.length);
+    let fields = (astNode.fields || []);
+    fields.filter(f=>f.nodeType==="Fields").forEach(
+        (f) => {
+            log(indent + 'adding fields for ref:',  f.ref);
+            fields = fields.concat(groups[f.ref].fields);
+        });
+    fields.filter(f=>f.nodeType === "Field").forEach(
+        (f) => {
+            log(indent + 'adding field:', {name: f.fieldName, type: f.fieldType});
             c.addProperty({name: f.fieldName, type: f.fieldType, scope: "protected"});
             const typeParts = f.fieldType.split('.');
             if (typeParts.length == 2) {
                 const ns = typeParts[0];
                 fileDef.addImport({moduleSpecifier: this.dependencies[ns], starImportName: ns});
             }
-            console.log(indent + 'nested class', f.fieldName, JSON.stringify(f.nestedClass,));
-            if ( f.nestedClass ){
-
+            log(indent + 'nested class', f.fieldName, JSON.stringify(f.nestedClass,));
+            if (f.nestedClass) {
                 addClassForASTNode(fileDef, f.nestedClass, indent + ' ');
             }
         }
-    )
+    );
 };
 export class ClassGenerator {
     private fileDef = createFile({classes: []});
@@ -183,8 +187,7 @@ export class ClassGenerator {
 
     public generateClassFileDefinition2(xsd: string, pluralPostFix= 's',  verbose?: boolean): FileDefinition {
         const fileDef = createFile();
-        const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
-        const groups: { [key: string]: object }= {};
+
         this.verbose = verbose;
         this.pluralPostFix = pluralPostFix;
 
@@ -194,11 +197,12 @@ export class ClassGenerator {
         this.log(xsd);
         this.log('');
         this.log('-------------------------------------------------------------------------------------');
-        let ast = this.parseXsd(xsd);
-        console.log(JSON.stringify(ast,null,3));
+        const ast = this.parseXsd(xsd);
+        Object.keys(groups).forEach(key => delete(groups[key]));
+        log(JSON.stringify(ast,null,3));
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Group')
-            .forEach(t => groups[t.name] = t);
+            .forEach(t => {groups[t.name] = t;log('storing group:', t.name);});
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
@@ -209,9 +213,9 @@ export class ClassGenerator {
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Enumeration')
             .forEach(t => {
-                let e = fileDef.addEnum({name: t.name});
+                const enumDef = fileDef.addEnum({name: t.name});
                 t.obj.values.forEach (
-                    m => { e.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
+                    m => { enumDef.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
                 );
             });
 
@@ -254,7 +258,7 @@ export class ClassGenerator {
         // let arrayPostfix='';
         // let newField:{name:string, type:string, parent: string};
         // let newClass:{name:string, super:string, abstract: boolean};
-        let fileDef = this.fileDef;
+        const fileDef = this.fileDef;
         const nodeName = this.findAttrValue(node, "name");
         // const parentName = this.findAttrValue(parent,'name');
         const nodeType = this.findAttrValue(node, 'type');

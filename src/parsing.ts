@@ -1,7 +1,7 @@
 /**
  * Created by eddyspreeuwers on 1/5/20.
  */
-import {capFirst, attribs, findFirstChild, xml, log, findNextSibbling, getFieldType} from './xml-utils';
+import { attribs, capFirst, findFirstChild, findNextSibbling, getFieldType, log, xml} from './xml-utils';
 
 const UNBOUNDED = 'unbounded';
 
@@ -39,7 +39,7 @@ export function astField() {
 }
 
 
-export function oneOf(...options: Parslet[]){
+export function oneOf(...options: Parslet[]) {
     return new OneOf('ONE OFF' , options);
 }
 
@@ -79,10 +79,9 @@ export class ASTNode {
     }
 
 
-    public addFields(n:Node): ASTNode {
+    public addFields(n: Node): ASTNode {
         return this.prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]);
     }
-
 
     public addName(node: Node, prefix?: string): ASTNode{
         return this.prop('name', (prefix || '') + capFirst(attribs(node).name));
@@ -135,7 +134,7 @@ export abstract class Parslet implements IParsable {
 
     constructor(name: string) {
         this.name = name;
-        this.fnNextNode = x => x;
+        this.fnNextNode = (x) => x;
     }
 
     public abstract parse(node: Node, indent?: string): ASTNode;
@@ -171,11 +170,11 @@ export abstract class Parslet implements IParsable {
         return this;
     }
 
-    public oneOf(...options: Parslet[]){
-        const next = new OneOf('ONE OFF' , options);
-        this.addNext(next, (n) => n);
-        return this;
-    }
+    // public oneOf(...options: Parslet[]){
+    //     const next = new OneOf('ONE OFF' , options);
+    //     this.addNext(next, (n) => n);
+    //     return this;
+    // }
 
     public childIsOneOf(...options: Parslet[]) {
         const next = new OneOf('ONE OFF' , options);
@@ -265,9 +264,9 @@ export class Matcher extends Parslet {
         let sibbling = node;
         let result: ASTNode;
 
-        //find the first sibbling matching the terminal
+        // find the first sibbling matching the terminal
         while (sibbling){
-            let skip = /(annotation|documentation)/.test(xml(node)?.localName);
+            const skip = /(annotation|documentation)/.test(xml(node)?.localName);
             if (!skip) break;
             sibbling = findNextSibbling(sibbling);
         }
@@ -305,7 +304,7 @@ export class OneOf extends Parslet {
         log(indent + 'ONE OFF:', this.options.map(o => o.label).join(','), node?.nodeName, nextNode?.nodeName);
         let result = null;
         let count = 1;
-        for (let option of this.options || []) {
+        for (const option of this.options || []) {
             log(indent + ' try:', option.name , '#' , count++, option.label || '');
             result = option.parse(nextNode, indent + '  ');
             if (result) {
@@ -341,7 +340,7 @@ export class Sibblings extends Parslet {
             let listItem = null;
             let count = 0;
             for (let option of this.options || []) {
-                log(indent + ' try:', option.name ,  '#' , count++, option.label||'');
+                log(indent + ' try:', option.name ,  '#' , count++, option.label || '');
                 listItem = option.parse(sibbling, indent + '  ');
                 if (listItem) {
                     break;

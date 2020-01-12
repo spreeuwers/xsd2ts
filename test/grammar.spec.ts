@@ -8,7 +8,7 @@ import {DOMParser} from "xmldom-reborn";
 
 
 
-fdescribe("grammar", () => {
+describe("grammar", () => {
 
     let simpleClassXsd = ""
     let simpleInheritedClassXsd ="";

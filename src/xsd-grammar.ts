@@ -30,7 +30,7 @@ const intRestrictionHandler: AstNodeFactory = (n) => /integer/.test(attribs(n).b
 const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string'): null;
 
 
-const namedGroupHandler: AstNodeFactory = (n) => (attribs(n).name) ?  astNode('Group').addName(n) : null;
+const namedGroupHandler: AstNodeFactory = (n) => (attribs(n).name) ?  astNode('Group').named(attribs(n).name) : null;
 const refGroupHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', attribs(n).ref):null
 
 
@@ -95,7 +95,7 @@ export class XsdGrammar {
         const SEQUENCE = match(sequence, fieldsMerger).children(FIELD).labeled('SEQUENCE');
         const CCONTENT = match(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD).labeled('CCONTENT');
 
-        const R_CLASS  = match(classType).children(REFGROUP, ATTRIBUTE).labeled('R_CLASS');
+        const R_CLASS  = match(classType, fieldsMerger).children(REFGROUP, ATTRIBUTE).labeled('R_CLASS');
         const C_CLASS  = match(classType).childIsOneOf(SEQUENCE, CCONTENT).labeled('C_CLASS');
 
         //extended class
