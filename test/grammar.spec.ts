@@ -111,7 +111,7 @@ describe("grammar", () => {
     it(" can parse a group tag", () => {
         let ast = testGrammar(groupXsd);
         expect((ast as any).types[0].nodeType).toBe('Group');
-        expect((ast as any).types[0].name).toBe('CustGroup');
+        expect((ast as any).types[0].name).toBe('custGroup');
         expect((ast as any).types[1].nodeType).toBe('Class');
         expect((ast as any).types[1].name).toBe('Ordertype');
         //expect((ast as any).types[0].type).toBe('group_custGroup');

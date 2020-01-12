@@ -31,7 +31,8 @@ const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).ba
 
 
 const namedGroupHandler: AstNodeFactory = (n) => (attribs(n).name) ?  astNode('Group').named(attribs(n).name) : null;
-const refGroupHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', attribs(n).ref):null
+const refGroupHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', attribs(n).ref):null;
+const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Method').prop('ref', attribs(n).ref):null
 
 
 
@@ -59,32 +60,36 @@ export class XsdGrammar {
         const attributeGroup = new Terminal("attributeGroup:attrGrp", namedGroupHandler);
         const schema         = new Terminal("schema");
         const namedGroup     = new Terminal("group:named", namedGroupHandler);
-        const refGroup       = new Terminal("group:ref", refGroupHandler);
+        const refGroup       = new Terminal("group:refGrp", refGroupHandler);
+        const refElement     = new Terminal("element:refElm", refElementHandler);
         const complexType    = new Terminal("complexType");
         const simpleType     = new Terminal("simpleType");
         const complexContent = new Terminal("complexContent");
         const extension      = new Terminal("extension",extensionHandler);
 
-        const enumeration    = new Terminal("enumeration",enumerationHandler);
+        const enumeration    = new Terminal("enumeration:enum",enumerationHandler);
 
-        const strRestriction = new Terminal("restriction", strRestrictionHandler);
-        const intRestriciton = new Terminal("restriction", intRestrictionHandler);
-        const classType      = new Terminal("complexType", classHandler);
-        const attribute      = new Terminal("attribute", attrHandler);
-        const sequence       = new Terminal("sequence");
+        const strRestriction = new Terminal("restriction:strRestr", strRestrictionHandler);
+        const intRestriciton = new Terminal("restriction:intRestr", intRestrictionHandler);
+        const classType      = new Terminal("complexType:ctype", classHandler);
+        const attribute      = new Terminal("attribute:attr", attrHandler);
+        const sequence       = new Terminal("sequence:seq");
+        const choice         = new Terminal("choice:Choice");
 
 
         // NonTerminals
 
-        const REFGROUP = match(refGroup).labeled('REFGROUP');
+        const REFGROUP = match(refGroup).labeled('REF_GROUP');
+        const REF_ELM  = match(refElement).labeled('REF_ELEMENT');
         const ATTRIBUTE= match(attribute).labeled('ATTRIBUTE');
+        const CHOICE   = match(choice).children(REF_ELM);
         const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement).labeled('ARRFIELD');
 
         const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY).labeled('CMPFIELD');
 
         const FIELD    = oneOf(CMPFIELD, ARRFIELD,  match(fieldElement), REFGROUP ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
 
-        const A_CLASS  = match(classElement).child(complexType).children(match(attribute)).labeled('A_CLASS')
+        const A_CLASS  = match(classElement, fieldsMerger).child(complexType).children(ATTRIBUTE, CHOICE).labeled('A_CLASS')
         // element class
         const E_CLASS  = match(classElement).child(complexType).child(sequence, fieldsMerger).children(FIELD).labeled('E_CLASS');
 

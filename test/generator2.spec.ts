@@ -9,7 +9,7 @@ function xsdPath(name: string){
   return   `./test/xsd/${name}.xsd`;
 }
 
-fdescribe("generator", () => {
+describe("generator", () => {
 
 
         it(" has function generateTemplateClassesFromXSD", () => {
@@ -41,16 +41,16 @@ fdescribe("generator", () => {
         it("creates heeft een types property", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/simpleType.xsd"));
             printFile("./src/generated/simpleType.ts");
-            compile(["./src/generated/types.ts"]);
+            //compile(["./src/generated/types.ts"]);
         });
 
-        fit("creates group.ts", () => {
+        it("creates group.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/group.xsd"));
             printFile("./src/generated/group.ts");
-            compile(["./src/generated/group.ts"]);
+            //compile(["./src/generated/group.ts"]);
         });
 
-        it("creates types.ts", () => {
+       it("creates types.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/types.xsd"));
             printFile("./src/generated/types.ts");
             //compile(["./src/generated/types.ts"]);

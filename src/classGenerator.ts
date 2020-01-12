@@ -69,7 +69,17 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') 
             log(indent + 'adding fields for ref:',  f.ref);
             fields = fields.concat(groups[f.ref].fields);
         });
-    fields.filter(f=>f.nodeType === "Field").forEach(
+    fields.filter(f=>f.nodeType === "choice").forEach(
+        (f) => {
+            log(indent + 'adding methods for choice', f.list?.map(i => i.ref).join(',') );
+            f.list?.forEach( (m) => {
+                const method = c.addMethod( {name: m.ref, returnType: 'void', scope: 'protected'} );
+                method.addParameter({name: m.ref, type:'any'});
+                method.onWriteFunctionBody = (w) => { w.write(`this["${m.ref}"] = ${m.ref};\n`); };
+            });
+            log(indent + 'added methods', c.methods.map((m) => m.name).join(','));
+         });
+    fields.filter( (f) => f.nodeType === "Field").forEach(
         (f) => {
             log(indent + 'adding field:', {name: f.fieldName, type: f.fieldType});
             c.addProperty({name: f.fieldName, type: f.fieldType, scope: "protected"});
@@ -85,6 +95,8 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') 
         }
     );
 };
+
+
 export class ClassGenerator {
     private fileDef = createFile({classes: []});
     private verbose = false;
@@ -202,7 +214,7 @@ export class ClassGenerator {
         log(JSON.stringify(ast,null,3));
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Group')
-            .forEach(t => {groups[t.name] = t;log('storing group:', t.name);});
+            .forEach(t => {groups[t.name] = t; log('storing group:', t.name);});
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
@@ -512,6 +524,7 @@ export class ClassGenerator {
 
 
                         const classDef = outFile.getClass( c.name);
+                        classDef.methods = c.methods;
                         classDef.isExported = true;
                         classDef.isAbstract = c.isAbstract;
                         c.extendsTypes.forEach((t) => classDef.addExtends(t.text));
@@ -532,6 +545,7 @@ export class ClassGenerator {
                             writer.write(`this["@class"] = "${this.classPrefix}${c.name}";\n`);
                             writer.write('(<any>Object).assign(this, <any> props);');
                         };
+
                     }
                 }
             );
