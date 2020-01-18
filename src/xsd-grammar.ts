@@ -38,6 +38,7 @@ const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Me
 
 const typesMerger: AstNodeMerger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
 const fieldsMerger: AstNodeMerger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
+//const choiceMerger: AstNodeMerger  = (r1, r2) => (<any>r2.list[0]) as ASTNode ;
 const enumMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.obj.values = r2.list; return r1; };
 const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.obj.type = r2.obj.value; return r1; };
 
@@ -82,12 +83,13 @@ export class XsdGrammar {
         const REFGROUP = match(refGroup).labeled('REF_GROUP');
         const REF_ELM  = match(refElement).labeled('REF_ELEMENT');
         const ATTRIBUTE= match(attribute).labeled('ATTRIBUTE');
-        const CHOICE   = match(choice).children(REF_ELM);
+        const FLD_ELM  = match(fieldElement).labeled('FIELD_ELM')
+        const CHOICE   = match(choice).children(REF_ELM, FIELDPROXY);
         const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement).labeled('ARRFIELD');
 
         const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY).labeled('CMPFIELD');
 
-        const FIELD    = oneOf(CMPFIELD, ARRFIELD,  match(fieldElement), REFGROUP ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
+        const FIELD    = oneOf(CMPFIELD, ARRFIELD,  FLD_ELM, REFGROUP, REF_ELM ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
 
         const A_CLASS  = match(classElement, fieldsMerger).child(complexType).children(ATTRIBUTE, CHOICE).labeled('A_CLASS')
         // element class
@@ -105,7 +107,6 @@ export class XsdGrammar {
 
         //extended class
         const X_CLASS  = match(classType).child(complexContent).child(extension).child(sequence, fieldsMerger).children(FIELD).labeled('X_CLASS');
-
 
         //const R_CLASS  = match(classType).child(refGroup);
         const S_CLASS  = match(classType).empty().labeled('EMPTY_CLASS'); //simple empty class

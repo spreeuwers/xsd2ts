@@ -73,11 +73,6 @@ export class ASTNode {
         return this;
     }
 
-    public capNamed(name: string): ASTNode {
-        this.name = capFirst(name);
-        return this;
-    }
-
 
     public addFields(n: Node): ASTNode {
         return this.prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]);
@@ -266,13 +261,14 @@ export class Matcher extends Parslet {
 
         // find the first sibbling matching the terminal
         while (sibbling){
-            const skip = /(annotation|documentation)/.test(xml(node)?.localName);
+            log('skip?',xml(node)?.localName );
+            const skip = /(annotation|documentation)/.test(xml(sibbling)?.localName);
             if (!skip) break;
             sibbling = findNextSibbling(sibbling);
         }
         result  = this.terminal.parse(sibbling, indent + ' ');
 
-        log(indent, this.name, this.terminal.tagName, 'node: ', node?.nodeName, 'match:', JSON.stringify(result));
+        log(indent, this.name, this.terminal.tagName, 'node: ', sibbling?.nodeName, 'match:', JSON.stringify(result));
         log(indent, this.name, 'next: ', this.nextParslet?.name, this.nextParslet?.label || '');
         if (result && this.nextParslet) {
             const nextResult =  this.nextParslet.parse(this.fnNextNode(sibbling), indent + ' ');
@@ -336,19 +332,23 @@ export class Sibblings extends Parslet {
         while (sibbling) {
             log(indent + 'list sibbling:', sibbling?.nodeName);
 
-            //const listItem = this.parsable.parse(sibbling, indent + '  ');
-            let listItem = null;
-            let count = 0;
-            for (let option of this.options || []) {
-                log(indent + ' try:', option.name ,  '#' , count++, option.label || '');
-                listItem = option.parse(sibbling, indent + '  ');
-                if (listItem) {
-                    break;
-                }
-            }
+            const skip = /(annotation|documentation)/.test(xml(sibbling)?.localName);
+            if (!skip) {
 
-            if (listItem) {
-                result.list.push(listItem);
+                //const listItem = this.parsable.parse(sibbling, indent + '  ');
+                let listItem = null;
+                let count = 0;
+                for (let option of this.options || []) {
+                    log(indent + ' try:', option.name, '#', count++, option.label || '');
+                    listItem = option.parse(sibbling, indent + '  ');
+                    if (listItem) {
+                        break;
+                    }
+                }
+
+                if (listItem) {
+                    result.list.push(listItem);
+                }
             }
             sibbling = findNextSibbling(sibbling);
 

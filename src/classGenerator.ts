@@ -60,22 +60,34 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
+function choiceBody(m: any): string {
+
+    return `this["${m.ref || m.fieldName}"] = ${m.ref|| m.fieldName};\n`;
+}
+
 function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') {
     let c = fileDef.addClass({name: astNode.name});
+
+    if (astNode.nodeType === 'Group') {
+        c.isAbstract = true;
+        astNode.fields = astNode.list || [];
+    }
+
     log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.fields?.length);
-    let fields = (astNode.fields || []);
-    fields.filter(f=>f.nodeType==="Fields").forEach(
+    let fields = (astNode.fields || []).filter(f => f);
+    fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
             log(indent + 'adding fields for ref:',  f.ref);
             fields = fields.concat(groups[f.ref].fields);
         });
-    fields.filter(f=>f.nodeType === "choice").forEach(
+    fields.filter( (f) => f.nodeType === "choice").forEach(
         (f) => {
             log(indent + 'adding methods for choice', f.list?.map(i => i.ref).join(',') );
             f.list?.forEach( (m) => {
-                const method = c.addMethod( {name: m.ref, returnType: 'void', scope: 'protected'} );
-                method.addParameter({name: m.ref, type:'any'});
-                method.onWriteFunctionBody = (w) => { w.write(`this["${m.ref}"] = ${m.ref};\n`); };
+                const method = c.addMethod( {name:  m.fieldName || m.ref, returnType: 'void', scope: 'protected'} );
+                method.addParameter({name: m.fieldName || m.ref, type: m.fieldType || capfirst(m.ref)});
+                method.onWriteFunctionBody = (w) => { w.write(choiceBody(m)); };
+                // log('create class for:' ,m.ref, groups);
             });
             log(indent + 'added methods', c.methods.map((m) => m.name).join(','));
          });
@@ -86,7 +98,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') 
             const typeParts = f.fieldType.split('.');
             if (typeParts.length == 2) {
                 const ns = typeParts[0];
-                fileDef.addImport({moduleSpecifier: this.dependencies[ns], starImportName: ns});
+                fileDef.addImport({moduleSpecifier: this?.dependencies[ns], starImportName: ns});
             }
             log(indent + 'nested class', f.fieldName, JSON.stringify(f.nestedClass,));
             if (f.nestedClass) {
@@ -104,11 +116,11 @@ export class ClassGenerator {
     private dependencies: Map<string, string>;
     private importMap: string[] = [];
     public types: string[] = [];
-    private specifiedClasses: Map<string,string> = {};
-    private referencedClasses: Map<string,string> = {};
+    private specifiedClasses: Map<string, string> = {};
+    private referencedClasses: Map<string, string> = {};
 
     constructor(dependencies?: Map<string,string>, private classPrefix = CLASS_PREFIX) {
-        this.dependencies = dependencies || <Map<string,string>>{};
+        this.dependencies = dependencies || {} as Map<string, string>;
         log(JSON.stringify(this.dependencies));
     }
 
@@ -214,7 +226,7 @@ export class ClassGenerator {
         log(JSON.stringify(ast,null,3));
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Group')
-            .forEach(t => {groups[t.name] = t; log('storing group:', t.name);});
+            .forEach(t => {groups[t.name] = t; log('storing group:', t.name); addClassForASTNode(fileDef, t);});
         (ast.obj.types || [])
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
@@ -227,11 +239,11 @@ export class ClassGenerator {
             .forEach(t => {
                 const enumDef = fileDef.addEnum({name: t.name});
                 t.obj.values.forEach (
-                    m => { enumDef.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
+                    (m) => { enumDef.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
                 );
             });
 
-        let tmp = this.makeSortedFileDefinition(fileDef.classes);
+        const tmp = this.makeSortedFileDefinition(fileDef.classes);
         fileDef.classes = tmp.classes;
         return fileDef;
     }

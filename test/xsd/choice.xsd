@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+
+  <xs:element name="choose">
+    <xs:complexType>
+      <xs:choice >
+        <xs:element name="item"  type="xs:string"/>
+        <xs:element name="param" type="xs:integer"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+
+</xs:schema>
