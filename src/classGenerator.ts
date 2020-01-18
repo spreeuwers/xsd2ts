@@ -80,6 +80,13 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') 
             log(indent + 'adding fields for ref:',  f.ref);
             fields = fields.concat(groups[f.ref].fields);
         });
+    fields.filter( (f) => f.nodeType === "Reference").forEach(
+        (f) => {
+            log(indent + 'adding field for Reference', f.ref);
+            const typePostFix = (f.array) ? "[]" : "";
+            const namePostFix = (f.array) ? "?" : "";
+            c.addProperty({name: f.ref + namePostFix, type: capfirst(f.ref)+ typePostFix, scope: "protected"});
+        });
     fields.filter( (f) => f.nodeType === "choice").forEach(
         (f) => {
             log(indent + 'adding methods for choice', f.list?.map(i => i.ref).join(',') );

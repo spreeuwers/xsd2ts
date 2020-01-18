@@ -24,7 +24,7 @@ const cmpFldHandler: AstNodeFactory = (n) => astField().prop('fieldName', attrib
 const classHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n);
 const enumElmHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astEnum(n);
 const enumerationHandler: AstNodeFactory = (n) => (attribs(n).value) ?  astEnumValue(n): null;
-const extensionHandler: AstNodeFactory = (n) => astNode('Extesnsion').prop('extends', attribs(n).base);
+const extensionHandler: AstNodeFactory = (n) => astNode('Extension').prop('extends', attribs(n).base);
 
 const intRestrictionHandler: AstNodeFactory = (n) => /integer/.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'number'): null;
 const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string'): null;
@@ -32,7 +32,7 @@ const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).ba
 
 const namedGroupHandler: AstNodeFactory = (n) => (attribs(n).name) ?  astNode('Group').named(attribs(n).name) : null;
 const refGroupHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', attribs(n).ref):null;
-const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Method').prop('ref', attribs(n).ref):null
+const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Reference').addAtribs(n): null;
 
 
 

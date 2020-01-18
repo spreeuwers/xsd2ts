@@ -103,12 +103,12 @@ describe("ClassGenerator", () => {
 
         });
 
-        fit("geeft een  classFile terug voor form met refs", () => {
+        it("geeft een  classFile terug voor form met refs", () => {
             const classFile = generator.generateClassFileDefinition2(formXsd, "", true);
 
             console.log(classFile.write());
-            const  classNames = ['X','Field','Option','ForValue', 'Item','Reported' ];
-            expect(classFile.classes.length).toBe(6);
+            const  classNames = ['X', 'Field', 'Option', 'ForValue', 'Item', 'Reported' ];
+            expect(classFile.classes.length).toBe(classNames.length);
             let fld = classFile.getClass("X").getProperty("field?");
             expect(fld.type.text).toBe("Field[]");
             expect(fld.name).toBe("field?");

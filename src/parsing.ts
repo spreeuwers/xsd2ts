@@ -91,9 +91,27 @@ export class ASTNode {
         return this;
     }
 
+
     get obj(): any {
         return this as any;
     }
+
+    public addAtribs(n: Node) {
+        for (let i = 0; i < (n as HTMLElement).attributes.length ; i++){
+            let attr = (n as HTMLElement).attributes.item(i);
+            this[attr.name] = attr.value;
+            if (this['maxOccurs'] === 'unbounded') {
+                this['array'] = true;
+            }
+            if (this['minOccurs'] === '0') {
+                this['optional'] = true;
+            }
+            delete(this['minOccurs']);
+            delete(this['maxOccurs']);
+        }
+        return this;
+    }
+
     public merge (other: ASTNode){
         let result = new ASTNode(this.nodeType);
         result =  (Object as any).assign(result, this);
