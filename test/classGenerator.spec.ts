@@ -88,7 +88,7 @@ describe("ClassGenerator", () => {
             expect(fld).toBeDefined();
         });
 
-        fit("geeft een  classFile terug voor form met refs", () => {
+        it("geeft een  classFile terug voor form met refs", () => {
             const classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             console.log(classFile.write());
@@ -103,7 +103,7 @@ describe("ClassGenerator", () => {
 
         });
 
-        it("geeft een  classFile terug voor form met refs", () => {
+        fit("geeft een  classFile terug voor form met refs", () => {
             const classFile = generator.generateClassFileDefinition2(formXsd, "", true);
 
             console.log(classFile.write());
@@ -214,8 +214,22 @@ describe("ClassGenerator", () => {
             //let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(7);
-            let method = classFile.getClass("Module")?.getMethod("param");
+            expect(classFile.classes.length).toBe(1);
+            let method = classFile.getClass("Choose")?.getMethod("item");
             expect(method?.returnType?.text).toBe("void");
+        });
+
+        it("returns a classFile for a groupXsd", () => {
+
+            let classFile = generator.generateClassFileDefinition(groupXsd, "", true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(2);
+            let c  = classFile.getClass("Ordertype");
+            console.log('class:  ' ,  c.write());
+            expect(c).toBeDefined();
+            let p  = c.getProperty('customer');
+            expect(p.type).toBeDefined();
+
         });
 });

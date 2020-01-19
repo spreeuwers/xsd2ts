@@ -32,17 +32,17 @@ const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).ba
 
 const namedGroupHandler: AstNodeFactory = (n) => (attribs(n).name) ?  astNode('Group').named(attribs(n).name) : null;
 const refGroupHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', attribs(n).ref):null;
-const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Reference').addAtribs(n): null;
+const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Reference').addAtribs(n) : null;
 
 
 
-const typesMerger: AstNodeMerger  = (r1, r2) => {r1.obj.types = r2.list; return r1; };
-const fieldsMerger: AstNodeMerger  = (r1, r2) => {r1.obj.fields = r2.list; return r1; };
+const typesMerger: AstNodeMerger  = (r1, r2) => {r1.children = r2.children; return r1; };
+const fieldsMerger: AstNodeMerger  = (r1, r2) => {r1.children = r2.children; return r1; };
 //const choiceMerger: AstNodeMerger  = (r1, r2) => (<any>r2.list[0]) as ASTNode ;
-const enumMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.obj.values = r2.list; return r1; };
-const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.obj.type = r2.obj.value; return r1; };
+const enumMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.attr.values = r2.children; return r1; };
+const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.attr.type = r2.attr.value; return r1; };
 
-const nestedClassMerger: AstNodeMerger  = (r1, r2) => {r1.nodeType='Field';r1.obj.nestedClass= {name: r1.obj.fieldType, fields: r2.list}; return r1; };
+const nestedClassMerger: AstNodeMerger  = (r1, r2) => {r1.nodeType='Field';r1.attr.nestedClass= {name: r1.attr.fieldType, children: r2.children}; return r1; };
 
 
 

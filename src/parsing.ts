@@ -52,19 +52,21 @@ export interface IParsable {
     parse(node: Node, indent?: string): ASTNode;
 }
 
+export type Attribs = {[key: string]: string} ;
 
 export class ASTNode {
     public nodeType: string;
     public name: string;
-    public child: ASTNode;
-    public list: ASTNode[];
+    private _attr: Attribs;
+    public children: ASTNode[];
 
     constructor(type: string){
         this.nodeType = type;
+        this._attr = {};
     }
 
     public prop(key: string, value: any) {
-        this[key] = value;
+        this._attr[key] = value;
         return this;
     }
 
@@ -79,7 +81,8 @@ export class ASTNode {
     }
 
     public addName(node: Node, prefix?: string): ASTNode{
-        return this.prop('name', (prefix || '') + capFirst(attribs(node).name));
+        this.name = (prefix || '') + capFirst( attribs(node).name);
+        return this;
     }
 
     public addField(node: Node) {
@@ -92,22 +95,22 @@ export class ASTNode {
     }
 
 
-    get obj(): any {
-        return this as any;
+    get attr():any {
+        return this._attr;
     }
 
     public addAtribs(n: Node) {
         for (let i = 0; i < (n as HTMLElement).attributes.length ; i++){
             let attr = (n as HTMLElement).attributes.item(i);
-            this[attr.name] = attr.value;
-            if (this['maxOccurs'] === 'unbounded') {
-                this['array'] = true;
+            if (attr.name === 'name') {
+               this.name = attr.value;
+            } else if (attr.name === 'maxOccurs') {
+                this.attr.array =attr.value === 'unbounded';
+            } else if (attr.name === 'minOccurs') {
+                this.attr.optional = attr.value === '0';
+            } else {
+                this.attr[attr.name] = attr.value;
             }
-            if (this['minOccurs'] === '0') {
-                this['optional'] = true;
-            }
-            delete(this['minOccurs']);
-            delete(this['maxOccurs']);
         }
         return this;
     }
@@ -345,7 +348,7 @@ export class Sibblings extends Parslet {
         let sibbling = node;
 
         const result = new ASTNode("Sibblings");
-        result.list = [];
+        result.children = [];
 
         while (sibbling) {
             log(indent + 'list sibbling:', sibbling?.nodeName);
@@ -365,7 +368,7 @@ export class Sibblings extends Parslet {
                 }
 
                 if (listItem) {
-                    result.list.push(listItem);
+                    result.children.push(listItem);
                 }
             }
             sibbling = findNextSibbling(sibbling);

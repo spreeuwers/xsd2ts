@@ -34,87 +34,87 @@ describe("grammar", () => {
 
     it(" can parse a single elements  ", () => {
         let ast = testGrammar(singleElmXsd);
-        expect((ast as any).types.length).toBe(1);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('ForNaam');
-        expect((ast as any).types[0].fields).toBeDefined();
-        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[0].fieldName).toBe('naam');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('xs:string');
+        expect((ast).children.length).toBe(1);
+        expect((ast).children[0].nodeType).toBe('Class');
+        expect((ast).children[0].name).toBe('ForNaam');
+        expect((ast).children[0].children).toBeDefined();
+        expect((ast).children[0].children[0].nodeType).toBe('Field');
+        expect((ast).children[0].children[0].attr.fieldName).toBe('naam');
+        expect((ast).children[0].children[0].attr.fieldType).toBe('xs:string');
     });
 
     it(" can parse a simple class starting with Element ", () => {
         let ast = testGrammar(elmXsd);
-        expect((ast as any).types.length).toBe(1);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('Classname');
-        expect((ast as any).types[0].fields).toBeDefined();
-        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('number');
+        expect(ast.children.length).toBe(1);
+        expect(ast.children[0].nodeType).toBe('Class');
+        expect(ast.children[0].name).toBe('Classname');
+        expect(ast.children[0].children).toBeDefined();
+        expect(ast.children[0].children[0].nodeType).toBe('Field');
+        expect(ast.children[0].children[0].attr.fieldName).toBe('intField');
+        expect(ast.children[0].children[0].attr.fieldType).toBe('number');
     });
 
     it(" can parse a simple class starting with complexType", () => {
 
         let ast = testGrammar(simpleClassXsd);
-        expect((ast as any).types.length).toBe(1);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('Test');
-        expect((ast as any).types[0].fields).toBeDefined();
-        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[0].fieldName).toBe('intField');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('number');
+        expect(ast.children.length).toBe(1);
+        expect(ast.children[0].nodeType).toBe('Class');
+        expect(ast.children[0].name).toBe('Test');
+        expect(ast.children[0].children).toBeDefined();
+        expect(ast.children[0].children[0].nodeType).toBe('Field');
+        expect(ast.children[0].children[0].attr.fieldName).toBe('intField');
+        expect(ast.children[0].children[0].attr.fieldType).toBe('number');
     });
 
     it(" can parse a simple class starting with an imported type namspace", () => {
         let ast = testGrammar(importedClassXsd);
-        expect((ast as any).types.length).toBe(1);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('Test');
-        expect((ast as any).types[0].fields).toBeDefined();
-        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[0].fieldName).toBe('firstName');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('string');
-        expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[2].fieldName).toBe('imported');
-        expect((ast as any).types[0].fields[2].fieldType).toBe('dep.Node');
+        expect(ast.children.length).toBe(1);
+        expect(ast.children[0].nodeType).toBe('Class');
+        expect(ast.children[0].name).toBe('Test');
+        expect(ast.children[0].children).toBeDefined();
+        expect(ast.children[0].children[0].nodeType).toBe('Field');
+        expect(ast.children[0].children[0].attr.fieldName).toBe('firstName');
+        expect(ast.children[0].children[0].attr.fieldType).toBe('string');
+        expect(ast.children[0].children[2].nodeType).toBe('Field');
+        expect(ast.children[0].children[2].attr.fieldName).toBe('imported');
+        expect(ast.children[0].children[2].attr.fieldType).toBe('dep.Node');
     });
 
     it(" can parse a simple simple Inherited Class", () => {
         let ast = testGrammar(simpleInheritedClassXsd);
-        expect((ast as any).types.length).toBe(2);
-        expect((ast as any).types[0].nodeType).toBe('Class');
-        expect((ast as any).types[0].name).toBe('InheridedClass');
-        expect((ast as any).types[0].fields).toBeDefined();
-        expect((ast as any).types[0].fields[0].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[0].fieldName).toBe('nestedFields');
-        expect((ast as any).types[0].fields[0].fieldType).toBe('NestedFields');
-        expect((ast as any).types[0].fields[2].nodeType).toBe('Field');
-        expect((ast as any).types[0].fields[2].fieldName).toBe('dateField');
-        expect((ast as any).types[0].fields[2].fieldType).toBe('Date');
+        expect(ast.children.length).toBe(2);
+        expect(ast.children[0].nodeType).toBe('Class');
+        expect(ast.children[0].name).toBe('InheridedClass');
+        expect(ast.children[0].children).toBeDefined();
+        expect(ast.children[0].children[0].nodeType).toBe('Field');
+        expect(ast.children[0].children[0].attr.fieldName).toBe('nestedFields');
+        expect(ast.children[0].children[0].attr.fieldType).toBe('NestedFields');
+        expect(ast.children[0].children[2].nodeType).toBe('Field');
+        expect(ast.children[0].children[2].attr.fieldName).toBe('dateField');
+        expect(ast.children[0].children[2].attr.fieldType).toBe('Date');
     });
 
     it(" can parse a simple enumeration  starting with element", () => {
         let ast = testGrammar(simpleTypeXsd);
-        expect((ast as any).types[0].nodeType).toBe('AliasType');
-        expect((ast as any).types[0].name).toBe('age');
-        expect((ast as any).types[0].type).toBe('number');
+        expect(ast.children[0].nodeType).toBe('AliasType');
+        expect(ast.children[0].name).toBe('age');
+        expect(ast.children[0].attr.type).toBe('number');
 
-        expect((ast as any).types[1].nodeType).toBe('Enumeration');
-        expect((ast as any).types[1].name).toBe('option');
-        expect((ast as any).types[1].values).toBeDefined();
-        expect((ast as any).types[1].values[0].value).toBe('A');
-        expect((ast as any).types[1].values[1].value).toBe('B');
+        expect(ast.children[1].nodeType).toBe('Enumeration');
+        expect(ast.children[1].name).toBe('option');
+        expect(ast.children[1].attr.values).toBeDefined();
+        expect(ast.children[1].attr.values[0].value).toBe('A');
+        expect(ast.children[1].attr.values[1].value).toBe('B');
 
     });
 
     it(" can parse a group tag", () => {
         let ast = testGrammar(groupXsd);
-        expect((ast as any).types[0].nodeType).toBe('Group');
-        expect((ast as any).types[0].name).toBe('custGroup');
-        expect((ast as any).types[1].nodeType).toBe('Class');
-        expect((ast as any).types[1].name).toBe('Ordertype');
-        //expect((ast as any).types[0].type).toBe('group_custGroup');
+        expect(ast.children[0].nodeType).toBe('Group');
+        expect(ast.children[0].name).toBe('custGroup');
+        expect(ast.children[1].nodeType).toBe('Class');
+        expect(ast.children[1].name).toBe('Ordertype');
+        //expect(ast.children[0].type).toBe('group_custGroup');
 
 
 
@@ -122,11 +122,11 @@ describe("grammar", () => {
 
     it(" can parse an attribute group tag", () => {
         let ast = testGrammar(typesXsd);
-        expect((ast as any).types[0].nodeType).toBe('Group');
-        expect((ast as any).types[0].name).toBe('BaseView');
-        expect((ast as any).types[1].nodeType).toBe('Class');
-        expect((ast as any).types[1].name).toBe('View');
-        //expect((ast as any).types[0].type).toBe('group_custGroup');
+        expect(ast.children[0].nodeType).toBe('Group');
+        expect(ast.children[0].name).toBe('BaseView');
+        expect(ast.children[1].nodeType).toBe('Class');
+        expect(ast.children[1].name).toBe('View');
+        //expect(ast.children[0].type).toBe('group_custGroup');
 
 
 

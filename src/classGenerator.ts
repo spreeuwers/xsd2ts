@@ -4,6 +4,7 @@
 import {ClassDefinition, createFile, EnumDefinition, FileDefinition} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
 import {XsdGrammar} from "./xsd-grammar";
+import {ASTNode} from "./parsing";
 import {log} from "./xml-utils";
 
 enum xsdTypes {
@@ -44,8 +45,8 @@ class State {
 
     }
 }
-type Fields = {fields:[]};
-const groups: { [key: string]: Fields } = {};
+
+const groups: { [key: string]: ASTNode } = {};
 
 export type namespaceResolver = (ns:string) => void;
 
@@ -65,34 +66,34 @@ function choiceBody(m: any): string {
     return `this["${m.ref || m.fieldName}"] = ${m.ref|| m.fieldName};\n`;
 }
 
-function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') {
+function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
     let c = fileDef.addClass({name: astNode.name});
 
     if (astNode.nodeType === 'Group') {
         c.isAbstract = true;
-        astNode.fields = astNode.list || [];
+        //astNode.fields = astNode.list || [];
     }
 
-    log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.fields?.length);
-    let fields = (astNode.fields || []).filter(f => f);
+    log(indent+ 'created: ', astNode.name, ', fields: ', astNode?.children?.length);
+    let fields = (astNode.children || []).filter(f => f);
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
-            log(indent + 'adding fields for ref:',  f.ref);
-            fields = fields.concat(groups[f.ref].fields);
+            log(indent + 'adding fields for ref:',  f.name);
+            fields = fields.concat(groups[f.name].children);
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
-            log(indent + 'adding field for Reference', f.ref);
-            const typePostFix = (f.array) ? "[]" : "";
-            const namePostFix = (f.array) ? "?" : "";
-            c.addProperty({name: f.ref + namePostFix, type: capfirst(f.ref)+ typePostFix, scope: "protected"});
+            log(indent + 'adding field for Reference', f.name);
+            const typePostFix = (f.attr.array) ? "[]" : "";
+            const namePostFix = (f.attr.array) ? "?" : "";
+            c.addProperty({name: f.name + namePostFix, type: capfirst(f.name)+ typePostFix, scope: "protected"});
         });
     fields.filter( (f) => f.nodeType === "choice").forEach(
         (f) => {
-            log(indent + 'adding methods for choice', f.list?.map(i => i.ref).join(',') );
-            f.list?.forEach( (m) => {
-                const method = c.addMethod( {name:  m.fieldName || m.ref, returnType: 'void', scope: 'protected'} );
-                method.addParameter({name: m.fieldName || m.ref, type: m.fieldType || capfirst(m.ref)});
+            log(indent + 'adding methods for choice', f.children?.map(i => i.name).join(',') );
+            f.children?.forEach( (m) => {
+                const method = c.addMethod( {name:  m.attr.fieldName || m.attr.ref, returnType: 'void', scope: 'protected'} );
+                method.addParameter({name: m.attr.fieldName || m.attr.ref, type: m.attr.fieldType || capfirst(m.attr.ref)});
                 method.onWriteFunctionBody = (w) => { w.write(choiceBody(m)); };
                 // log('create class for:' ,m.ref, groups);
             });
@@ -100,16 +101,16 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: any, indent = '') 
          });
     fields.filter( (f) => f.nodeType === "Field").forEach(
         (f) => {
-            log(indent + 'adding field:', {name: f.fieldName, type: f.fieldType});
-            c.addProperty({name: f.fieldName, type: f.fieldType, scope: "protected"});
-            const typeParts = f.fieldType.split('.');
+            log(indent + 'adding field:', {name: f.attr.fieldName, type: f.attr.fieldType});
+            c.addProperty({name: f.attr.fieldName, type: f.attr.fieldType, scope: "protected"});
+            const typeParts = f.attr.fieldType.split('.');
             if (typeParts.length == 2) {
                 const ns = typeParts[0];
                 fileDef.addImport({moduleSpecifier: this?.dependencies[ns], starImportName: ns});
             }
-            log(indent + 'nested class', f.fieldName, JSON.stringify(f.nestedClass,));
-            if (f.nestedClass) {
-                addClassForASTNode(fileDef, f.nestedClass, indent + ' ');
+            log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
+            if (f.attr.nestedClass) {
+                addClassForASTNode(fileDef, f.attr.nestedClass, indent + ' ');
             }
         }
     );
@@ -231,21 +232,25 @@ export class ClassGenerator {
         const ast = this.parseXsd(xsd);
         Object.keys(groups).forEach(key => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
-        (ast.obj.types || [])
+        (ast.children || [])
             .filter(t => t.nodeType === 'Group')
-            .forEach(t => {groups[t.name] = t; log('storing group:', t.name); addClassForASTNode(fileDef, t);});
-        (ast.obj.types || [])
+            .forEach(t => {
+                groups[t.name] = t;
+                log('storing group:', t.name);
+                addClassForASTNode(fileDef, t);
+            });
+        (ast.children || [])
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
-        (ast.obj.types || [])
+        (ast.children || [])
             .filter(t => t.nodeType === 'AliasType')
-            .forEach( t => fileDef.addTypeAlias({name: t.name, type:t.type}) );
+            .forEach( t => fileDef.addTypeAlias({name: t.name, type: t.attr.type}) );
 
-        (ast.obj.types || [])
+        (ast.children || [])
             .filter(t => t.nodeType === 'Enumeration')
             .forEach(t => {
                 const enumDef = fileDef.addEnum({name: t.name});
-                t.obj.values.forEach (
+                t.attr.values.forEach (
                     (m) => { enumDef.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
                 );
             });
@@ -530,7 +535,7 @@ export class ClassGenerator {
                     if (hDepth > max_depth) {
                         max_depth = hDepth;
                     }
-                    this.log(c.name + '\t' + hDepth);
+                    this.log( c.name + '\t' + hDepth);
                     if (hDepth === depth) {
 
                         if (c.name.indexOf(GROUP_PREFIX) === 0) {
