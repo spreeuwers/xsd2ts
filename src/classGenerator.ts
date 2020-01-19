@@ -86,7 +86,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             log(indent + 'adding field for Reference', f.name);
             const typePostFix = (f.attr.array) ? "[]" : "";
             const namePostFix = (f.attr.array) ? "?" : "";
-            c.addProperty({name: f.name + namePostFix, type: capfirst(f.name)+ typePostFix, scope: "protected"});
+            c.addProperty({name: f.attr.ref + namePostFix, type: capfirst(f.attr.ref) + typePostFix, scope: "protected"});
         });
     fields.filter( (f) => f.nodeType === "choice").forEach(
         (f) => {
