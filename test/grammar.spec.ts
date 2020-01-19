@@ -103,8 +103,8 @@ describe("grammar", () => {
         expect(ast.children[1].nodeType).toBe('Enumeration');
         expect(ast.children[1].name).toBe('option');
         expect(ast.children[1].attr.values).toBeDefined();
-        expect(ast.children[1].attr.values[0].value).toBe('A');
-        expect(ast.children[1].attr.values[1].value).toBe('B');
+        expect(ast.children[1].attr.values[0].attr.value).toBe('A');
+        expect(ast.children[1].attr.values[1].attr.value).toBe('B');
 
     });
 
