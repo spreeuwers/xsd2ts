@@ -103,7 +103,7 @@ describe("ClassGenerator", () => {
 
         });
 
-        fit("geeft een  classFile terug voor form met refs", () => {
+        it("geeft een  classFile terug voor form met refs", () => {
             const classFile = generator.generateClassFileDefinition2(formXsd, "", true);
 
             console.log(classFile.write());

@@ -77,7 +77,9 @@ export class ASTNode {
 
 
     public addFields(n: Node): ASTNode {
-        return this.prop('fields', [{nodeType: 'Field' , fieldName: attribs(n).name, fieldType: attribs(n).type }]);
+        this.children = this.children || [];
+        this.children.push(astNode('Field').prop('fieldName', attribs(n).name).prop('fieldType',attribs(n).type));
+        return this;
     }
 
     public addName(node: Node, prefix?: string): ASTNode{

@@ -79,7 +79,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
             log(indent + 'adding fields for ref:',  f.name);
-            fields = fields.concat(groups[f.name].children);
+            fields = fields.concat(groups[f.attr.ref].children);
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
