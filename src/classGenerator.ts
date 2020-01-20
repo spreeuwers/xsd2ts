@@ -63,7 +63,7 @@ function capfirst(s: string = "") {
 
 function choiceBody(m: any): string {
 
-    return `this["${m.ref || m.fieldName}"] = ${m.ref|| m.fieldName};\n`;
+    return `(this as any).${m.attr.ref || m.attr.fieldName} = arg;\n`;
 }
 
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
@@ -93,7 +93,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             log(indent + 'adding methods for choice', f.children?.map(i => i.name).join(',') );
             f.children?.forEach( (m) => {
                 const method = c.addMethod( {name:  m.attr.fieldName || m.attr.ref, returnType: 'void', scope: 'protected'} );
-                method.addParameter({name: m.attr.fieldName || m.attr.ref, type: m.attr.fieldType || capfirst(m.attr.ref)});
+                method.addParameter({name: 'arg', type: m.attr.fieldType || capfirst(m.attr.ref)});
                 method.onWriteFunctionBody = (w) => { w.write(choiceBody(m)); };
                 // log('create class for:' ,m.ref, groups);
             });

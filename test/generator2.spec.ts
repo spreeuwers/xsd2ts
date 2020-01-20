@@ -47,17 +47,18 @@ describe("generator", () => {
         it("creates group.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/group.xsd"));
             printFile("./src/generated/group.ts");
-            //compile(["./src/generated/group.ts"]);
+            compile(["./src/generated/group.ts"]);
         });
 
-       it("creates types.ts", () => {
+       fit("creates types.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/types.xsd"));
             printFile("./src/generated/types.ts");
-            //compile(["./src/generated/types.ts"]);
+            compile(["./src/generated/types.ts"]);
         });
 
         it("creates element.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/element.xsd",{ Xs : "./ns"} ));
+            compile(["./src/generated/element.ts"]);
         });
 
 
