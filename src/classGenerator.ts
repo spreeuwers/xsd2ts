@@ -63,7 +63,7 @@ function capfirst(s: string = "") {
 
 function choiceBody(m: any, names: string[]): string {
     const name = m.attr.ref || m.attr.fieldName;
-    const result = names.filter(n => n !== name).map( (n) => `delete(this['${n}']);`).join('\n');
+    const result = names.filter(n => n !== name).map( (n) => `delete((this as any).${n});`).join('\n');
     return result + `\n(this as any).${name} = arg;\n`;
 }
 
@@ -235,6 +235,14 @@ export class ClassGenerator {
         Object.keys(groups).forEach(key => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
         const children = ast.children || [];
+
+        children
+            .filter(t => t.nodeType === 'AliasType')
+            .forEach( t => {
+                log('alias type: ', t.attr.type);
+                fileDef.addTypeAlias({name: capfirst(t.name), type: this.getFieldType(t.attr.type)});
+            });
+
         children
             .filter(t => t.nodeType === 'Group')
             .forEach(t => {
@@ -242,12 +250,11 @@ export class ClassGenerator {
                 log('storing group:', t.name);
                 addClassForASTNode(fileDef, t);
             });
+
         children
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
-        children
-            .filter(t => t.nodeType === 'AliasType')
-            .forEach( t => fileDef.addTypeAlias({name: t.name, type: t.attr.type}) );
+
 
         children
             .filter(t => t.nodeType === 'Enumeration')
