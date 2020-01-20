@@ -41,7 +41,7 @@ describe("generator", () => {
         it("creates heeft een types property", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/simpleType.xsd"));
             printFile("./src/generated/simpleType.ts");
-            //compile(["./src/generated/types.ts"]);
+            compile(["./src/generated/simpleType.ts"]);
         });
 
         it("creates group.ts", () => {
@@ -100,7 +100,7 @@ function _compile(fileNames: string[], options: ts.CompilerOptions): void {
 
     let exitCode = emitResult.emitSkipped ? 1 : 0;
     console.log(`Process exiting with code '${exitCode}'.`);
-    process.exit(exitCode);
+    //process.exit(exitCode);
 }
 
 

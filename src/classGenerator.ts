@@ -232,26 +232,27 @@ export class ClassGenerator {
         const ast = this.parseXsd(xsd);
         Object.keys(groups).forEach(key => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
-        (ast.children || [])
+        const children = ast.children || [];
+        children
             .filter(t => t.nodeType === 'Group')
             .forEach(t => {
                 groups[t.name] = t;
                 log('storing group:', t.name);
                 addClassForASTNode(fileDef, t);
             });
-        (ast.children || [])
+        children
             .filter(t => t.nodeType === 'Class')
             .forEach(t => addClassForASTNode(fileDef, t) );
-        (ast.children || [])
+        children
             .filter(t => t.nodeType === 'AliasType')
             .forEach( t => fileDef.addTypeAlias({name: t.name, type: t.attr.type}) );
 
-        (ast.children || [])
+        children
             .filter(t => t.nodeType === 'Enumeration')
             .forEach(t => {
                 const enumDef = fileDef.addEnum({name: t.name});
                 t.attr.values.forEach (
-                    (m) => { enumDef.addMember( {name: m.value , value: `"${m.value}"` as any } ); }
+                    (m) => { enumDef.addMember( {name: m.attr.value , value: `"${m.attr.value}"` as any } ); }
                 );
             });
 
