@@ -61,9 +61,10 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
-function choiceBody(m: any): string {
-
-    return `(this as any).${m.attr.ref || m.attr.fieldName} = arg;\n`;
+function choiceBody(m: any, names: string[]): string {
+    const name = m.attr.ref || m.attr.fieldName;
+    const result = names.filter(n => n !== name).map( (n) => `delete(this['${n}']);`).join('\n');
+    return result + `\n(this as any).${name} = arg;\n`;
 }
 
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
@@ -90,11 +91,12 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
         });
     fields.filter( (f) => f.nodeType === "choice").forEach(
         (f) => {
-            log(indent + 'adding methods for choice', f.children?.map(i => i.name).join(',') );
+            const names = f.children?.map(i => i.attr.fieldName || i.attr.ref);
+            log(indent + 'adding methods for choice', names.join(',') );
             f.children?.forEach( (m) => {
                 const method = c.addMethod( {name:  m.attr.fieldName || m.attr.ref, returnType: 'void', scope: 'protected'} );
                 method.addParameter({name: 'arg', type: m.attr.fieldType || capfirst(m.attr.ref)});
-                method.onWriteFunctionBody = (w) => { w.write(choiceBody(m)); };
+                method.onWriteFunctionBody = (w) => { w.write(choiceBody(m, names)); };
                 // log('create class for:' ,m.ref, groups);
             });
             log(indent + 'added methods', c.methods.map((m) => m.name).join(','));
