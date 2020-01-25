@@ -12,7 +12,7 @@ enum xsdTypes {
     XS_ENUM = "xs:enumeration",
 }
 
-const COLUMN = ":";
+const COLON = ":";
 
 const XS_SCHEMA = "xs:schema";
 const XS_RESTRICTION = "xs:restriction";
@@ -47,6 +47,7 @@ class State {
 }
 
 const groups: { [key: string]: ASTNode } = {};
+const ns2modMap = {} as Map<string, string>;
 
 export type namespaceResolver = (ns:string) => void;
 
@@ -108,7 +109,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const typeParts = f.attr.fieldType.split('.');
             if (typeParts.length == 2) {
                 const ns = typeParts[0];
-                fileDef.addImport({moduleSpecifier: this?.dependencies[ns], starImportName: ns});
+                fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns} );
             }
             log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
             if (f.attr.nestedClass) {
@@ -129,13 +130,16 @@ export class ClassGenerator {
     private specifiedClasses: Map<string, string> = {};
     private referencedClasses: Map<string, string> = {};
 
-    constructor(dependencies?: Map<string,string>, private classPrefix = CLASS_PREFIX) {
-        this.dependencies = dependencies || {} as Map<string, string>;
+    constructor(depMap?: Map<string, string>, private classPrefix = CLASS_PREFIX) {
+        this.dependencies = depMap || {} as Map<string, string>;
+        (Object as any).assign(ns2modMap, depMap);
         log(JSON.stringify(this.dependencies));
     }
 
     private nsResolver(ns: string): void {
+        log('nsResolver', ns);
         this.importMap[ns] = this.dependencies[ns] || "ns";
+        log('nsResolver', ns, this.importMap);
     }
 
     private findAttrValue(node: HTMLElement, attrName: string): string {
@@ -231,7 +235,7 @@ export class ClassGenerator {
         this.log(xsd);
         this.log('');
         this.log('-------------------------------------------------------------------------------------');
-        const ast = this.parseXsd(xsd);
+        const ast = this.parseXsd(xsd, (ns) => { this.nsResolver(ns); } );
         Object.keys(groups).forEach(key => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
         const children = ast.children || [];
@@ -271,8 +275,8 @@ export class ClassGenerator {
     }
 
 
-    private parseXsd(xsd:string){
-        const xsdGrammar = new XsdGrammar();
+    private parseXsd(xsd:string, nsHandler: (ns: string) => void){
+        const xsdGrammar = new XsdGrammar(nsHandler);
         const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
         const xmlNode = xmlDom?.documentElement;
         return xsdGrammar.parse(xmlNode);
@@ -527,9 +531,11 @@ export class ClassGenerator {
     private makeSortedFileDefinition(sortedClasses: ClassDefinition[]): FileDefinition {
         //  console.log('makeSortedFileDefinition ');
         const outFile = createFile({classes: []});
+
+        outFile.addImport({moduleSpecifier: "mod", starImportName: "nspce"});
         for ( let ns in this.importMap) {
-            // console.log('ns ',ns);
-            outFile.addImport({moduleSpecifier:this.importMap[ns], starImportName: ns});
+            log('ns ', ns, this.importMap[ns]);
+            outFile.addImport({moduleSpecifier: this.importMap[ns], starImportName: ns});
         }
 
         let depth = 0;
@@ -670,13 +676,13 @@ export class ClassGenerator {
 
         if (result) {
 
-            if (result.indexOf(COLUMN) > 0) {
-                let ns = result.split(COLUMN)[0];
+            if (result.indexOf(COLON) > 0) {
+                let ns = result.split(COLON)[0];
                 this.nsResolver(ns);
                 console.log("namespace",ns);
             }
 
-            return result.replace(COLUMN, '.');
+            return result.replace(COLON, '.');
         } else {
             return 'any';
         }

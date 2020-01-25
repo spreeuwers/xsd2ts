@@ -45,9 +45,17 @@ const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.att
 
 const nestedClassMerger: AstNodeMerger  = (r1, r2) => {r1.nodeType='Field';r1.attr.nestedClass= {name: r1.attr.fieldType, children: r2.children}; return r1; };
 
-
+export type NsHandler = (ns: string) => void;
 
 export class XsdGrammar {
+
+    private nsHandler: NsHandler;
+
+    public constructor(nsHandler: NsHandler){
+        this.nsHandler = nsHandler;
+        ASTNode.nsHandler = nsHandler;
+    }
+
 
     public parse(node: Node): ASTNode {
 

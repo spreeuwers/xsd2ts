@@ -22,7 +22,7 @@ describe("generator", () => {
             printFile("./src/generated/simpleClass.ts");
         });
 
-        it("creates importedClass.ts", () => {
+        fit("creates importedClass.ts", () => {
             expect(generateTemplateClassesFromXSD2("./test/xsd/importedClass.xsd",
                 {dep: "./ns"} as Map<string, string>));
             printFile("./src/generated/importedClass.ts");

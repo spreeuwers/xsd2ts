@@ -1,7 +1,8 @@
 /**
  * Created by eddyspreeuwers on 1/5/20.
  */
-import { attribs, capFirst, findFirstChild, findNextSibbling, getFieldType, log, xml} from './xml-utils';
+import { attribs, capFirst, findFirstChild, findNextSibbling, log, xml} from './xml-utils';
+import {NsHandler} from "./xsd-grammar";
 
 const UNBOUNDED = 'unbounded';
 
@@ -11,6 +12,7 @@ export type AstNodeFactory = (n: Node) => ASTNode;
 export type AstNodeMerger = (r1: ASTNode, r2: ASTNode) => ASTNode;
 
 const returnMergedResult: AstNodeMerger  = (r1, r2) => r1.merge(r2);
+
 let ns = 'xs';
 
 export function setNamespace(namespace: string) {
@@ -54,7 +56,26 @@ export interface IParsable {
 
 export type Attribs = {[key: string]: string} ;
 
+export function getFieldType(type: string,): string {
+
+    const [ns, key] = type?.toLowerCase().split(':');
+    const typeMap = {
+        string: "string",
+        float: "number",
+        double: "number",
+        int: "number",
+        integer: "number",
+        datetime: "Date",
+        date: "Date",
+        base64bBinary: "string",
+        boolean: "boolean",
+    }
+    return typeMap[key] || type?.replace(':', '.') || 'any';
+}
+
 export class ASTNode {
+    public static nsHandler: NsHandler;
+
     public nodeType: string;
     public name: string;
     private _attr: Attribs;
@@ -78,7 +99,7 @@ export class ASTNode {
 
     public addFields(n: Node): ASTNode {
         this.children = this.children || [];
-        this.children.push(astNode('Field').prop('fieldName', attribs(n).name).prop('fieldType',attribs(n).type));
+        this.children.push(astNode('Field').prop('fieldName', attribs(n).name).prop('fieldType', attribs(n).type));
         return this;
     }
 

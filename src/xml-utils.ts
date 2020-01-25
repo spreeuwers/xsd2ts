@@ -9,7 +9,7 @@ export function log(...parms: any) {
 
 export function findFirstChild(node: Node): Node {
     node = node?.firstChild;
-    if (node && node.nodeType == node.TEXT_NODE) {
+    if (node && node.nodeType === node.TEXT_NODE) {
         node = findNextSibbling(node);
     }
     return node;
@@ -37,15 +37,15 @@ export function findChildren(node: Node){
 }
 
 
-export function xml(n:Node): XMLNode{
-    return n as XMLNode;
+export function xml(n:Node): IXMLNode{
+    return n as IXMLNode;
 }
 
-export interface XMLNode extends Node {
+export interface IXMLNode extends Node {
     localName: string;
 }
 
-export function capFirst (s: string) {
+export function capFirst(s: string) {
     if (s && s[0]){
         return s[0].toUpperCase() + s.substr(1);
     }
@@ -79,18 +79,4 @@ export function attribs(node: Node): IAttributes {
 }
 
 
-export function getFieldType(type: string): string {
-    const key = type?.toLowerCase().split(':').reverse()[0];
-    const typeMap = {
-        string: "string",
-        float: "number",
-        double: "number",
-        int: "number",
-        integer: "number",
-        datetime: "Date",
-        date: "Date",
-        base64bBinary: "string",
-        boolean: "boolean",
-    }
-    return typeMap[key] || type?.replace(':','.') || 'any';
-}
+

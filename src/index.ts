@@ -62,7 +62,7 @@ export function generateTemplateClassesFromXSD2(xsdFilePath: string, dependencie
 
     const PROTECTED = 'protected';
     const xsdString = fs.readFileSync(xsdFilePath, 'utf8');
-    const fileName =  xsdFilePath.split("/").reverse()[0].replace(".xsd",".ts");
+    const fileName =  xsdFilePath.split("/").reverse()[0].replace(".xsd", ".ts");
 
     const genSrcPath = "./src/generated";
     const generator = new ClassGenerator(imports);

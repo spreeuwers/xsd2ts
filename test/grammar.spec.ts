@@ -145,7 +145,7 @@ function printFile(fname:string) {
 
 
 function testGrammar (elmXsd: string) {
-    const grammar = new XsdGrammar();
+    const grammar = new XsdGrammar((ns)=>{});
     console.log('src:', elmXsd);
     const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
     const xmlNode = xmlDom.documentElement;
