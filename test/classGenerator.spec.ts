@@ -106,7 +106,7 @@ describe("ClassGenerator", () => {
         // });
 
         it("geeft een  classFile terug voor form met refs", () => {
-            const classFile = generator.generateClassFileDefinition2(formXsd, "", true);
+            const classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
             log(classFile.write());
             const  classNames = ['X', 'Field', 'Option', 'ForValue', 'Item', 'Reported' ];
@@ -180,7 +180,7 @@ describe("ClassGenerator", () => {
 
         it("returns a classFile for a simpleTypeXsd", () => {
 
-            let classFile = generator.generateClassFileDefinition2(simpleClassXsd, "", true);
+            let classFile = generator.generateClassFileDefinition(simpleClassXsd, "", true);
             const types = generator.types.map((t) => `${t}`).join("\n");
             log("-------------------------------------\n");
             log(types,"\n\n", classFile.write());
@@ -192,7 +192,7 @@ describe("ClassGenerator", () => {
 
         it("returns a classFile for a simpleTypeXsd", () => {
 
-            let classFile = generator.generateClassFileDefinition2(simpleTypeXsd, "", true);
+            let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
             //let types = generator.types.map((t) => `${t}`).join("\n");
             log("------------ classes -------------------------\n");
             log(classFile.write());
@@ -203,7 +203,7 @@ describe("ClassGenerator", () => {
         });
 
         it("returns a  classFile with special types from typesXsd", () => {
-            let classFile = generator.generateClassFileDefinition2(typesXsd, "", true);
+            let classFile = generator.generateClassFileDefinition(typesXsd, "", true);
             //let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(classFile.write());
@@ -213,7 +213,7 @@ describe("ClassGenerator", () => {
         });
 
         it("returns a  classFile with special types from typesXsd", () => {
-            let classFile = generator.generateClassFileDefinition2(choiceXsd, "", true);
+            let classFile = generator.generateClassFileDefinition(choiceXsd, "", true);
             //let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(classFile.write());

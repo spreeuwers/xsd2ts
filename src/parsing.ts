@@ -57,7 +57,7 @@ export interface IParsable {
 
 export type Attribs = {[key: string]: string} ;
 
-export function getFieldType(type: string,): string {
+export function getFieldType(type: string): string {
 
     const key = type?.toLowerCase().split(':').reverse().shift();
 
