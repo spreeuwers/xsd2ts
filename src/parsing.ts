@@ -3,6 +3,7 @@
  */
 import { attribs, capFirst, findFirstChild, findNextSibbling, log, xml} from './xml-utils';
 import {NsHandler} from "./xsd-grammar";
+import reverse = require("lodash/fp/reverse");
 
 const UNBOUNDED = 'unbounded';
 
@@ -58,7 +59,8 @@ export type Attribs = {[key: string]: string} ;
 
 export function getFieldType(type: string,): string {
 
-    const [ns, key] = type?.toLowerCase().split(':');
+    const key = type?.toLowerCase().split(':').reverse().shift();
+
     const typeMap = {
         string: "string",
         float: "number",

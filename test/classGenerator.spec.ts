@@ -183,21 +183,21 @@ describe("ClassGenerator", () => {
             const types = generator.types.map((t) => `${t}`).join("\n");
             log("-------------------------------------\n");
             log(types,"\n\n", classFile.write());
-            expect(classFile.classes.length).toBe(3);
-            let c  = classFile.getClass("Naam");
-            expect(c).toBeDefined();
+            expect(classFile.classes.length).toBe(4);
+            const c  = classFile.getClass("Schema");
+            expect(c.name).toBe("Schema");
 
         });
 
         it("returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition2(simpleTypeXsd, "", true);
-            let types = generator.types.map((t) => `${t}`).join("\n");
-            log("-------------------------------------\n");
-            log(types,"\n\n", classFile.write());
-            expect(classFile.classes.length).toBe(0);
-            const c  = classFile.getClass("Naam");
-            expect(c).toBeDefined();
+            //let types = generator.types.map((t) => `${t}`).join("\n");
+            log("------------ classes -------------------------\n");
+            log(classFile.write());
+            expect(classFile.classes.length).toBe(1);
+            const c  = classFile.getClass("Schema");
+            expect(c.name).toBe("Schema");
 
         });
 
@@ -216,7 +216,7 @@ describe("ClassGenerator", () => {
             //let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(1);
+            expect(classFile.classes.length).toBe(2);
             let method = classFile.getClass("Choose")?.getMethod("item");
             expect(method?.returnType?.text).toBe("void");
         });

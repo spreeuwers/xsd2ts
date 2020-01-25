@@ -56,16 +56,17 @@ export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies
 
 }
 
-export function generateTemplateClassesFromXSD2(xsdFilePath: string, dependencies?: Map<string,string>): void {
-    let imports = dependencies || <Map<string,string>>{};
+export function generateTemplateClassesFromXSD2(xsdFilePath: string, dependencies: Map<string,string> = {}): void {
+    let imports = dependencies;
     console.log(JSON.stringify(dependencies));
 
-    const PROTECTED = 'protected';
     const xsdString = fs.readFileSync(xsdFilePath, 'utf8');
     const fileName =  xsdFilePath.split("/").reverse()[0].replace(".xsd", ".ts");
 
     const genSrcPath = "./src/generated";
     const generator = new ClassGenerator(imports);
+
+    generator.schemaName = fileName.replace( ".ts", "");
 
     if (!fs.existsSync(genSrcPath)) {
         fs.mkdirSync(genSrcPath);

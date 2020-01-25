@@ -62,6 +62,10 @@ function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
+function lowfirst(s: string = "") {
+    return s[0]?.toLowerCase() + s?.substring(1);
+}
+
 function choiceBody(m: any, names: string[]): string {
     const name = m.attr.ref || m.attr.fieldName;
     const result = names.filter(n => n !== name).map( (n) => `delete((this as any).${n});`).join('\n');
@@ -127,6 +131,7 @@ export class ClassGenerator {
     private dependencies: Map<string, string>;
     private importMap: string[] = [];
     public types: string[] = [];
+    public schemaName = "schema";
     private specifiedClasses: Map<string, string> = {};
     private referencedClasses: Map<string, string> = {};
 
@@ -238,6 +243,10 @@ export class ClassGenerator {
         const ast = this.parseXsd(xsd, (ns) => { this.nsResolver(ns); } );
         Object.keys(groups).forEach(key => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
+
+        // create schema class
+        const schemaClass = createFile().addClass({name: capfirst(ast.name)});
+
         const children = ast.children || [];
 
         children
@@ -245,7 +254,10 @@ export class ClassGenerator {
             .forEach( t => {
                 log('alias type: ', t.attr.type);
                 fileDef.addTypeAlias({name: capfirst(t.name), type: this.getFieldType(t.attr.type)});
+                schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
             });
+
+        fileDef.classes.push(schemaClass);
 
         children
             .filter(t => t.nodeType === 'Group')
@@ -257,7 +269,10 @@ export class ClassGenerator {
 
         children
             .filter(t => t.nodeType === 'Class')
-            .forEach(t => addClassForASTNode(fileDef, t) );
+            .forEach(t => {
+                addClassForASTNode(fileDef, t);
+                schemaClass.addProperty({name: lowfirst(t.name), type: t.name});
+            });
 
 
         children
@@ -267,6 +282,7 @@ export class ClassGenerator {
                 t.attr.values.forEach (
                     (m) => { enumDef.addMember( {name: m.attr.value , value: `"${m.attr.value}"` as any } ); }
                 );
+                schemaClass.addProperty({name: lowfirst(t.name), type: t.name});
             });
 
         const tmp = this.makeSortedFileDefinition(fileDef.classes);
@@ -276,7 +292,7 @@ export class ClassGenerator {
 
 
     private parseXsd(xsd:string, nsHandler: (ns: string) => void){
-        const xsdGrammar = new XsdGrammar(nsHandler);
+        const xsdGrammar = new XsdGrammar(this.schemaName);
         const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
         const xmlNode = xmlDom?.documentElement;
         return xsdGrammar.parse(xmlNode);

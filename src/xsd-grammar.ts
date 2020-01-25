@@ -7,7 +7,10 @@ import {
     astEnum, astEnumValue
 } from './parsing';
 
-
+function makeSchemaHandler(schemaName: string){
+    return (n) => new ASTNode("schema").named(schemaName);
+}
+const schemaHandler: AstNodeFactory = null;
 const fieldHandler: AstNodeFactory = (n) => (attribs(n).type) ? astNode('Field').addField(n) : null;
 
 
@@ -49,11 +52,10 @@ export type NsHandler = (ns: string) => void;
 
 export class XsdGrammar {
 
-    private nsHandler: NsHandler;
+    private schemaName: string;
 
-    public constructor(nsHandler: NsHandler){
-        this.nsHandler = nsHandler;
-        ASTNode.nsHandler = nsHandler;
+    public constructor(name: string){
+        this.schemaName = name;
     }
 
 
@@ -68,7 +70,7 @@ export class XsdGrammar {
         const topFldElement  = new Terminal("element:topFld", topFieldHandler);
         const enumElement    = new Terminal("element:enum", enumElmHandler);
         const attributeGroup = new Terminal("attributeGroup:attrGrp", namedGroupHandler);
-        const schema         = new Terminal("schema");
+        const schema         = new Terminal("schema:Schema", makeSchemaHandler(this.schemaName));
         const namedGroup     = new Terminal("group:named", namedGroupHandler);
         const refGroup       = new Terminal("group:refGrp", refGroupHandler);
         const refElement     = new Terminal("element:refElm", refElementHandler);

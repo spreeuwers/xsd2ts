@@ -35,12 +35,9 @@ describe("grammar", () => {
     it(" can parse a single elements  ", () => {
         let ast = testGrammar(singleElmXsd);
         expect((ast).children.length).toBe(1);
-        expect((ast).children[0].nodeType).toBe('Class');
-        expect((ast).children[0].name).toBe('ForNaam');
-        expect((ast).children[0].children).toBeDefined();
-        expect((ast).children[0].children[0].nodeType).toBe('Field');
-        expect((ast).children[0].children[0].attr.fieldName).toBe('naam');
-        expect((ast).children[0].children[0].attr.fieldType).toBe('xs:string');
+        expect((ast).children[0].nodeType).toBe('AliasType');
+        expect((ast).children[0].name).toBe("naam");
+        expect((ast).children[0].attr.type).toBe("xs:string");
     });
 
     it(" can parse a simple class starting with Element ", () => {
@@ -145,7 +142,7 @@ function printFile(fname:string) {
 
 
 function testGrammar (elmXsd: string) {
-    const grammar = new XsdGrammar((ns)=>{});
+    const grammar = new XsdGrammar("Schema");
     console.log('src:', elmXsd);
     const xmlDom = new DOMParser().parseFromString(elmXsd, 'application/xml');
     const xmlNode = xmlDom.documentElement;
