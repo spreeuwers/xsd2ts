@@ -178,55 +178,56 @@ export class ClassGenerator {
 
 
 
-    public generateClassFileDefinition(xsd: string, pluralPostFix= 's',  verbose?: boolean): FileDefinition {
-        this.fileDef = createFile();
-        const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
-
-        this.verbose = verbose;
-        this.pluralPostFix = pluralPostFix;
-
-
-        this.log('--------------------generating classFile definition for----------------------------------');
-        this.log('');
-        this.log(xsd);
-        this.log('');
-        this.log('-------------------------------------------------------------------------------------');
-        if (xmlDom?.documentElement) {
-
-            this.traverse(xmlDom.documentElement);
-
-        }
-
-
-
-        this.log('\nspecified: ', Object.keys(this.specifiedClasses).join(';'));
-        this.log('referenced:',Object.keys(this.referencedClasses).join(';'));
-
-        this.log('\n-----generated------');
-        let sortedClasses = this.fileDef.classes;
-        this.log(sortedClasses.map(c =>  '' + c.name).join(';').replace('[]', ''));
-
-        sortedClasses = sortedClasses
-            .filter(c => this.specifiedClasses[c.name] || this.referencedClasses[c.name] )
-            .sort( (a, b) => a.name.localeCompare(b.name)
-        );
-        this.log('\n----filtered----');
-        this.log(sortedClasses.map(c =>  c.name).join(';'));
-        this.log('--------');
-        // remove Schema class when not needed, when there are no toplevel elements
-        sortedClasses = sortedClasses.filter(c => (c.name === "Schema") ?  c.properties.length < 0 : true);
-
-        console.log("-------------------------------generated classes-------------------------------------");
-        console.log("Nr of classes generated: ", sortedClasses.length);
-        sortedClasses.forEach(c => this.log(c.name));
-
-        logLine();
-
-        const outfile =  this.makeSortedFileDefinition(sortedClasses);
-        outfile.enums = this.fileDef.enums;
-        return outfile;
-
-    }
+    // public generateClassFileDefinition(xsd: string, pluralPostFix= 's',  verbose?: boolean): FileDefinition {
+    //     this.fileDef = createFile();
+    //     const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
+    //
+    //     this.verbose = verbose;
+    //     this.pluralPostFix = pluralPostFix;
+    //
+    //
+    //     this.log('--------------------generating classFile definition for----------------------------------');
+    //     this.log('');
+    //     this.log(xsd);
+    //     this.log('');
+    //     this.log('-------------------------------------------------------------------------------------');
+    //     if (xmlDom?.documentElement) {
+    //
+    //         this.traverse(xmlDom.documentElement);
+    //
+    //     }
+    //
+    //
+    //
+    //     this.log('\nspecified: ', Object.keys(this.specifiedClasses).join(';'));
+    //     this.log('referenced:',Object.keys(this.referencedClasses).join(';'));
+    //
+    //     this.log('\n-----generated------');
+    //     let sortedClasses = this.fileDef.classes;
+    //     this.log(sortedClasses.map(c =>  '' + c.name).join(';').replace('[]', ''));
+    //
+    //     sortedClasses = sortedClasses
+    //         .filter(c => this.specifiedClasses[c.name] || this.referencedClasses[c.name] )
+    //         .sort( (a, b) => a.name.localeCompare(b.name)
+    //     );
+    //     this.log('\n----filtered----');
+    //     this.log(sortedClasses.map(c =>  c.name).join(';'));
+    //     this.log('--------');
+    //     // remove Schema class when not needed, when there are no toplevel elements
+    //     sortedClasses = sortedClasses.filter(c => (c.name === "Schema") ?  c.properties.length < 0 : true);
+    //
+    //     console.log("-------------------------------generated classes-------------------------------------");
+    //     console.log("Nr of classes generated: ", sortedClasses.length);
+    //     sortedClasses.forEach(c => this.log(c.name));
+    //
+    //     logLine();
+    //
+    //     const outfile =  this.makeSortedFileDefinition(sortedClasses);
+    //     outfile.enums = this.fileDef.enums;
+    //     return outfile;
+    //
+    // }
+    //
 
     public generateClassFileDefinition2(xsd: string, pluralPostFix= 's',  verbose?: boolean): FileDefinition {
         const fileDef = createFile();
@@ -241,7 +242,7 @@ export class ClassGenerator {
         this.log('');
         this.log('-------------------------------------------------------------------------------------');
         const ast = this.parseXsd(xsd);
-        Object.keys(groups).forEach(key => delete(groups[key]));
+        Object.keys(groups).forEach( (key) => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
 
         // create schema class
