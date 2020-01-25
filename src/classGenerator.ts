@@ -240,7 +240,7 @@ export class ClassGenerator {
         this.log(xsd);
         this.log('');
         this.log('-------------------------------------------------------------------------------------');
-        const ast = this.parseXsd(xsd, (ns) => { this.nsResolver(ns); } );
+        const ast = this.parseXsd(xsd);
         Object.keys(groups).forEach(key => delete(groups[key]));
         log(JSON.stringify(ast,null,3));
 
@@ -291,7 +291,7 @@ export class ClassGenerator {
     }
 
 
-    private parseXsd(xsd:string, nsHandler: (ns: string) => void){
+    private parseXsd(xsd:string){
         const xsdGrammar = new XsdGrammar(this.schemaName);
         const xmlDom = new DOMParser().parseFromString(xsd, 'application/xml');
         const xmlNode = xmlDom?.documentElement;
