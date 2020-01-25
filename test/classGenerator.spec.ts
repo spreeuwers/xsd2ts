@@ -121,62 +121,44 @@ describe("ClassGenerator", () => {
 
         });
 
-        // it("returns a  classFile with special types from typesXsd", () => {
-        //     let classFile = generator.generateClassFileDefinition(typesXsd, "", true);
-        //     let types = generator.types.map((t) => `${t}`).join("\n");
-        //     console.log("-------------------------------------\n");
-        //     console.log(types, "\n\n", classFile.write());
-        //     expect(classFile.classes.length).toBe(7);
-        //     let fld = classFile.getClass("Module")?.getProperty("param");
-        //     expect(fld.type.text).toBe("Param");
-        // });
-        //
-        // it("geeft een  classFile terug voor een enkel leeg element", () => {
-        //
-        //     let classFile = generator.generateClassFileDefinition(singleElmXsd, "", true);
-        //
-        //     console.log(classFile.write());
-        //     expect(classFile.classes.length).toBe(0);
-        //     let c  = classFile.getClass("Naam");
-        //     expect(c).toBeDefined();
-        //
-        // });
 
-        // it("returns a classFile for a groupXsd", () => {
-        //
-        //     let classFile = generator.generateClassFileDefinition(groupXsd, "", true);
-        //
-        //     console.log(classFile.write());
-        //     expect(classFile.classes.length).toBe(2);
-        //     let c  = classFile.getClass("Ordertype");
-        //     console.log('class:  ' ,  c.write());
-        //     expect(c).toBeDefined();
-        //     let p  = c.getProperty('customer');
-        //     expect(p.type).toBeDefined();
-        //
-        // });
-        // it("returns a classFile for a single element with nested type", () => {
-        //
-        //     let classFile = generator.generateClassFileDefinition(elmXsd, "", true);
-        //
-        //     console.log(classFile.write());
-        //     expect(classFile.classes.length).toBe(1);
-        //     let c  = classFile.getClass("Naam");
-        //     expect(c).toBeDefined();
-        //
-        // });
 
-        // it("returns a classFile for a simpleTypeXsd", () => {
-        //
-        //     let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
-        //     let types = generator.types.map((t) => `${t}`).join("\n");
-        //     console.log("-------------------------------------\n");
-        //     console.log(types,"\n\n", classFile.write());
-        //     expect(classFile.classes.length).toBe(0);
-        //     let c  = classFile.getClass("Naam");
-        //     expect(c).toBeDefined();
-        //
-        // });
+        fit("geeft een  classFile terug voor een enkel leeg element", () => {
+
+            let classFile = generator.generateClassFileDefinition(singleElmXsd, "", true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(1);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
+
+        it("returns a classFile for a groupXsd", () => {
+
+            let classFile = generator.generateClassFileDefinition(groupXsd, "", true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(3);
+            let c  = classFile.getClass("Ordertype");
+            console.log('class:  ' ,  c.write());
+            expect(c).toBeDefined();
+            let p  = c.getProperty('customer');
+            expect(p.type).toBeDefined();
+
+        });
+
+        it("returns a classFile for a single element with nested type", () => {
+
+            let classFile = generator.generateClassFileDefinition(elmXsd, "", true);
+
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(2);
+            let c  = classFile.getClass("Naam");
+            expect(c).toBeDefined();
+
+        });
+
 
         it("returns a classFile for a simpleTypeXsd", () => {
 
@@ -193,7 +175,6 @@ describe("ClassGenerator", () => {
         it("returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
-            //let types = generator.types.map((t) => `${t}`).join("\n");
             log("------------ classes -------------------------\n");
             log(classFile.write());
             expect(classFile.classes.length).toBe(1);
@@ -204,7 +185,6 @@ describe("ClassGenerator", () => {
 
         it("returns a  classFile with special types from typesXsd", () => {
             let classFile = generator.generateClassFileDefinition(typesXsd, "", true);
-            //let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(7);
@@ -214,7 +194,6 @@ describe("ClassGenerator", () => {
 
         it("returns a  classFile with special types from typesXsd", () => {
             let classFile = generator.generateClassFileDefinition(choiceXsd, "", true);
-            //let types = generator.types.map((t) => `${t}`).join("\n");
             console.log("-------------------------------------\n");
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(2);
@@ -222,17 +201,5 @@ describe("ClassGenerator", () => {
             expect(method?.returnType?.text).toBe("void");
         });
 
-        // it("returns a classFile for a groupXsd", () => {
-        //
-        //     let classFile = generator.generateClassFileDefinition(groupXsd, "", true);
-        //
-        //     console.log(classFile.write());
-        //     expect(classFile.classes.length).toBe(2);
-        //     let c  = classFile.getClass("Ordertype");
-        //     console.log('class:  ' ,  c.write());
-        //     expect(c).toBeDefined();
-        //     let p  = c.getProperty('customer');
-        //     expect(p.type).toBeDefined();
-        //
-        // });
+
 });
