@@ -58,7 +58,7 @@ describe("ClassGenerator", () => {
             expect(generator.generateClassFileDefinition("").classes.length).toBe(1);
         });
 
-        fit("returns a simple classFile ", () => {
+        it("returns a simple classFile ", () => {
             const result = generator.generateClassFileDefinition(simpleClassXsd);
             logClassDef(result);
             expect(result.classes.length).toBe(3);
