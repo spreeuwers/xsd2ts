@@ -10,8 +10,8 @@ import {
 function makeSchemaHandler(schemaName: string){
     return (n) => new ASTNode("schema").named(schemaName);
 }
-const schemaHandler: AstNodeFactory = null;
-const fieldHandler: AstNodeFactory = (n) => (attribs(n).type) ? astNode('Field').addField(n) : null;
+
+const fieldHandler: AstNodeFactory = (n) => (attribs(n).type) ? astNode('Field').addField(n).prop('label4', 'fieldHandler') : null;
 
 
 //const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? astClass().addName(n, 'For').addFields(n) : null;
@@ -20,15 +20,15 @@ const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? ast
 const attrHandler: AstNodeFactory = (n) =>  astNode('Field').addField(n);
 
 
-const arrayFldHandler: AstNodeFactory = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? astNode('Field').addField(n) : null;
+const arrayFldHandler: AstNodeFactory = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? astNode('ArrField').addField(n).prop('label1','arrayFldHandler') : null;
 
 
-const cmpFldHandler: AstNodeFactory = (n) => astField().prop('fieldName', attribs(n).name).prop('fieldType', capFirst(attribs(n).name));
+const cmpFldHandler: AstNodeFactory = (n) => astField().prop('label2', 'cmpFldHandler').addField(n, capFirst(attribs(n).name));
 
-const classHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n);
+const classHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n).prop('label3','classHandler');
 const enumElmHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astEnum(n);
 const enumerationHandler: AstNodeFactory = (n) => (attribs(n).value) ?  astEnumValue(n): null;
-const extensionHandler: AstNodeFactory = (n) => astNode('Extension').prop('extends', attribs(n).base);
+const extensionHandler: AstNodeFactory = (n) => astNode('Extension').addAtribs(n);
 
 const intRestrictionHandler: AstNodeFactory = (n) => /integer/.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'number'): null;
 const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string'): null;
@@ -42,11 +42,11 @@ const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Re
 
 const typesMerger: AstNodeMerger  = (r1, r2) => {r1.children = r2.children; return r1; };
 const fieldsMerger: AstNodeMerger  = (r1, r2) => {r1.children = r2.children; return r1; };
-//const choiceMerger: AstNodeMerger  = (r1, r2) => (<any>r2.list[0]) as ASTNode ;
 const enumMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.attr.values = r2.children; return r1; };
 const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.attr.type = r2.attr.value; return r1; };
 
-const nestedClassMerger: AstNodeMerger  = (r1, r2) => {r1.nodeType='Field';r1.attr.nestedClass= {name: r1.attr.fieldType, children: r2.children}; return r1; };
+const nestedClassMerger: AstNodeMerger  = (r1, r2) => {r1.nodeType = 'Field'; r1.attr.nestedClass= {name: r1.attr.fieldType, children: r2.children}; return r1; };
+const arrayFieldMerger: AstNodeMerger = (r1, r2) => {r2.nodeType = 'Field'; r2.attr.fieldName = r1.attr.fieldName; return r2;};
 
 export type NsHandler = (ns: string) => void;
 
@@ -77,7 +77,7 @@ export class XsdGrammar {
         const complexType    = new Terminal("complexType");
         const simpleType     = new Terminal("simpleType");
         const complexContent = new Terminal("complexContent");
-        const extension      = new Terminal("extension",extensionHandler);
+        const extension      = new Terminal("extension", extensionHandler);
 
         const enumeration    = new Terminal("enumeration:enum",enumerationHandler);
 
@@ -96,11 +96,11 @@ export class XsdGrammar {
         const ATTRIBUTE= match(attribute).labeled('ATTRIBUTE');
         const FLD_ELM  = match(fieldElement).labeled('FIELD_ELM')
         const CHOICE   = match(choice).children(REF_ELM, FIELDPROXY);
-        const ARRFIELD = match(cmpFldElement).child(complexType).child(sequence).child(arrFldElement).labeled('ARRFIELD');
+        const ARRFIELD = match(cmpFldElement, arrayFieldMerger).child(complexType).child(sequence).child(arrFldElement).labeled('ARRFIELD');
 
         const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY).labeled('CMPFIELD');
 
-        const FIELD    = oneOf(CMPFIELD, ARRFIELD,  FLD_ELM, REFGROUP, REF_ELM ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
+        const FIELD    = oneOf(ARRFIELD, CMPFIELD, FLD_ELM, REFGROUP, REF_ELM ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
 
         const A_CLASS  = match(classElement, fieldsMerger).child(complexType).children(ATTRIBUTE, CHOICE).labeled('A_CLASS')
         // element class

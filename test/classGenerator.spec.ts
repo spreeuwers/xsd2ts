@@ -46,42 +46,42 @@ describe("ClassGenerator", () => {
             expect(generator).toBeDefined();
         });
 
-        // it("heeft een generateClassFileDefition methode", () => {
-        //     expect(generator.generateClassFileDefinition).toBeDefined();
-        // });
+        it("heeft een generateClassFileDefition methode", () => {
+            expect(generator.generateClassFileDefinition).toBeDefined();
+        });
 
-        // it("heeft een types property", () => {
-        //     expect(generator.types).toBeDefined();
-        // });
-        //
-        // it("heeft een types property", () => {
-        //     expect(generator.generateClassFileDefinition("").classes.length).toBe(0);
-        // });
-        //
-        // it("returns a simple classFile ", () => {
-        //     const result = generator.generateClassFileDefinition(simpleClassXsd);
-        //     logClassDef(result);
-        //     expect(result.classes.length).toBe(3);
-        //
-        // });
+        it("heeft een types property", () => {
+            expect(generator.types).toBeDefined();
+        });
 
-        // it("geeft een inherited classFile terug", () => {
-        //     const result = generator.generateClassFileDefinition(simpleInheritedClassXsd, '', true);
-        //     logClassDef(result);
-        //     expect(result.classes.length).toBe(6);
-        //     const test = result.getClass("InheridedClass");
-        //     log(test.write());
-        //     expect(test).toBeDefined();
-        //     expect(test.extendsTypes[0].text).toBe('Base');
-        //     expect(test.getProperty("intField")).toBeDefined();
-        //     expect(test.getProperty("dateField")).toBeDefined();
-        //     expect(test.getMethod("constructor")).toBeDefined();
-        //     expect(test.getProperty("dateField").type.isArrayType()).toBe(false);
-        //     expect(test.getProperty("arrayField?").type.isArrayType()).toBe(true);
-        //     expect(test.getProperty("nestedFields").type.isArrayType()).toBe(false);
-        //     expect(test.getProperty("nestedFields").type.text).toBe("NestedFields");
-        //     expect(test.getProperty("strArrayField").type.text).toBe("string[]");
-        // });
+        it("heeft een types property", () => {
+            expect(generator.generateClassFileDefinition("").classes.length).toBe(1);
+        });
+
+        fit("returns a simple classFile ", () => {
+            const result = generator.generateClassFileDefinition(simpleClassXsd);
+            logClassDef(result);
+            expect(result.classes.length).toBe(3);
+
+        });
+
+        it("geeft een inherited classFile terug", () => {
+            const result = generator.generateClassFileDefinition(simpleInheritedClassXsd, '', true);
+            logClassDef(result);
+            expect(result.classes.length).toBe(6);
+            const test = result.getClass("InheridedClass");
+            log(test.write());
+            expect(test).toBeDefined();
+            expect(test.extendsTypes[0].text).toBe('Base');
+            expect(test.getProperty("intField")).toBeDefined();
+            expect(test.getProperty("dateField")).toBeDefined();
+            expect(test.getMethod("constructor")).toBeDefined();
+            expect(test.getProperty("dateField").type.isArrayType()).toBe(false);
+            expect(test.getProperty("arrayField?").type.isArrayType()).toBe(true);
+            expect(test.getProperty("nestedFields").type.isArrayType()).toBe(false);
+            expect(test.getProperty("nestedFields").type.text).toBe("NestedFields");
+            expect(test.getProperty("strArrayField").type.text).toBe("string[]");
+        });
 
         // it("geeft een  classFile terug met imports", () => {
         //     let importingClass =generator.generateClassFileDefinition(importedClassXsd, '' , true);
@@ -123,7 +123,7 @@ describe("ClassGenerator", () => {
 
 
 
-        fit("geeft een  classFile terug voor een enkel leeg element", () => {
+        it("geeft een  classFile terug voor een enkel leeg element", () => {
 
             let classFile = generator.generateClassFileDefinition(singleElmXsd, "", true);
 
@@ -166,7 +166,7 @@ describe("ClassGenerator", () => {
             const types = generator.types.map((t) => `${t}`).join("\n");
             log("-------------------------------------\n");
             log(types,"\n\n", classFile.write());
-            expect(classFile.classes.length).toBe(4);
+            expect(classFile.classes.length).toBe(3);
             const c  = classFile.getClass("Schema");
             expect(c.name).toBe("Schema");
 

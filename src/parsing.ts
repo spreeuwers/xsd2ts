@@ -38,7 +38,7 @@ export function astEnumValue(n: Node){
 }
 
 export function astField() {
-    return astNode('Class');
+    return astNode('Field');
 }
 
 
@@ -110,9 +110,9 @@ export class ASTNode {
         return this;
     }
 
-    public addField(node: Node) {
+    public addField(node: Node, fldType?: string) {
 
-        let type = getFieldType(attribs(node).type);
+        let type = fldType || getFieldType(attribs(node).type);
 
         this.prop('fieldName', attribs(node).name + ((attribs(node).minOccurs === '0') ? '?' : ''))
             .prop('fieldType', type + ((attribs(node).maxOccurs === UNBOUNDED) ? '[]' : ''));
@@ -144,6 +144,8 @@ export class ASTNode {
         let result = new ASTNode(this.nodeType);
         result =  (Object as any).assign(result, this);
         result =  (Object as any).assign(result, other);
+        (Object as any).assign(result.attr, this.attr);
+        (Object as any).assign(result.attr, other.attr);
         result.nodeType = this.nodeType;
         return result;
     }
@@ -162,9 +164,6 @@ export class ASTClass extends ASTNode {
         return 'Class;';
     }
 
-    public static fromNamedElement(n:Node): ASTClass {
-        return new ASTClass(n);
-    }
 }
 
 export abstract class Parslet implements IParsable {
@@ -307,7 +306,7 @@ export class Matcher extends Parslet {
 
         // find the first sibbling matching the terminal
         while (sibbling){
-            log('skip?',xml(node)?.localName );
+            // log(indent, 'skip?',xml(node)?.localName );
             const skip = /(annotation|documentation)/.test(xml(sibbling)?.localName);
             if (!skip) break;
             sibbling = findNextSibbling(sibbling);

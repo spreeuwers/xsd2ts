@@ -74,6 +74,9 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
         c.isAbstract = true;
         // astNode.fields = astNode.list || [];
     }
+    if (astNode.attr?.base){
+        c.addExtends(capfirst(astNode.attr.base));
+    }
 
     log(indent + 'created: ', astNode.name, ', fields: ', astNode?.children?.length);
     let fields = (astNode.children || []).filter( (f) => f);
@@ -157,9 +160,9 @@ export class ClassGenerator {
         log(JSON.stringify(ast, null, 3));
 
         // create schema class
-        const schemaClass = createFile().addClass({name: capfirst(ast.name)});
+        const schemaClass = createFile().addClass({name: capfirst(ast?.name || 'Schema') });
 
-        const children = ast.children || [];
+        const children = ast?.children || [];
 
         children
             .filter((t) => t.nodeType === 'AliasType')
