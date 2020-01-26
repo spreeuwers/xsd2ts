@@ -66,7 +66,7 @@ export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies
     const genSrcPath = "./src/generated";
     const generator = new ClassGenerator(imports);
 
-    generator.schemaName = fileName.replace( ".ts", "");
+    generator.schemaName = fileName.replace( ".ts", "").replace(/\W/g, '_');
 
     if (!fs.existsSync(genSrcPath)) {
         fs.mkdirSync(genSrcPath);
