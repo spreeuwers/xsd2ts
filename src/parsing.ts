@@ -76,7 +76,6 @@ export function getFieldType(type: string): string {
 }
 
 export class ASTNode {
-    public static nsHandler: NsHandler;
 
     public nodeType: string;
     public name: string;
@@ -99,11 +98,6 @@ export class ASTNode {
     }
 
 
-    public addFields(n: Node): ASTNode {
-        this.children = this.children || [];
-        this.children.push(astNode('Field').prop('fieldName', attribs(n).name).prop('fieldType', attribs(n).type));
-        return this;
-    }
 
     public addName(node: Node, prefix?: string): ASTNode{
         this.name = (prefix || '') + capFirst( attribs(node).name);

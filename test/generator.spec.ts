@@ -17,22 +17,9 @@ describe("generator", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/simpleClass.xsd",{Xs: "./ns"}));
         });
 
-        it("creates importedClass.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/importedClass.xsd",
-                {Dep: "./ns"} as Map<string, string>));
-        });
 
-        it("creates simpleInheritedClass.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/simpleInheritedClass.xsd",
-                {Xs: "./ns"} as Map<string, string>));
-        });
 
-        it("creates xep-004.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd"));
-        });
-        it("creates heeft een types property", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/simpleType.xsd"));
-        });
+
 
         it("creates group.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/group.xsd"));
