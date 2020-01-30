@@ -67,7 +67,9 @@ export class XsdGrammar {
         const arrFldElement  = new Terminal("element:array", arrayFldHandler);
         const classElement   = new Terminal("element:class", classHandler);
         const topFldElement  = new Terminal("element:topFld", topFieldHandler);
-        const enumElement    = new Terminal("element:enum", enumElmHandler);
+        const enumElement    = new Terminal("element:enumElm", enumElmHandler);
+        const enumType       = new Terminal("simpleType:enumType", enumElmHandler);
+
         const attributeGroup = new Terminal("attributeGroup:attrGrp", namedGroupHandler);
         const schema         = new Terminal("schema:Schema", makeSchemaHandler(this.schemaName));
         const namedGroup     = new Terminal("group:named", namedGroupHandler);
@@ -122,9 +124,11 @@ export class XsdGrammar {
         const S_CLASS  = match(classType).empty().labeled('EMPTY_CLASS'); //simple empty class
         const F_CLASS  = match(topFldElement).labeled('F_CLASS');
         const N_GROUP  = match(namedGroup).child(sequence, childsMerger).children(FIELD).labeled('N_GROUP');
-        const ENUMTYPE = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
+        const ENUMELM  = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
+        const ENUMTYPE = match(enumType, enumMerger).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
+
         const ALIASTYPE= match(enumElement, typeMerger).child(simpleType).child(intRestriciton).labeled('ALIAS');
-        const TYPES    = oneOf(ALIASTYPE, S_CLASS, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, F_CLASS, G_CLASS, A_CLASS,  R_CLASS );
+        const TYPES    = oneOf(ALIASTYPE, S_CLASS, ENUMELM, ENUMTYPE, E_CLASS, C_CLASS, X_CLASS, N_GROUP, F_CLASS, G_CLASS, A_CLASS,  R_CLASS );
 
         const SCHEMA   = match(schema, childsMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');

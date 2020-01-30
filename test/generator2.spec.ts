@@ -34,7 +34,7 @@ describe("generator", () => {
             printFile("./src/generated/simpleInheritedClass.ts");
         });
 
-        fit("creates xep-004.ts", () => {
+        it("creates xep-004.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd"));
             printFile("./src/generated/xep-004.ts");
             compile(["./src/generated/xep-004.ts"]);
