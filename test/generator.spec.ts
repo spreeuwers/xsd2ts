@@ -62,7 +62,14 @@ describe("generator", () => {
 
         it("creates element.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/element.xsd",{ Xs : "./ns"} ));
+            printFile("./src/generated/element.ts");
             compile(["./src/generated/element.ts"]);
+        });
+
+        it("creates capabilities_1_3_0.ts", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/capabilities_1_3_0.xsd",{ wms : "./wms"} ));
+            printFile("./src/generated/capabilities_1_3_0.ts");
+            compile(["./src/generated/capabilities_1_3_0.ts"]);
         });
 
 

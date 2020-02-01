@@ -66,6 +66,9 @@ function choiceBody(m: any, names: string[]): string {
     const result = names.filter((n) => n !== name).map( (n) => `delete((this as any).${n});`).join('\n');
     return result + `\n(this as any).${name} = arg;\n`;
 }
+function refBody(): string {
+     return  `(Object as any).assign(this,arg);\n`;
+}
 
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
     const c = fileDef.addClass({name: astNode.name});
@@ -87,10 +90,18 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
-            log(indent + 'adding field for Reference', f.name);
+            log(indent + 'adding field for Reference', f.attr.ref);
+
             const typePostFix = (f.attr.array) ? "[]" : "";
             const namePostFix = (f.attr.array) ? "?" : "";
-            c.addProperty({name: f.attr.ref + namePostFix, type: capfirst(f.attr.ref) + typePostFix, scope: "protected"});
+            const [ns, localName] = f.attr.ref?.split(':');
+            const refName = localName + namePostFix;
+            const refType = ns + '.'  + capfirst(localName + typePostFix);
+            // c.addProperty({name: refName, type: refType, scope: "protected"});
+            const method = c.addMethod( {name:  refName , returnType: 'void', scope: 'protected'} );
+            method.addParameter({name: 'arg', type: refType});
+            method.onWriteFunctionBody = (w) => { w.write(refBody()); };
+
         });
     fields.filter( (f) => f.nodeType === "choice").forEach(
         (f) => {
@@ -109,9 +120,11 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             log(indent + 'adding field:', {name: f.attr.fieldName, type: f.attr.fieldType});
             c.addProperty({name: f.attr.fieldName, type: f.attr.fieldType, scope: "protected"});
             const typeParts = f.attr.fieldType.split('.');
-            if (typeParts.length == 2) {
+            if (typeParts.length === 2) {
                 const ns = typeParts[0];
-                fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns} );
+                if(fileDef.imports.filter(i => i.starImportName === ns).length ===0) {
+                    fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
+                }
             }
             log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
             if (f.attr.nestedClass) {
