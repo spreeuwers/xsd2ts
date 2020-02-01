@@ -90,17 +90,17 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
-            log(indent + 'adding field for Reference', f.attr.ref);
+            log(indent + 'adding method for Reference: ', f.attr.ref);
 
             const typePostFix = (f.attr.array) ? "[]" : "";
             const namePostFix = (f.attr.array) ? "?" : "";
-            const [ns, localName] = f.attr.ref?.split(':');
+            const [ns, localName] = (/:/.test(f.attr.ref)) ? f.attr.ref?.split(':') : [null,f.attr.ref];
             const refName = localName + namePostFix;
-            const refType = ns + '.'  + capfirst(localName + typePostFix);
-            // c.addProperty({name: refName, type: refType, scope: "protected"});
-            const method = c.addMethod( {name:  refName , returnType: 'void', scope: 'protected'} );
-            method.addParameter({name: 'arg', type: refType});
-            method.onWriteFunctionBody = (w) => { w.write(refBody()); };
+            const refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
+            c.addProperty({name: refName, type: refType, scope: "protected"});
+            //const method = c.addMethod( {name:  refName , returnType: 'void', scope: 'protected'} );
+            //method.addParameter({name: 'arg', type: refType});
+            //method.onWriteFunctionBody = (w) => { w.write(refBody()); };
 
         });
     fields.filter( (f) => f.nodeType === "choice").forEach(
