@@ -58,9 +58,9 @@ export interface IAttributes extends Node {
     type: string;
     base: string;
     value: string;
-    ref:string;
-    minOccurs:string;
-    maxOccurs:string;
+    ref: string;
+    minOccurs: string;
+    maxOccurs: string;
 }
 
 export function attribs(node: Node): IAttributes {
