@@ -37,7 +37,7 @@ describe("generator", () => {
         });
 
         it("creates xep-004.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd"));
+            expect(generateTemplateClassesFromXSD("./test/xsd/xep-004.xsd",{jabber:'./ns'}, 'jabber'));
             printFile("./src/generated/xep-004.ts");
             compile("./src/generated/xep-004.ts");
         });
@@ -73,13 +73,13 @@ describe("generator", () => {
         });
 
         it("creates defNamespace.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/defNamespace.xsd",{ wms : "./wms"} ));
+            expect(generateTemplateClassesFromXSD("./test/xsd/defNamespace.xsd",{ dep : "./ns"} ));
             printFile("./src/generated/defNamespace.ts");
             compile("./src/generated/defNamespace.ts");
         });
 
-        xit("creates inversedNamespace.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/inversedNamespace.xsd",{ default : "./dep"} ));
+        it("creates inversedNamespace.ts", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/inversedNamespace.xsd",{ dep : "./ns"}, 'dep' ));
             printFile("./src/generated/inversedNamespace.ts");
             compile("./src/generated/inversedNamespace.ts");
         });

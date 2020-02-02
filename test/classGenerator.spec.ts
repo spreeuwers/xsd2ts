@@ -54,8 +54,8 @@ describe("ClassGenerator", () => {
             expect(generator.types).toBeDefined();
         });
 
-        it("heeft een types property", () => {
-            expect(generator.generateClassFileDefinition("").classes.length).toBe(1);
+        it("returns an empty claas array for an empty string", () => {
+            expect(generator.generateClassFileDefinition("").classes.length).toBe(0);
         });
 
         it("returns a simple classFile ", () => {

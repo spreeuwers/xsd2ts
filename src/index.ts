@@ -24,9 +24,9 @@ let importStatements = [];
 let imports = {};
 
 
-function  nsResolver(ns: string): void {
-    importStatements.push(`import * as ${ns} from "${imports[ns]}";\n`);
-}
+// function  nsResolver(ns: string): void {
+//     importStatements.push(`import * as ${ns} from "${imports[ns]}";\n`);
+// }
 
 
 // export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies?: Map<string,string>): void {
@@ -56,7 +56,7 @@ function  nsResolver(ns: string): void {
 //
 // }
 
-export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies: Map<string,string> = {}): void {
+export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies: Map<string,string> = {}, xmlnsName = 'xmlns'): void {
     let imports = dependencies;
     console.log(JSON.stringify(dependencies));
 
@@ -65,6 +65,7 @@ export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies
 
     const genSrcPath = "./src/generated";
     const generator = new ClassGenerator(imports);
+    generator.xmlnsName = xmlnsName;
 
     generator.schemaName = fileName.replace( ".ts", "").replace(/\W/g, '_');
 

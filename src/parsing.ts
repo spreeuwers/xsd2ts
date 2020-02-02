@@ -72,6 +72,11 @@ export function getFieldType(type: string, defNs: string): string {
         base64bBinary: "string",
         boolean: "boolean",
     }
+
+    if (defNs && !/:/.test(type)){
+        type = defNs + '.' + type;
+    }
+
     return typeMap[key] || type?.replace(':', '.') || 'any';
 }
 
@@ -106,7 +111,7 @@ export class ASTNode {
 
     public addField(node: Node, fldType?: string) {
 
-        let type = fldType || getFieldType(attribs(node).type, '');
+        let type = fldType || getFieldType(attribs(node).type, null);
 
         this.prop('fieldName', attribs(node).name + ((attribs(node).minOccurs === '0') ? '?' : ''))
             .prop('fieldType', type + ((attribs(node).maxOccurs === UNBOUNDED) ? '[]' : ''));

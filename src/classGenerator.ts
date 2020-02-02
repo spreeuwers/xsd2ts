@@ -7,44 +7,15 @@ import {ASTNode, getFieldType} from "./parsing";
 import {log} from "./xml-utils";
 import {XsdGrammar} from "./xsd-grammar";
 
-// enum xsdTypes {
-//     XS_STRING = 'xs:string',
-//     XS_ENUM = "xs:enumeration",
-// }
+let XMLNS = 'xmlns';
+let definedTypes: string[];
 
 const COLON = ":";
-
-// const XS_SCHEMA = "xs:schema";
-// const XS_RESTRICTION = "xs:restriction";
-// const XS_SEQUENCE = "xs:sequence";
-// const XS_ELEMENT = "xs:element";
-// const XS_EXTENSION = "xs:extension";
-// const XS_COMPLEX_TYPE = "xs:complexType";
-// const XS_SIMPLE_TYPE = "xs:simpleType";
-// const XS_GROUP = "xs:group";
-// const XS_ANNOTATION = "xs:annotation";
-// const XS_DOCUMENTATION = "xs:documentation";
-// const XS_ATTRIBUTE = "xs:attribute";
-// const XS_ATTRGROUP = "xs:attributeGroup";
-// const XS_ENUM = "xs:enum";
-// const UNKNOWN = "Unknown";
-
 const GROUP_PREFIX = 'group_';
-
+const XSD_NS = "http://www.w3.org/2001/XMLSchema";
 const CLASS_PREFIX = ".";
 
-class State {
-    public path: string;
-    public fieldName: string;
-    public className: string;
-    public fieldType: string;
-    public parentName: string;
-    public parentClass: string;
-    constructor(s?: State) {
-        Object.keys(s || {}).forEach( (key) => this[key] = s[key]);
-
-    }
-}
+const defaultSchemaName = 'Schema';
 
 const groups: { [key: string]: ASTNode } = {};
 const ns2modMap = {} as Map<string, string>;
@@ -66,6 +37,11 @@ function choiceBody(m: any, names: string[]): string {
 }
 
 
+function addNewImport(fileDef: FileDefinition, ns: string) {
+    if (fileDef.imports.filter(i => i.starImportName === ns).length === 0) {
+        fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
+    }
+}
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
     const c = fileDef.addClass({name: astNode.name});
 
@@ -112,14 +88,27 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
     fields.filter( (f) => f.nodeType === "Field").forEach(
         (f) => {
             log(indent + 'adding field:', {name: f.attr.fieldName, type: f.attr.fieldType});
-            c.addProperty({name: f.attr.fieldName, type: f.attr.fieldType, scope: "protected"});
+
+            let xmlns = "";
+            let fldType = f.attr.fieldType;
             const typeParts = f.attr.fieldType.split('.');
             if (typeParts.length === 2) {
-                const ns = typeParts[0];
-                if(fileDef.imports.filter(i => i.starImportName === ns).length ===0) {
-                    fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
-                }
+                xmlns = typeParts[0];
+                //fldType = typeParts[1];
+                addNewImport(fileDef, xmlns);
             }
+
+            // whenever the default namespace (xmlns) is defined and not the xsd namspace
+            // the types without namsespace must be imported and thus prefixed with a ts namespace
+            //
+            const undefinedType = definedTypes.indexOf(fldType) < 0;
+            log('defined: ', fldType , undefinedType);
+
+            if (undefinedType && namespaces.default && namespaces.default !== XSD_NS) {
+                fldType = getFieldType(f.attr.type, XMLNS);
+            }
+            c.addProperty({name: f.attr.fieldName, type: fldType, scope: "protected"});
+
             log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
             if (f.attr.nestedClass) {
                 addClassForASTNode(fileDef, f.attr.nestedClass, indent + ' ');
@@ -132,13 +121,12 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 export class ClassGenerator {
     public types: string[] = [];
     public schemaName = "schema";
+    public xmlnsName= "xmlns";
     private fileDef = createFile({classes: []});
     private verbose = false;
     private pluralPostFix = 's';
     private dependencies: Map<string, string>;
     private importMap: string[] = [];
-    private specifiedClasses: Map<string, string> = {};
-    private referencedClasses: Map<string, string> = {};
 
     constructor(depMap?: Map<string, string>, private classPrefix = CLASS_PREFIX) {
         this.dependencies = depMap || {} as Map<string, string>;
@@ -162,11 +150,21 @@ export class ClassGenerator {
         this.log(xsd);
         this.log('');
         this.log('-------------------------------------------------------------------------------------');
+
+        if (!xsd){
+            return fileDef;
+        }
+
         const ast = this.parseXsd(xsd);
 
-        const XSD_NS = "http://www.w3.org/2001/XMLSchema";
-        const noDefNs = ast.attr.xmlns === XSD_NS;
-        const xsdNsAttr = Object.keys(ast.attr).filter(n => ast.attr[n] === XSD_NS).shift();
+        if (!ast){
+            return fileDef;
+        }
+
+        XMLNS = this.xmlnsName;
+
+
+        const xsdNsAttr = Object.keys(ast.attr || []).filter(n => ast.attr[n] === XSD_NS).shift();
         const xsdNs = xsdNsAttr.replace(/^\w+:/, '');
         const defNs = ast.attr.xmlns;
 
@@ -176,13 +174,18 @@ export class ClassGenerator {
         namespaces.xsd = xsdNs;
         namespaces.default = defNs;
 
+        if (defNs && (defNs !== XSD_NS)) addNewImport(fileDef, XMLNS);
+
         Object.keys(groups).forEach( (key) => delete(groups[key]));
         log('AST:\n', JSON.stringify(ast, null, 3));
 
         // create schema class
-        const schemaClass = createFile().addClass({name: capfirst(ast?.name || 'Schema') });
+
+        const schemaClass = createFile().addClass({name: capfirst(ast?.name || defaultSchemaName) });
 
         const children = ast?.children || [];
+        definedTypes = children.map(c => c.name);
+        log('definedTypes: ', JSON.stringify(definedTypes));
 
         children
             .filter((t) => t.nodeType === 'AliasType')
@@ -275,7 +278,7 @@ export class ClassGenerator {
         //  console.log('makeSortedFileDefinition ');
         const outFile = createFile({classes: []});
 
-        outFile.addImport({moduleSpecifier: "mod", starImportName: "nspce"});
+        //outFile.addImport({moduleSpecifier: "mod", starImportName: "nspce"});
         for ( const ns in this.importMap) {
             log('ns ', ns, this.importMap[ns]);
             outFile.addImport({moduleSpecifier: this.importMap[ns], starImportName: ns});
