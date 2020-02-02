@@ -7,15 +7,16 @@ import {
     astEnum, astEnumValue
 } from './parsing';
 
+
 function makeSchemaHandler(schemaName: string){
-    return (n) => new ASTNode("schema").named(schemaName);
+    return (n) => new ASTNode("schema").named(schemaName).addAttribs(n);
 }
 
 const fieldHandler: AstNodeFactory = (n) => (attribs(n).type) ? astNode('Field').addField(n).prop('label4', 'fieldHandler') : null;
 
 
 //const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? astClass().addName(n, 'For').addFields(n) : null;
-const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? astNode('AliasType').addAtribs(n): null;
+const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? astNode('AliasType').addAttribs(n): null;
 
 const attrHandler: AstNodeFactory = (n) =>  astNode('Field').addField(n);
 
@@ -28,7 +29,7 @@ const cmpFldHandler: AstNodeFactory = (n) => astField().prop('label2', 'cmpFldHa
 const classHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n).prop('label3','classHandler');
 const enumElmHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astEnum(n);
 const enumerationHandler: AstNodeFactory = (n) => (attribs(n).value) ?  astEnumValue(n): null;
-const extensionHandler: AstNodeFactory = (n) => astNode('Extension').addAtribs(n);
+const extensionHandler: AstNodeFactory = (n) => astNode('Extension').addAttribs(n);
 
 const intRestrictionHandler: AstNodeFactory = (n) => /integer/.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'number'): null;
 const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string'): null;
@@ -36,7 +37,7 @@ const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).ba
 
 const namedGroupHandler: AstNodeFactory = (n) => (attribs(n).name) ?  astNode('Group').named(attribs(n).name) : null;
 const refGroupHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Fields').prop('ref', attribs(n).ref):null;
-const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Reference').addAtribs(n) : null;
+const refElementHandler: AstNodeFactory = (n) => (attribs(n).ref) ?  astNode('Reference').addAttribs(n) : null;
 
 
 

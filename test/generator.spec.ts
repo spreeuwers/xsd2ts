@@ -78,7 +78,7 @@ describe("generator", () => {
             compile("./src/generated/defNamespace.ts");
         });
 
-        fit("creates inversedNamespace.ts", () => {
+        xit("creates inversedNamespace.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/inversedNamespace.xsd",{ default : "./dep"} ));
             printFile("./src/generated/inversedNamespace.ts");
             compile("./src/generated/inversedNamespace.ts");

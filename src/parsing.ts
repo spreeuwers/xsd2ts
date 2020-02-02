@@ -2,7 +2,6 @@
  * Created by eddyspreeuwers on 1/5/20.
  */
 import { attribs, capFirst, findFirstChild, findNextSibbling, log, xml} from './xml-utils';
-import {NsHandler} from "./xsd-grammar";
 import reverse = require("lodash/fp/reverse");
 
 const UNBOUNDED = 'unbounded';
@@ -57,7 +56,8 @@ export interface IParsable {
 
 export type Attribs = {[key: string]: string} ;
 
-export function getFieldType(type: string): string {
+
+export function getFieldType(type: string, defNs: string): string {
 
     const key = type?.toLowerCase().split(':').reverse().shift();
 
@@ -106,10 +106,11 @@ export class ASTNode {
 
     public addField(node: Node, fldType?: string) {
 
-        let type = fldType || getFieldType(attribs(node).type);
+        let type = fldType || getFieldType(attribs(node).type, '');
 
         this.prop('fieldName', attribs(node).name + ((attribs(node).minOccurs === '0') ? '?' : ''))
             .prop('fieldType', type + ((attribs(node).maxOccurs === UNBOUNDED) ? '[]' : ''));
+        this.addAttribs(node);
         return this;
     }
 
@@ -118,7 +119,7 @@ export class ASTNode {
         return this._attr;
     }
 
-    public addAtribs(n: Node) {
+    public addAttribs(n: Node) {
         for (let i = 0; i < (n as HTMLElement).attributes.length ; i++){
             let attr = (n as HTMLElement).attributes.item(i);
             if (attr.name === 'name') {

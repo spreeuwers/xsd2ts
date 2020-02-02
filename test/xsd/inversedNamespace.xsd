@@ -6,6 +6,7 @@
                 <xs:element name="id" type="xs:string"/>
                 <xs:element name="date" type="xs:dateTime"/>
                 <xs:element name="address" type="Address"/>
+                <xs:element ref="node"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

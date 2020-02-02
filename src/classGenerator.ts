@@ -49,9 +49,7 @@ class State {
 const groups: { [key: string]: ASTNode } = {};
 const ns2modMap = {} as Map<string, string>;
 
-export type namespaceResolver = (ns: string) => void;
-
-
+const namespaces = {default: "", xsd: "xs"};
 
 function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
@@ -66,9 +64,7 @@ function choiceBody(m: any, names: string[]): string {
     const result = names.filter((n) => n !== name).map( (n) => `delete((this as any).${n});`).join('\n');
     return result + `\n(this as any).${name} = arg;\n`;
 }
-function refBody(): string {
-     return  `(Object as any).assign(this,arg);\n`;
-}
+
 
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
     const c = fileDef.addClass({name: astNode.name});
@@ -82,6 +78,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
     }
 
     log(indent + 'created: ', astNode.name, ', fields: ', astNode?.children?.length);
+
     let fields = (astNode.children || []).filter( (f) => f);
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
@@ -98,9 +95,6 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const refName = localName + namePostFix;
             const refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
             c.addProperty({name: refName, type: refType, scope: "protected"});
-            //const method = c.addMethod( {name:  refName , returnType: 'void', scope: 'protected'} );
-            //method.addParameter({name: 'arg', type: refType});
-            //method.onWriteFunctionBody = (w) => { w.write(refBody()); };
 
         });
     fields.filter( (f) => f.nodeType === "choice").forEach(
@@ -169,8 +163,21 @@ export class ClassGenerator {
         this.log('');
         this.log('-------------------------------------------------------------------------------------');
         const ast = this.parseXsd(xsd);
+
+        const XSD_NS = "http://www.w3.org/2001/XMLSchema";
+        const noDefNs = ast.attr.xmlns === XSD_NS;
+        const xsdNsAttr = Object.keys(ast.attr).filter(n => ast.attr[n] === XSD_NS).shift();
+        const xsdNs = xsdNsAttr.replace(/^\w+:/, '');
+        const defNs = ast.attr.xmlns;
+
+        log('xsd namespace:', xsdNs );
+        log('def namespace:', defNs );
+        //store namspaces
+        namespaces.xsd = xsdNs;
+        namespaces.default = defNs;
+
         Object.keys(groups).forEach( (key) => delete(groups[key]));
-        log(JSON.stringify(ast, null, 3));
+        log('AST:\n', JSON.stringify(ast, null, 3));
 
         // create schema class
         const schemaClass = createFile().addClass({name: capfirst(ast?.name || 'Schema') });
@@ -181,7 +188,7 @@ export class ClassGenerator {
             .filter((t) => t.nodeType === 'AliasType')
             .forEach( (t) => {
                 log('alias type: ', t.attr.type);
-                fileDef.addTypeAlias({name: capfirst(t.name), type: getFieldType(t.attr.type)});
+                fileDef.addTypeAlias({name: capfirst(t.name), type: getFieldType(t.attr.type, defNs)});
                 schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
             });
 
@@ -369,60 +376,6 @@ export class ClassGenerator {
         }
         return result;
     }
-
-
-    // private getFieldType(type: string): string {
-    //     let result = capfirst(type);
-    //     switch (type?.toLowerCase()) {
-    //         case "xs:string":
-    //             result = "string";
-    //             break;
-    //         case "xs:float":
-    //             result = "number";
-    //             break;
-    //         case "xs:double":
-    //             result = "number";
-    //             break;
-    //         case "xs:integer":
-    //             result = "number";
-    //             break;
-    //         case "xs:int":
-    //             result = "number";
-    //             break;
-    //         case "xs:boolean":
-    //             result = "boolean";
-    //             break;
-    //         case "xs:dateTime":
-    //             result = "Date";
-    //             break;
-    //         case "xs:date":
-    //             result = "Date";
-    //             break;
-    //         case "xs:long":
-    //             result = "number";
-    //             break;
-    //         case "xs:decimal":
-    //             result = "number";
-    //             break;
-    //         case "xs:base64Binary":
-    //             result = "string";
-    //             break;
-    //     }
-    //
-    //     if (result) {
-    //
-    //         if (result.indexOf(COLON) > 0) {
-    //             const ns = result.split(COLON)[0];
-    //             this.nsResolver(ns);
-    //             console.log("namespace", ns);
-    //         }
-    //
-    //         return result.replace(COLON, '.');
-    //     } else {
-    //         return 'any';
-    //     }
-    //
-    // }
 
 
 
