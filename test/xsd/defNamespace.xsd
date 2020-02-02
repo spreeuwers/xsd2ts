@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:dep="file://dep.xsd">
+    <element name="test">
+        <complexType>
+            <sequence>
+                <element name="firstName" type="string"/>
+                <element name="lastName" type="string" minOccurs="0"/>
+                <element name="imported" type="dep:Node"/>
+            </sequence>
+        </complexType>
+    </element>
+</schema>
