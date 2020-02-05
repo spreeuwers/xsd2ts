@@ -157,7 +157,7 @@ var ClassGenerator = /** @class */ (function () {
             .filter(function (t) { return t.nodeType === 'AliasType'; })
             .forEach(function (t) {
             xml_utils_1.log('alias type: ', t.attr.type);
-            fileDef.addTypeAlias({ name: capfirst(t.name), type: parsing_1.getFieldType(t.attr.type, defNs) });
+            var typeAlias = fileDef.addTypeAlias({ name: capfirst(t.name), type: parsing_1.getFieldType(t.attr.type, defNs), isExported: true });
             schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
         });
         fileDef.classes.push(schemaClass);
