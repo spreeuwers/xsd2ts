@@ -10,7 +10,7 @@
     "compile-gen": "tsc -p ./src/generated --outDir ./compiled",
     "version": "npm version patch",
     "setup": "npm install",
-    "deploy": "npm compile && npm publish"
+    "deploy": "npm run compile && npm publish"
   },
   "author": "Eddy Spreeuwers",
   "license": "UNLICENSED",
