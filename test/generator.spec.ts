@@ -3,11 +3,15 @@
  */
 import * as fs from "fs";
 import * as ts from "typescript";
+import {useNormalLogModus, useVerboseLogModus} from "../src/xml-utils";
+
 import {generateTemplateClassesFromXSD} from "../src/index";
 
 function xsdPath(name: string){
   return   `./test/xsd/${name}.xsd`;
 }
+
+useVerboseLogModus();
 
 describe("generator", () => {
 

@@ -52,12 +52,12 @@ function addClassForASTNode(fileDef, astNode, indent) {
     xml_utils_1.log(indent + 'created: ', astNode.name, ', fields: ', (_c = (_b = astNode) === null || _b === void 0 ? void 0 : _b.children) === null || _c === void 0 ? void 0 : _c.length);
     var fields = (astNode.children || []).filter(function (f) { return f; });
     fields.filter(function (f) { return f.nodeType === "Fields"; }).forEach(function (f) {
-        xml_utils_1.log(indent + 'adding fields for ref:', f.name);
+        xml_utils_1.log(indent + 'adding named fields:', f.name);
         fields = fields.concat(groups[f.attr.ref].children);
     });
     fields.filter(function (f) { return f.nodeType === "Reference"; }).forEach(function (f) {
         var _a;
-        xml_utils_1.log(indent + 'adding method for Reference: ', f.attr.ref);
+        xml_utils_1.log(indent + 'adding fields for Reference: ', f.attr.ref);
         var typePostFix = (f.attr.array) ? "[]" : "";
         var namePostFix = (f.attr.array) ? "?" : "";
         var _b = (/:/.test(f.attr.ref)) ? (_a = f.attr.ref) === null || _a === void 0 ? void 0 : _a.split(':') : [null, f.attr.ref], ns = _b[0], localName = _b[1];

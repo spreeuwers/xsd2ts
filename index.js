@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 var fs = require("fs");
 var classGenerator_1 = require("./classGenerator");
+var xml_utils_1 = require("./xml-utils");
 var TSCONFIG = "{\n                \"compilerOptions\": {\n                    \"module\": \"commonjs\",\n                    \"target\": \"es5\",\n                    \"sourceMap\": true,\n                    \"declaration\": true,\n                    \"declarationDir\": \"../../\",\n                    \"outDir\":  \"../../\"\n                },\n                \"exclude\": [\n                    \"node_modules\"\n                ]\n    }";
 var importStatements = [];
 var imports = {};
@@ -37,6 +38,10 @@ var imports = {};
 //     fs.writeFileSync(`${genSrcPath}/${fileName}`, src, 'utf8');
 //
 // }
+function verbose() {
+    xml_utils_1.useVerboseLogModus();
+}
+exports.verbose = verbose;
 function generateTemplateClassesFromXSD(xsdFilePath, dependencies, xmlnsName) {
     if (dependencies === void 0) { dependencies = {}; }
     if (xmlnsName === void 0) { xmlnsName = 'xmlns'; }
@@ -57,5 +62,6 @@ function generateTemplateClassesFromXSD(xsdFilePath, dependencies, xmlnsName) {
     var disclaimer = "/***********\ngenerated template classes for " + xsdFilePath + ' ' + new Date().toLocaleString() + "\n***********/\n\n";
     var src = disclaimer + '\n\n\n\n' + classFileDef.write().replace(/protected\s/g, 'public ');
     fs.writeFileSync(genSrcPath + "/" + fileName, src, 'utf8');
+    fs.writeFileSync(genSrcPath + "/index.ts", src, 'utf8');
 }
 exports.generateTemplateClassesFromXSD = generateTemplateClassesFromXSD;

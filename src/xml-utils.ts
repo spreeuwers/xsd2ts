@@ -3,8 +3,19 @@
  */
 
 
+let VERBOSE = false;
+
+export function useVerboseLogModus() {
+    VERBOSE = true;
+}
+export function useNormalLogModus() {
+    VERBOSE = false;
+}
+
 export function log(...parms: any) {
-    console.log.apply(console, parms);
+    if (VERBOSE) {
+        console.log.apply(console, parms);
+    }
 }
 
 export function findFirstChild(node: Node): Node {

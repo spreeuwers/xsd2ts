@@ -58,12 +58,12 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
     let fields = (astNode.children || []).filter( (f) => f);
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
-            log(indent + 'adding fields for ref:',  f.name);
+            log(indent + 'adding named fields:',  f.name);
             fields = fields.concat(groups[f.attr.ref].children);
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
-            log(indent + 'adding method for Reference: ', f.attr.ref);
+            log(indent + 'adding fields for Reference: ', f.attr.ref);
 
             const typePostFix = (f.attr.array) ? "[]" : "";
             const namePostFix = (f.attr.array) ? "?" : "";

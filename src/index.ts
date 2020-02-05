@@ -3,6 +3,7 @@
  */
 import * as fs from "fs";
 import {ClassGenerator} from './classGenerator';
+import {useVerboseLogModus} from "./xml-utils";
 
 const TSCONFIG =
     `{
@@ -56,6 +57,10 @@ let imports = {};
 //
 // }
 
+export function verbose(){
+    useVerboseLogModus();
+}
+
 export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies: Map<string,string> = {}, xmlnsName = 'xmlns'): void {
     let imports = dependencies;
     console.log(JSON.stringify(dependencies));
@@ -81,6 +86,7 @@ export function generateTemplateClassesFromXSD(xsdFilePath: string, dependencies
     let disclaimer = "/***********\ngenerated template classes for " + xsdFilePath + ' ' + new Date().toLocaleString() + "\n***********/\n\n";
     let src = disclaimer + '\n\n\n\n' + classFileDef.write().replace(/protected\s/g, 'public ');
     fs.writeFileSync(`${genSrcPath}/${fileName}`, src, 'utf8');
+    fs.writeFileSync(`${genSrcPath}/index.ts`, src, 'utf8');
 
 }
 

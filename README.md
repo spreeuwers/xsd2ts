@@ -42,10 +42,31 @@ import {generateTemplateClassesFromXSD} from "xsd2ts";
 generateTemplateClassesFromXSD('./yourXsdFile.xsd');
 
 ````
-When dependencies must be included you casn specify these as follows:
+When dependencies must be included you can specify these as follows:
 ````
-generateTemplateClassesFromXSD('./yourXsdFile.xsd', {libname, 'module(path)'});
+import {generateTemplateClassesFromXSD} from "xsd2ts";
+generateTemplateClassesFromXSD('./dependency.xsd'); 
+generateTemplateClassesFromXSD('./yourXsdFile.xsd', {libname, './dependency'});
 ````
+The libname should equal the namespace for this dependency to generate the right import statements
+
+
+You can specify a dependency for the default namespace with the third parameter
+when you omit this parameter it will deault to the name "xmlns"
+````
+import {generateTemplateClassesFromXSD} from "xsd2ts";
+generateTemplateClassesFromXSD('./dependency.xsd'); 
+generateTemplateClassesFromXSD('./yourXsdFile.xsd', {defaultns, './dependency'},defaultns);
+````
+Extra logging can be turned on by calling verbose() 
+ 
+ ````
+ import {generateTemplateClassesFromXSD,verbose} from "xsd2ts";
+ verbose();
+ generateTemplateClassesFromXSD('./dependency.xsd');
+  
+ ````
+
 Generate a folder 'src/generated' with index.ts file by executing:
     
     npm run ts-gen
@@ -61,3 +82,6 @@ Then publish your npm package:
 Now you can use the npm lib in other npm projects by installing it:
 
     npm install --save <your npm package name>
+
+
+Remark: Ther was an error in version 3.1: it did not emit an index.ts

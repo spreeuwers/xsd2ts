@@ -15,6 +15,7 @@ const returnMergedResult: AstNodeMerger  = (r1, r2) => r1.merge(r2);
 
 let ns = 'xs';
 
+
 export function setNamespace(namespace: string) {
     ns = namespace;
 }
