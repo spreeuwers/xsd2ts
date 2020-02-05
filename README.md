@@ -1,5 +1,5 @@
 # xsd2ts
-converting an xsd to typscript template classes
+converting an xsd to typescript template classes
 
 #tutorial:
 
