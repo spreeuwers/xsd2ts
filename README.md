@@ -40,6 +40,11 @@ and add the following content:
 ````
 import {generateTemplateClassesFromXSD} from "xsd2ts";
 generateTemplateClassesFromXSD('./yourXsdFile.xsd');
+
+````
+When dependencies must be included you casn specify these as follows:
+````
+generateTemplateClassesFromXSD('./yourXsdFile.xsd', {libname, 'module(path)'});
 ````
 Generate a folder 'src/generated' with index.ts file by executing:
     
