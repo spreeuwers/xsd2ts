@@ -88,6 +88,18 @@ describe("generator", () => {
             compile("./src/generated/inversedNamespace.ts");
         });
 
+        it("creates dep.ts", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/dep.xsd"));
+            printFile("./src/generated/dep.ts");
+            compile("./src/generated/dep.ts");
+        });
+
+        fit("creates a single element schema.ts", () => {
+            expect(generateTemplateClassesFromXSD("./test/xsd/singleElm.xsd"));
+            printFile("./src/generated/singleElm.ts");
+            compile("./src/generated/singleElm.ts");
+        });
+
 
 });
 

@@ -191,7 +191,7 @@ export class ClassGenerator {
             .filter((t) => t.nodeType === 'AliasType')
             .forEach( (t) => {
                 log('alias type: ', t.attr.type);
-                fileDef.addTypeAlias({name: capfirst(t.name), type: getFieldType(t.attr.type, defNs)});
+                const typeAlias = fileDef.addTypeAlias({name: capfirst(t.name), type: getFieldType(t.attr.type, defNs), isExported: true});
                 schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
             });
 
