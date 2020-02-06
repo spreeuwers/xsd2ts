@@ -369,7 +369,7 @@ export class Sibblings extends Parslet {
 
     public parse(node: Node, indent?: string): ASTNode{
 
-        log(indent + 'Collect all :', this.options.map(x => x.name).join(','), node.nodeName);
+        log(indent + 'Collect all :', this.options.map(x => x.name).join(','), node?.nodeName);
         let sibbling = node;
 
         const result = new ASTNode("Sibblings");

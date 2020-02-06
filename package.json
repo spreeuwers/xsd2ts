@@ -1,7 +1,7 @@
 {
   "name": "xsd2ts",
-  "version": "0.3.4",
-  "description": "generates template classes for xsd",
+  "version": "0.3.5",
+  "description": "generates template classes for an xsd",
   "main": "index.js",
   "scripts": {
     "test:jasmine": "ts-node  -r ./test/node-unittest-setup.js node_modules/jasmine/bin/jasmine.js JASMINE_CONFIG_PATH=jasmine.json",
