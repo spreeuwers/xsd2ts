@@ -15,7 +15,6 @@ export declare class ClassGenerator {
     private importMap;
     constructor(depMap?: Map<string, string>, classPrefix?: string);
     generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
-    private nsResolver;
     private findAttrValue;
     private nodeName;
     private findChildren;

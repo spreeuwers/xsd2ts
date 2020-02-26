@@ -143,6 +143,10 @@ describe("ClassGenerator", () => {
             let c  = classFile.getClass("Ordertype");
             console.log('class:  ' ,  c.write());
             expect(c).toBeDefined();
+            expect(c.extendsTypes.length).toBe(1);
+            let superClass = c.extendsTypes[0].text;
+            expect(superClass).toBe("CustGroup");
+            c  = classFile.getClass(superClass);
             let p  = c.getProperty('customer');
             expect(p.type).toBeDefined();
 

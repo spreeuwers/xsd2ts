@@ -100,11 +100,11 @@ describe("generator", () => {
             compile("./src/generated/singleElm.ts");
         });
 
-        xit("creates a isdoc-invoice-6.0.1.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/isdoc-invoice-6.0.1.xsd"));
-            printFile("./src/generated/isdoc-invoice-6.0.1.ts");
-            compile("./src/generated/isdoc-invoice-6.0.1.ts");
-        });
+        // fit("creates a isdoc-invoice-6.0.1.ts", () => {
+        //     expect(generateTemplateClassesFromXSD("./test/xsd/isdoc-invoice-6.0.1.xsd"));
+        //     printFile("./src/generated/isdoc-invoice-6.0.1.ts");
+        //     compile("./src/generated/isdoc-invoice-6.0.1.ts");
+        // });
 });
 
 function printFile(fname:string) {

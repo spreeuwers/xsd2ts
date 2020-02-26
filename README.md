@@ -1,5 +1,6 @@
 # xsd2ts
-converting an xsd to typescript template classes
+Tool for converting xsd files to typescript template classes
+
 
 #tutorial:
 
@@ -25,7 +26,7 @@ Create an npm project(folder) with a package.json file with content:
     "ts-loader": "2.2.2",
     "ts-node": "3.3.0",
     "typescript": "2.6.1",
-    "xsd2ts": "0.0.8"
+    "xsd2ts": "0.3.5"
   }
 }
 
@@ -84,4 +85,4 @@ Now you can use the npm lib in other npm projects by installing it:
     npm install --save <your npm package name>
 
 
-Remark: Ther was an error in version 3.1: it did not emit an index.ts
+Remark: There was an error in version 3.1: it did not emit an index.ts

@@ -43,7 +43,7 @@ function addNewImport(fileDef: FileDefinition, ns: string) {
     }
 }
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
-    const c = fileDef.addClass({name: astNode.name});
+    const c = fileDef.addClass({name: capfirst(astNode.name)});
 
     if (astNode.nodeType === 'Group') {
         c.isAbstract = true;
@@ -59,7 +59,8 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
             log(indent + 'adding named fields:',  f.name);
-            fields = fields.concat(groups[f.attr.ref].children);
+            //fields = fields.concat(groups[f.attr.ref].children);
+            c.addExtends(capfirst(f.attr.ref));
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
@@ -67,7 +68,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 
             const typePostFix = (f.attr.array) ? "[]" : "";
             const namePostFix = (f.attr.array) ? "?" : "";
-            const [ns, localName] = (/:/.test(f.attr.ref)) ? f.attr.ref?.split(':') : [null,f.attr.ref];
+            const [ns, localName] = (/:/.test(f.attr.ref)) ? f.attr.ref?.split(':') : [null, f.attr.ref];
             const refName = localName + namePostFix;
             const refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
             c.addProperty({name: refName, type: refType, scope: "protected"});
@@ -228,11 +229,11 @@ export class ClassGenerator {
         return fileDef;
     }
 
-    private nsResolver(ns: string): void {
-        log('nsResolver', ns);
-        this.importMap[ns] = this.dependencies[ns] || "ns";
-        log('nsResolver', ns, this.importMap);
-    }
+    // private nsResolver(ns: string): void {
+    //     log('nsResolver', ns);
+    //     this.importMap[ns] = this.dependencies[ns] || "ns";
+    //     log('nsResolver', ns, this.importMap);
+    // }
 
     private findAttrValue(node: HTMLElement, attrName: string): string {
         return node?.attributes?.getNamedItem(attrName)?.value;
@@ -338,7 +339,7 @@ export class ClassGenerator {
             // console.log('depth:', depth);
             depth++;
         }
-        console.log('ready');
+        log('ready');
         return outFile;
     }
 

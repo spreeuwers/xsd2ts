@@ -41,7 +41,7 @@ function addNewImport(fileDef, ns) {
 function addClassForASTNode(fileDef, astNode, indent) {
     if (indent === void 0) { indent = ''; }
     var _a, _b, _c;
-    var c = fileDef.addClass({ name: astNode.name });
+    var c = fileDef.addClass({ name: capfirst(astNode.name) });
     if (astNode.nodeType === 'Group') {
         c.isAbstract = true;
         // astNode.fields = astNode.list || [];
@@ -53,7 +53,8 @@ function addClassForASTNode(fileDef, astNode, indent) {
     var fields = (astNode.children || []).filter(function (f) { return f; });
     fields.filter(function (f) { return f.nodeType === "Fields"; }).forEach(function (f) {
         xml_utils_1.log(indent + 'adding named fields:', f.name);
-        fields = fields.concat(groups[f.attr.ref].children);
+        //fields = fields.concat(groups[f.attr.ref].children);
+        c.addExtends(capfirst(f.attr.ref));
     });
     fields.filter(function (f) { return f.nodeType === "Reference"; }).forEach(function (f) {
         var _a;
@@ -185,11 +186,11 @@ var ClassGenerator = /** @class */ (function () {
         fileDef.classes = tmp.classes;
         return fileDef;
     };
-    ClassGenerator.prototype.nsResolver = function (ns) {
-        xml_utils_1.log('nsResolver', ns);
-        this.importMap[ns] = this.dependencies[ns] || "ns";
-        xml_utils_1.log('nsResolver', ns, this.importMap);
-    };
+    // private nsResolver(ns: string): void {
+    //     log('nsResolver', ns);
+    //     this.importMap[ns] = this.dependencies[ns] || "ns";
+    //     log('nsResolver', ns, this.importMap);
+    // }
     ClassGenerator.prototype.findAttrValue = function (node, attrName) {
         var _a, _b, _c;
         return (_c = (_b = (_a = node) === null || _a === void 0 ? void 0 : _a.attributes) === null || _b === void 0 ? void 0 : _b.getNamedItem(attrName)) === null || _c === void 0 ? void 0 : _c.value;
@@ -276,7 +277,7 @@ var ClassGenerator = /** @class */ (function () {
             // console.log('depth:', depth);
             depth++;
         }
-        console.log('ready');
+        xml_utils_1.log('ready');
         return outFile;
     };
     ClassGenerator.prototype.addProtectedPropToClass = function (classDef, prop) {
