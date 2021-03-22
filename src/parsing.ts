@@ -103,7 +103,10 @@ export class ASTNode {
         return this;
     }
 
-
+    public prefixFieldName(prefix: string): ASTNode{
+        this.prop('fieldName',  '$' + this._attr.fieldName);
+        return this;
+    }
 
     public addName(node: Node, prefix?: string): ASTNode{
         this.name = (prefix || '') + capFirst( attribs(node).name);

@@ -23,12 +23,14 @@
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element ref="label"/>
         <xs:element ref="module"/>
+        <xs:element ref="description"/>
       </xs:choice>
       <xs:attributeGroup ref="BaseView"/>
     </xs:complexType>
   </xs:element>
   
   <xs:element name="label" type="xs:string"/>
+  <xs:element name="description" type="xs:string"/>
   
   <xs:element name="module">
     <xs:complexType>

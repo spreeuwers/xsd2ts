@@ -87,6 +87,7 @@
 		</annotation>
 		<complexType>
 			<attributeGroup ref="xlink:simpleAttrs"/>
+
 		</complexType>
 	</element>
 	<element name="Format" type="string">

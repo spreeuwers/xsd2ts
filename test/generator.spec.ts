@@ -71,7 +71,7 @@ describe("generator", () => {
         });
 
         it("creates capabilities_1_3_0.ts", () => {
-            expect(generateTemplateClassesFromXSD("./test/xsd/capabilities_1_3_0.xsd",{ wms : "./wms"} ));
+            expect(generateTemplateClassesFromXSD("./test/xsd/capabilities_1_3_0.xsd", { wms : "./wms", xlink: "./xlink"} ));
             printFile("./src/generated/capabilities_1_3_0.ts");
             compile("./src/generated/capabilities_1_3_0.ts");
         });
@@ -100,11 +100,6 @@ describe("generator", () => {
             compile("./src/generated/singleElm.ts");
         });
 
-        // fit("creates a isdoc-invoice-6.0.1.ts", () => {
-        //     expect(generateTemplateClassesFromXSD("./test/xsd/isdoc-invoice-6.0.1.xsd"));
-        //     printFile("./src/generated/isdoc-invoice-6.0.1.ts");
-        //     compile("./src/generated/isdoc-invoice-6.0.1.ts");
-        // });
 });
 
 function printFile(fname:string) {

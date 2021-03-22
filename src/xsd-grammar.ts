@@ -18,7 +18,7 @@ const fieldHandler: AstNodeFactory = (n) => (attribs(n).type) ? astNode('Field')
 //const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? astClass().addName(n, 'For').addFields(n) : null;
 const topFieldHandler: AstNodeFactory = (n) => /xs:/.test(attribs(n).type) ? astNode('AliasType').addAttribs(n): null;
 
-const attrHandler: AstNodeFactory = (n) =>  astNode('Field').addField(n);
+const attrHandler: AstNodeFactory = (n) =>  astNode('Field').addField(n).prefixFieldName('$');
 
 
 const arrayFldHandler: AstNodeFactory = (n) => (attribs(n).type && attribs(n).maxOccurs === "unbounded") ? astNode('ArrField').addField(n).prop('label1','arrayFldHandler') : null;
@@ -75,6 +75,7 @@ export class XsdGrammar {
         const schema         = new Terminal("schema:Schema", makeSchemaHandler(this.schemaName));
         const namedGroup     = new Terminal("group:named", namedGroupHandler);
         const refGroup       = new Terminal("group:refGrp", refGroupHandler);
+        const attrRefGroup   = new Terminal("attributeGroup:attrRefGrp", refGroupHandler);
         const refElement     = new Terminal("element:refElm", refElementHandler);
         const complexType    = new Terminal("complexType");
         const simpleType     = new Terminal("simpleType");
@@ -92,7 +93,7 @@ export class XsdGrammar {
 
 
         // NonTerminals
-
+        const ATTREFGRP= match(attrRefGroup).labeled('ATTRGRP');
         const REFGROUP = match(refGroup).labeled('REF_GROUP');
         const REF_ELM  = match(refElement).labeled('REF_ELEMENT');
         const ATTRIBUTE= match(attribute).labeled('ATTRIBUTE');
@@ -102,9 +103,9 @@ export class XsdGrammar {
 
         const CMPFIELD = match(cmpFldElement, nestedClassMerger).child(complexType).child(sequence).children(FIELDPROXY).labeled('CMPFIELD');
 
-        const FIELD    = oneOf(ARRFIELD, CMPFIELD, FLD_ELM, REFGROUP, REF_ELM ).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
+        const FIELD    = oneOf(ARRFIELD, CMPFIELD, FLD_ELM, REFGROUP, REF_ELM).labeled('FIELD'); FIELDPROXY.parslet = FIELD;
 
-        const A_CLASS  = match(classElement, childsMerger).child(complexType).children(ATTRIBUTE, CHOICE).labeled('A_CLASS')
+        const A_CLASS  = match(classElement, childsMerger).child(complexType).children(ATTRIBUTE, CHOICE, ATTREFGRP).labeled('A_CLASS')
         // element class
         const E_CLASS  = match(classElement).child(complexType).child(sequence, childsMerger).children(FIELD).labeled('E_CLASS');
 

@@ -26,7 +26,7 @@
     "ts-code-generator": "0.0.3",
     "ts-loader": "2.2.2",
     "ts-node": "^8.6.2",
-    "typescript": "^3.7.5",
+    "typescript": "^3.9.9",
     "xmldom-reborn": "^1.0.5"
   },
   "devDependencies": {

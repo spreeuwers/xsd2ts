@@ -53,8 +53,17 @@ function addClassForASTNode(fileDef, astNode, indent) {
     var fields = (astNode.children || []).filter(function (f) { return f; });
     fields.filter(function (f) { return f.nodeType === "Fields"; }).forEach(function (f) {
         xml_utils_1.log(indent + 'adding named fields:', f.name);
-        //fields = fields.concat(groups[f.attr.ref].children);
-        c.addExtends(capfirst(f.attr.ref));
+        var superClass = '';
+        if (f.attr.ref.indexOf(':') >= 0) {
+            var _a = f.attr.ref.split(':'), ns = _a[0], qname = _a[1];
+            xml_utils_1.log(indent + 'split ns, qname: ', ns, qname);
+            superClass = ns.toLowerCase() + '.' + capfirst(qname);
+            addNewImport(fileDef, ns);
+        }
+        else {
+            superClass = capfirst(f.attr.ref);
+        }
+        c.addExtends(superClass);
     });
     fields.filter(function (f) { return f.nodeType === "Reference"; }).forEach(function (f) {
         var _a;
@@ -71,7 +80,8 @@ function addClassForASTNode(fileDef, astNode, indent) {
         var names = (_a = f.children) === null || _a === void 0 ? void 0 : _a.map(function (i) { return i.attr.fieldName || i.attr.ref; });
         xml_utils_1.log(indent + 'adding methods for choice', names.join(','));
         (_b = f.children) === null || _b === void 0 ? void 0 : _b.forEach(function (m) {
-            var method = c.addMethod({ name: m.attr.fieldName || m.attr.ref, returnType: 'void', scope: 'protected' });
+            var methodName = m.attr.fieldName || m.attr.ref;
+            var method = c.addMethod({ name: methodName, returnType: 'void', scope: 'protected' });
             method.addParameter({ name: 'arg', type: m.attr.fieldType || capfirst(m.attr.ref) });
             method.onWriteFunctionBody = function (w) { w.write(choiceBody(m, names)); };
             // log('create class for:' ,m.ref, groups);
@@ -88,8 +98,8 @@ function addClassForASTNode(fileDef, astNode, indent) {
             //fldType = typeParts[1];
             addNewImport(fileDef, xmlns);
         }
-        // whenever the default namespace (xmlns) is defined and not the xsd namspace
-        // the types without namsespace must be imported and thus prefixed with a ts namespace
+        // whenever the default namespace (xmlns) is defined and not the xsd namespace
+        // the types without namespace must be imported and thus prefixed with a ts namespace
         //
         var undefinedType = definedTypes.indexOf(fldType) < 0;
         xml_utils_1.log('defined: ', fldType, undefinedType);

@@ -1,7 +1,7 @@
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
-import {ClassDefinition, createFile, EnumDefinition, FileDefinition} from "ts-code-generator";
+import {ClassDefinition, createFile, FileDefinition} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
 import {ASTNode, getFieldType} from "./parsing";
 import {log} from "./xml-utils";
@@ -49,18 +49,26 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
         c.isAbstract = true;
         // astNode.fields = astNode.list || [];
     }
-    if (astNode.attr?.base){
+    if (astNode.attr?.base) {
         c.addExtends(capfirst(astNode.attr.base));
     }
 
     log(indent + 'created: ', astNode.name, ', fields: ', astNode?.children?.length);
 
-    let fields = (astNode.children || []).filter( (f) => f);
+    const fields = (astNode.children || []).filter( (f) => f);
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
             log(indent + 'adding named fields:',  f.name);
-            //fields = fields.concat(groups[f.attr.ref].children);
-            c.addExtends(capfirst(f.attr.ref));
+            let superClass = '';
+            if (f.attr.ref.indexOf(':') >= 0) {
+                const [ns, qname] = f.attr.ref.split(':');
+                log(indent + 'split ns, qname: ', ns, qname);
+                superClass = ns.toLowerCase() + '.' + capfirst(qname);
+                addNewImport(fileDef, ns);
+            } else {
+                superClass = capfirst(f.attr.ref);
+            }
+            c.addExtends(superClass);
         });
     fields.filter( (f) => f.nodeType === "Reference").forEach(
         (f) => {
@@ -79,9 +87,12 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const names = f.children?.map((i) => i.attr.fieldName || i.attr.ref);
             log(indent + 'adding methods for choice', names.join(',') );
             f.children?.forEach( (m) => {
-                const method = c.addMethod( {name:  m.attr.fieldName || m.attr.ref, returnType: 'void', scope: 'protected'} );
+                const methodName = m.attr.fieldName || m.attr.ref;
+
+                const method = c.addMethod( {name:  methodName, returnType: 'void', scope: 'protected'} );
                 method.addParameter({name: 'arg', type: m.attr.fieldType || capfirst(m.attr.ref)});
                 method.onWriteFunctionBody = (w) => { w.write(choiceBody(m, names)); };
+                method.onBeforeWrite = (w) => w.write('//choice\n');
                 // log('create class for:' ,m.ref, groups);
             });
             log(indent + 'added methods', c.methods.map((m) => m.name).join(','));
@@ -95,12 +106,11 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const typeParts = f.attr.fieldType.split('.');
             if (typeParts.length === 2) {
                 xmlns = typeParts[0];
-                //fldType = typeParts[1];
                 addNewImport(fileDef, xmlns);
             }
 
-            // whenever the default namespace (xmlns) is defined and not the xsd namspace
-            // the types without namsespace must be imported and thus prefixed with a ts namespace
+            // whenever the default namespace (xmlns) is defined and not the xsd namespace
+            // the types without namespace must be imported and thus prefixed with a ts namespace
             //
             const undefinedType = definedTypes.indexOf(fldType) < 0;
             log('defined: ', fldType , undefinedType);
