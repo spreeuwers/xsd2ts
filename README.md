@@ -25,8 +25,8 @@ Create an npm project(folder) with a package.json file with content:
   "dependencies": {
     "ts-loader": "2.2.2",
     "ts-node": "3.3.0",
-    "typescript": "2.6.1",
-    "xsd2ts": "0.3.5"
+    "typescript": "3.9.9",
+    "xsd2ts": "0.3.7"
   }
 }
 
