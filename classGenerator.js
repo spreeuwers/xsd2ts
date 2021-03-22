@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ClassGenerator = void 0;
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
@@ -19,14 +20,14 @@ var groups = {};
 var ns2modMap = {};
 var namespaces = { default: "", xsd: "xs" };
 function capfirst(s) {
+    var _a;
     if (s === void 0) { s = ""; }
-    var _a, _b;
-    return ((_a = s[0]) === null || _a === void 0 ? void 0 : _a.toUpperCase()) + ((_b = s) === null || _b === void 0 ? void 0 : _b.substring(1));
+    return ((_a = s[0]) === null || _a === void 0 ? void 0 : _a.toUpperCase()) + (s === null || s === void 0 ? void 0 : s.substring(1));
 }
 function lowfirst(s) {
+    var _a;
     if (s === void 0) { s = ""; }
-    var _a, _b;
-    return ((_a = s[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase()) + ((_b = s) === null || _b === void 0 ? void 0 : _b.substring(1));
+    return ((_a = s[0]) === null || _a === void 0 ? void 0 : _a.toLowerCase()) + (s === null || s === void 0 ? void 0 : s.substring(1));
 }
 function choiceBody(m, names) {
     var name = m.attr.ref || m.attr.fieldName;
@@ -39,8 +40,8 @@ function addNewImport(fileDef, ns) {
     }
 }
 function addClassForASTNode(fileDef, astNode, indent) {
+    var _a, _b;
     if (indent === void 0) { indent = ''; }
-    var _a, _b, _c;
     var c = fileDef.addClass({ name: capfirst(astNode.name) });
     if (astNode.nodeType === 'Group') {
         c.isAbstract = true;
@@ -49,7 +50,7 @@ function addClassForASTNode(fileDef, astNode, indent) {
     if ((_a = astNode.attr) === null || _a === void 0 ? void 0 : _a.base) {
         c.addExtends(capfirst(astNode.attr.base));
     }
-    xml_utils_1.log(indent + 'created: ', astNode.name, ', fields: ', (_c = (_b = astNode) === null || _b === void 0 ? void 0 : _b.children) === null || _c === void 0 ? void 0 : _c.length);
+    xml_utils_1.log(indent + 'created: ', astNode.name, ', fields: ', (_b = astNode === null || astNode === void 0 ? void 0 : astNode.children) === null || _b === void 0 ? void 0 : _b.length);
     var fields = (astNode.children || []).filter(function (f) { return f; });
     fields.filter(function (f) { return f.nodeType === "Fields"; }).forEach(function (f) {
         xml_utils_1.log(indent + 'adding named fields:', f.name);
@@ -84,6 +85,7 @@ function addClassForASTNode(fileDef, astNode, indent) {
             var method = c.addMethod({ name: methodName, returnType: 'void', scope: 'protected' });
             method.addParameter({ name: 'arg', type: m.attr.fieldType || capfirst(m.attr.ref) });
             method.onWriteFunctionBody = function (w) { w.write(choiceBody(m, names)); };
+            method.onBeforeWrite = function (w) { return w.write('//choice\n'); };
             // log('create class for:' ,m.ref, groups);
         });
         xml_utils_1.log(indent + 'added methods', c.methods.map(function (m) { return m.name; }).join(','));
@@ -95,7 +97,6 @@ function addClassForASTNode(fileDef, astNode, indent) {
         var typeParts = f.attr.fieldType.split('.');
         if (typeParts.length === 2) {
             xmlns = typeParts[0];
-            //fldType = typeParts[1];
             addNewImport(fileDef, xmlns);
         }
         // whenever the default namespace (xmlns) is defined and not the xsd namespace
@@ -130,7 +131,6 @@ var ClassGenerator = /** @class */ (function () {
     }
     ClassGenerator.prototype.generateClassFileDefinition = function (xsd, pluralPostFix, verbose) {
         if (pluralPostFix === void 0) { pluralPostFix = 's'; }
-        var _a, _b;
         var fileDef = ts_code_generator_1.createFile();
         this.verbose = verbose;
         this.pluralPostFix = pluralPostFix;
@@ -160,8 +160,8 @@ var ClassGenerator = /** @class */ (function () {
         Object.keys(groups).forEach(function (key) { return delete (groups[key]); });
         xml_utils_1.log('AST:\n', JSON.stringify(ast, null, 3));
         // create schema class
-        var schemaClass = ts_code_generator_1.createFile().addClass({ name: capfirst(((_a = ast) === null || _a === void 0 ? void 0 : _a.name) || defaultSchemaName) });
-        var children = ((_b = ast) === null || _b === void 0 ? void 0 : _b.children) || [];
+        var schemaClass = ts_code_generator_1.createFile().addClass({ name: capfirst((ast === null || ast === void 0 ? void 0 : ast.name) || defaultSchemaName) });
+        var children = (ast === null || ast === void 0 ? void 0 : ast.children) || [];
         definedTypes = children.map(function (c) { return c.name; });
         xml_utils_1.log('definedTypes: ', JSON.stringify(definedTypes));
         children
@@ -202,16 +202,15 @@ var ClassGenerator = /** @class */ (function () {
     //     log('nsResolver', ns, this.importMap);
     // }
     ClassGenerator.prototype.findAttrValue = function (node, attrName) {
-        var _a, _b, _c;
-        return (_c = (_b = (_a = node) === null || _a === void 0 ? void 0 : _a.attributes) === null || _b === void 0 ? void 0 : _b.getNamedItem(attrName)) === null || _c === void 0 ? void 0 : _c.value;
+        var _a, _b;
+        return (_b = (_a = node === null || node === void 0 ? void 0 : node.attributes) === null || _a === void 0 ? void 0 : _a.getNamedItem(attrName)) === null || _b === void 0 ? void 0 : _b.value;
     };
     ClassGenerator.prototype.nodeName = function (node) {
         return this.findAttrValue(node, 'name');
     };
     ClassGenerator.prototype.findChildren = function (node) {
-        var _a;
         var result = [];
-        var child = (_a = node) === null || _a === void 0 ? void 0 : _a.firstChild;
+        var child = node === null || node === void 0 ? void 0 : node.firstChild;
         while (child) {
             if (!/function Text/.test("" + child.constructor)) {
                 result.push(child);
@@ -224,10 +223,9 @@ var ClassGenerator = /** @class */ (function () {
         return this.findChildren(node)[0];
     };
     ClassGenerator.prototype.parseXsd = function (xsd) {
-        var _a;
         var xsdGrammar = new xsd_grammar_1.XsdGrammar(this.schemaName);
         var xmlDom = new xmldom_reborn_1.DOMParser().parseFromString(xsd, 'application/xml');
-        var xmlNode = (_a = xmlDom) === null || _a === void 0 ? void 0 : _a.documentElement;
+        var xmlNode = xmlDom === null || xmlDom === void 0 ? void 0 : xmlDom.documentElement;
         return xsdGrammar.parse(xmlNode);
     };
     ClassGenerator.prototype.log = function (message) {
@@ -310,13 +308,13 @@ var ClassGenerator = /** @class */ (function () {
         });
     };
     ClassGenerator.prototype.findHierachyDepth = function (c, f) {
-        var _a, _b;
+        var _a;
         var result = 0;
         var superClassName = (c.extendsTypes[0]) ? c.extendsTypes[0].text : '';
         while (superClassName) {
             result++;
             c = f.getClass(superClassName);
-            superClassName = (_b = (_a = c) === null || _a === void 0 ? void 0 : _a.extendsTypes[0]) === null || _b === void 0 ? void 0 : _b.text;
+            superClassName = (_a = c === null || c === void 0 ? void 0 : c.extendsTypes[0]) === null || _a === void 0 ? void 0 : _a.text;
         }
         return result;
     };

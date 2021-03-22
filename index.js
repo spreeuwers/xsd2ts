@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.generateTemplateClassesFromXSD = exports.verbose = void 0;
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
