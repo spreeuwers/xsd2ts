@@ -200,9 +200,13 @@ describe("ClassGenerator", () => {
             let classFile = generator.generateClassFileDefinition(choiceXsd, "", true);
             console.log("-------------------------------------\n");
             console.log(classFile.write());
-            expect(classFile.classes.length).toBe(2);
-            let method = classFile.getClass("Choose")?.getMethod("item");
+            expect(classFile.classes.length).toBe(3);
+            let method = classFile.getClass("Choose1")?.getMethod("item");
             expect(method?.returnType?.text).toBe("void");
+            method = classFile.getClass("Choose2")?.getMethod("b");
+            expect(method?.returnType?.text).toBe("void");
+            let attr = classFile.getClass("Choose2").getProperty("$a0");
+            expect(attr.type.text).toEqual('Date');
         });
 
 

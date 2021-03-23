@@ -46,6 +46,10 @@
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
+        <xs:sequence>
+            <xs:element name="strseqfield"   type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="extraAttr" type="xs:string"/>
     </xs:complexType>
     <xs:complexType name="Base" abstract="true">
     </xs:complexType>

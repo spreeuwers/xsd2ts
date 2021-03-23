@@ -100,6 +100,12 @@ describe("generator", () => {
             compile("./src/generated/singleElm.ts");
         });
 
+        it("creates a choice construct schema.ts", () => {
+           expect(generateTemplateClassesFromXSD("./test/xsd/choice.xsd"));
+           printFile("./src/generated/choice.ts");
+           compile("./src/generated/choice.ts");
+    });
+
 });
 
 function printFile(fname:string) {

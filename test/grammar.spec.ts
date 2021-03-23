@@ -63,7 +63,7 @@ describe("grammar", () => {
         expect(ast.children[0].children[0].attr.fieldType).toBe('number');
     });
 
-    it(" can parse a simple class starting with an imported type namspace", () => {
+    it(" can parse a simple class starting with an imported type namespace", () => {
         let ast = testGrammar(importedClassXsd);
         expect(ast.children.length).toBe(1);
         expect(ast.children[0].nodeType).toBe('Class');

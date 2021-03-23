@@ -2,7 +2,7 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
 
 
-  <xs:element name="choose">
+  <xs:element name="choose1">
     <xs:complexType>
       <xs:choice >
         <xs:element name="item"  type="xs:string"/>
@@ -11,5 +11,20 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:complexType name="choose2">
 
+    <xs:sequence>
+      <xs:element name="item"  type="xs:string"/>
+
+
+      <xs:choice>
+        <xs:element name="b"  type="xs:string"/>
+        <xs:element name="c"  type="xs:string"/>
+      </xs:choice>
+
+    </xs:sequence>
+    <xs:attribute name="a1" use="required" type="xs:dateTime"/>
+    <xs:attribute name="a2" use="required" type="xs:dateTime"/>
+    <xs:attribute name="a0"  type="xs:dateTime"/>
+  </xs:complexType>
 </xs:schema>
