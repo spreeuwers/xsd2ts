@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://app.example.org/v4/model"
+           targetNamespace="http://app.example.org/v4/model">
+
+    <xs:element name="Order" type="s1:Order"/>
+
+    <xs:element name="Orders">
+
+        <xs:complexType>
+
+            <xs:sequence>
+
+                <xs:element name="Incident" type="s1:Order" minOccurs="0" maxOccurs="unbounded"/>
+
+            </xs:sequence>
+
+        </xs:complexType>
+
+    </xs:element>
+
+
+
+    <xs:complexType name="Order">
+
+        <xs:sequence>
+
+            <xs:element name="Location" type="xs:string" minOccurs="0"/>
+
+        </xs:sequence>
+
+    </xs:complexType>
+
+</xs:schema>

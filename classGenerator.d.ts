@@ -13,6 +13,7 @@ export declare class ClassGenerator {
     private pluralPostFix;
     private dependencies;
     private importMap;
+    private targetNamespace;
     constructor(depMap?: Map<string, string>, classPrefix?: string);
     generateClassFileDefinition(xsd: string, pluralPostFix?: string, verbose?: boolean): FileDefinition;
     private findAttrValue;

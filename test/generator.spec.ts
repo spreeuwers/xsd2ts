@@ -46,7 +46,7 @@ describe("generator", () => {
             compile("./src/generated/xep-004.ts");
         });
 
-        it("creates heeft een types property", () => {
+        it("creates simpleType.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/simpleType.xsd"));
             printFile("./src/generated/simpleType.ts");
             compile("./src/generated/simpleType.ts");
@@ -104,7 +104,14 @@ describe("generator", () => {
            expect(generateTemplateClassesFromXSD("./test/xsd/choice.xsd"));
            printFile("./src/generated/choice.ts");
            compile("./src/generated/choice.ts");
-    });
+        });
+
+        it("creates a schema with targetnamespace.ts", () => {
+           expect(generateTemplateClassesFromXSD("./test/xsd/targetnamespace.xsd"));
+           printFile("./src/generated/targetnamespace.ts");
+           compile("./src/generated/targetnamespace.ts");
+        });
+
 
 });
 

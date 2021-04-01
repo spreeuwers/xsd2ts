@@ -1,6 +1,6 @@
 {
   "name": "xsd2ts",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "generates template classes for an xsd",
   "main": "index.js",
   "scripts": {

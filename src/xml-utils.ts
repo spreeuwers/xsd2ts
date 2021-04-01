@@ -72,15 +72,18 @@ export interface IAttributes extends Node {
     ref: string;
     minOccurs: string;
     maxOccurs: string;
+    abstract: string;
 }
 
 export function attribs(node: Node): IAttributes {
+    if (!node) return null;
     const attr = (node as HTMLElement)?.attributes;
-    //console.log('getNamedItem', attr);
+    if (!attr) return null;
     const result = {
         name: attr.getNamedItem('name')?.value,
         type: attr.getNamedItem('type')?.value,
         base: attr.getNamedItem('base')?.value,
+        abstract: attr.getNamedItem('abstract')?.value,
         value: attr.getNamedItem('value')?.value,
         ref: attr.getNamedItem('ref')?.value,
         minOccurs: attr.getNamedItem('minOccurs')?.value,

@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+
+
 <xs:element name="age">
     <xs:simpleType>
         <xs:restriction base="xs:integer">
@@ -8,6 +10,7 @@
         </xs:restriction>
     </xs:simpleType>
 </xs:element>
+
  <xs:element name="option">
         <xs:simpleType>
             <xs:restriction base="xs:string">
@@ -16,6 +19,7 @@
             </xs:restriction>
         </xs:simpleType>
  </xs:element>
+
  <xs:element name="colors">
         <xs:simpleType>
             <xs:restriction base="xs:string">
@@ -25,4 +29,35 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
+
+
+    <xs:simpleType name="direction">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NORTH"/>
+            <xs:enumeration value="SOUTH"/>
+            <xs:enumeration value="WEST"/>
+            <xs:enumeration value="EAST"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="percentage">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="100"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <simpleType name="longitudeType">
+        <restriction base="double">
+            <minInclusive value="-180"/>
+            <maxInclusive value="180"/>
+        </restriction>
+    </simpleType>
+
+    <xs:simpleType name="Action">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="add|remove|update"/>
+        </xs:restriction>
+    </xs:simpleType>
+
 </xs:schema>

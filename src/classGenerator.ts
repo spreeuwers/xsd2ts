@@ -1,16 +1,16 @@
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
-import {ClassDefinition, createFile, FileDefinition} from "ts-code-generator";
+import {ClassDefinition, createFile, EnumDefinition, FileDefinition} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
 import {ASTNode, getFieldType} from "./parsing";
-import {log} from "./xml-utils";
+import {capFirst, log} from "./xml-utils";
 import {XsdGrammar} from "./xsd-grammar";
 
 let XMLNS = 'xmlns';
 let definedTypes: string[];
 
-const COLON = ":";
+//const COLON = ":";
 const GROUP_PREFIX = 'group_';
 const XSD_NS = "http://www.w3.org/2001/XMLSchema";
 const CLASS_PREFIX = ".";
@@ -20,7 +20,12 @@ const defaultSchemaName = 'Schema';
 const groups: { [key: string]: ASTNode } = {};
 const ns2modMap = {} as Map<string, string>;
 
+const primitive = /(string|number)/i;
+
+
 const namespaces = {default: "", xsd: "xs"};
+let   targetNamespace = 's1';
+
 
 function capfirst(s: string = "") {
     return s[0]?.toUpperCase() + s?.substring(1);
@@ -50,12 +55,21 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
         // astNode.fields = astNode.list || [];
     }
     if (astNode.attr?.base) {
-        c.addExtends(capfirst(astNode.attr.base));
+        let superClass = '';
+        let [ns, qname]  = astNode.attr.base.split(':');
+        if (ns === targetNamespace){
+            superClass = capfirst(qname);
+        } else if (qname) {
+            superClass = ns.toLowerCase() + '.' + capfirst(qname);
+        }else {
+            superClass = capfirst(ns);
+        }
+        c.addExtends(superClass);
     }
 
     log(indent + 'created: ', astNode.name, ', fields: ', astNode?.children?.length);
 
-    const fields = (astNode.children || []).filter( (f) => f);
+    let fields = (astNode.children || []).filter( (f) => f);
     fields.filter((f) => f.nodeType === "Fields").forEach(
         (f) => {
             log(indent + 'adding named fields:',  f.name);
@@ -63,8 +77,12 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             if (f.attr.ref.indexOf(':') >= 0) {
                 const [ns, qname] = f.attr.ref.split(':');
                 log(indent + 'split ns, qname: ', ns, qname);
-                superClass = ns.toLowerCase() + '.' + capfirst(qname);
-                addNewImport(fileDef, ns);
+                if (ns === targetNamespace){
+                    superClass = capfirst(qname);
+                } else {
+                    superClass = ns.toLowerCase() + '.' + capfirst(qname);
+                    addNewImport(fileDef, ns);
+                }
             } else {
                 superClass = capfirst(f.attr.ref);
             }
@@ -78,7 +96,12 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const namePostFix = (f.attr.array) ? "?" : "";
             const [ns, localName] = (/:/.test(f.attr.ref)) ? f.attr.ref?.split(':') : [null, f.attr.ref];
             const refName = localName + namePostFix;
-            const refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
+            let refType = '';
+            if (ns === targetNamespace){
+                refType = capfirst(localName + typePostFix);
+            } else {
+                refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
+            }
             c.addProperty({name: refName, type: refType, scope: "protected"});
 
         });
@@ -106,7 +129,10 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const typeParts = f.attr.fieldType.split('.');
             if (typeParts.length === 2) {
                 xmlns = typeParts[0];
-                addNewImport(fileDef, xmlns);
+                fldType = typeParts[1];
+                if (xmlns !== targetNamespace) {
+                  addNewImport(fileDef, xmlns);
+                }
             }
 
             // whenever the default namespace (xmlns) is defined and not the xsd namespace
@@ -115,8 +141,8 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             const undefinedType = definedTypes.indexOf(fldType) < 0;
             log('defined: ', fldType , undefinedType);
 
-            if (undefinedType && namespaces.default && namespaces.default !== XSD_NS) {
-                fldType = getFieldType(f.attr.type, XMLNS);
+            if (undefinedType && namespaces.default && namespaces.default !== XSD_NS && 'xmlns' !== targetNamespace) {
+                fldType = getFieldType(f.attr.type, ('xmlns' != targetNamespace)? XMLNS : null);
             }
             c.addProperty({name: f.attr.fieldName, type: fldType, scope: "protected"});
 
@@ -138,6 +164,7 @@ export class ClassGenerator {
     private pluralPostFix = 's';
     private dependencies: Map<string, string>;
     private importMap: string[] = [];
+    private targetNamespace = 's1';
 
     constructor(depMap?: Map<string, string>, private classPrefix = CLASS_PREFIX) {
         this.dependencies = depMap || {} as Map<string, string>;
@@ -178,10 +205,16 @@ export class ClassGenerator {
         const xsdNsAttr = Object.keys(ast.attr || []).filter(n => ast.attr[n] === XSD_NS).shift();
         const xsdNs = xsdNsAttr.replace(/^\w+:/, '');
         const defNs = ast.attr.xmlns;
+        targetNamespace = Object.keys(ast.attr || []).filter( n => ast.attr[n] === ast.attr.targetNamespace && (n != "targetNamespace") ).shift();
+        targetNamespace = targetNamespace?.replace(/^\w+:/, '');
 
         log('xsd namespace:', xsdNs );
         log('def namespace:', defNs );
-        //store namspaces
+        log('xsd targetnamespace:', targetNamespace );
+        const typeAliases = {};
+
+
+        //store namespaces
         namespaces.xsd = xsdNs;
         namespaces.default = defNs;
 
@@ -201,9 +234,33 @@ export class ClassGenerator {
         children
             .filter((t) => t.nodeType === 'AliasType')
             .forEach( (t) => {
-                log('alias type: ', t.attr.type);
-                const typeAlias = fileDef.addTypeAlias({name: capfirst(t.name), type: getFieldType(t.attr.type, defNs), isExported: true});
-                schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                let aliasType = getFieldType(t.attr.type, null);
+                log('alias type: ', t.attr.type , '->', aliasType);
+                if (t.attr.pattern){
+                    let p = t.attr.pattern;
+                    p = p.replace(/.*\[/, '').replace(/\].*/, '');
+                    aliasType = (p.indexOf('|')< 0) ? aliasType : p.split('|').map(p =>`"${p}"`).join('|');
+
+                }
+                const [ns, localName] = aliasType.split('.');
+
+                if (targetNamespace === ns && t.name === localName){
+                    console.log('skipping alias:', aliasType);
+                } else {
+                    if (ns == targetNamespace){
+                        aliasType = capfirst(localName);
+                    }
+                    //skip circular refs
+                    if (t.name.toLowerCase() != aliasType.toLowerCase()) {
+                        if (primitive.test(aliasType)){
+                            aliasType = aliasType.toLowerCase();
+                        }
+                        //fileDef.addTypeAlias({name: capfirst(t.name), type: aliasType, isExported: true});
+                        typeAliases[capfirst(t.name)] = aliasType;
+                        schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                    }
+                }
+
             });
 
         fileDef.classes.push(schemaClass);
@@ -227,15 +284,22 @@ export class ClassGenerator {
         children
             .filter((t) => t.nodeType === 'Enumeration')
             .forEach((t) => {
-                const enumDef = fileDef.addEnum({name: t.name});
+                const enumDef = fileDef.addEnum({name: capFirst(t.name)});
                 t.attr.values.forEach (
                     (m) => { enumDef.addMember( {name: m.attr.value , value: `"${m.attr.value}"` as any } ); },
                 );
-                schemaClass.addProperty({name: lowfirst(t.name), type: t.name});
+                schemaClass.addProperty({name: lowfirst(t.name), type: capFirst(t.name)});
             });
 
         const tmp = this.makeSortedFileDefinition(fileDef.classes);
+        Object.keys(typeAliases).forEach( k =>  {
+            fileDef.addTypeAlias({name: k, type: typeAliases[k], isExported: true});
+        });
+
         fileDef.classes = tmp.classes;
+        //const members = fileDef.getMembers();
+        //members.forEach(m => fileDef.setOrderOfMember(1, m.));
+
         return fileDef;
     }
 

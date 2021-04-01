@@ -36,6 +36,14 @@ export function astEnum(n:Node) {
 export function astEnumValue(n: Node){
     return astNode('EnumValue').prop('value', attribs(n).value);
 }
+export function astPatternValue(n: Node){
+    return astNode('PatternValue').prop('pattern', attribs(n).value);
+}
+
+export function astLengthValue(n: Node){
+    return astNode('MaxLengthValue').prop('maxLength', attribs(n).value);
+}
+
 
 export function astField() {
     return astNode('Field');
@@ -68,17 +76,22 @@ export function getFieldType(type: string, defNs: string): string {
         double: "number",
         int: "number",
         integer: "number",
+        positiveinteger: "number",
+        nonnegativeinteger: "number",
+        decimal: "number",
         datetime: "Date",
         date: "Date",
-        base64bBinary: "string",
+        base64binary: "string",
         boolean: "boolean",
     }
 
     if (defNs && !/:/.test(type)){
-        type = defNs + '.' + type;
+        type = defNs.toLowerCase() + '.' + capFirst(type);
+    } else {
+        type = type?.split(':').map( (p, i, a) => (i < a.length - 1) ? p.toLowerCase() : capFirst(p)).join('.');
     }
 
-    return typeMap[key] || type?.replace(':', '.') || 'any';
+    return typeMap[key] || type || 'any';
 }
 
 export class ASTNode {

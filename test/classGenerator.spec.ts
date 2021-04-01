@@ -28,6 +28,7 @@ describe("ClassGenerator", () => {
         let choiceXsd = "";
         let simpleTypeXsd = "";
         let singleElmXsd = "";
+        let targetnamespace = "";
         beforeEach(() => {
             generator = new ClassGenerator(<Map<string,string>>{"dep":"xml-parser"});
             simpleClassXsd = fs.readFileSync('./test/xsd/simpleClass.xsd').toString();
@@ -40,6 +41,7 @@ describe("ClassGenerator", () => {
             elmXsd = fs.readFileSync("./test/xsd/element.xsd").toString();
             singleElmXsd = fs.readFileSync("./test/xsd/singleElm.xsd").toString();
             simpleTypeXsd = fs.readFileSync("./test/xsd/simpletype.xsd").toString();
+            targetnamespace = fs.readFileSync("./test/xsd/targetnamespace.xsd").toString();
         });
 
         it("heeft een werkende constructor", () => {
@@ -209,5 +211,10 @@ describe("ClassGenerator", () => {
             expect(attr.type.text).toEqual('Date');
         });
 
-
+        it("returns a  classFile with types from namespaceXsd", () => {
+            let classFile = generator.generateClassFileDefinition(targetnamespace, "", true);
+            console.log("-------------------------------------\n");
+            console.log(classFile.write());
+            expect(classFile.classes.length).toBe(3);
+        });
 });
