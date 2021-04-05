@@ -178,7 +178,7 @@ describe("ClassGenerator", () => {
 
         });
 
-        it("returns a classFile for a simpleTypeXsd", () => {
+       it("returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
             log("------------ classes -------------------------\n");
@@ -186,6 +186,9 @@ describe("ClassGenerator", () => {
             expect(classFile.classes.length).toBe(1);
             const c  = classFile.getClass("Schema");
             expect(c.name).toBe("Schema");
+            expect(classFile.typeAliases.length).toBe(7);
+            expect(classFile.getTypeAlias('Alphabet').type.text).toEqual('"A"|"B"|"C"');
+            expect(classFile.enums.length).toBe(4);
 
         });
 

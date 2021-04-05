@@ -29,8 +29,8 @@ export function astClass(n?: Node) {
     return result;
 }
 
-export function astEnum(n:Node) {
-    return astNode('Enum').named(attribs(n).name);
+export function astNamedUntypedElm(n:Node) {
+    return astNode('NamedUntypedElm').named(attribs(n).name);
 }
 
 export function astEnumValue(n: Node){

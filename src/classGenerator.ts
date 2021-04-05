@@ -238,9 +238,11 @@ export class ClassGenerator {
                 log('alias type: ', t.attr.type , '->', aliasType);
                 if (t.attr.pattern){
                     let p = t.attr.pattern;
-                    p = p.replace(/.*\[/, '').replace(/\].*/, '');
-                    aliasType = (p.indexOf('|')< 0) ? aliasType : p.split('|').map(p =>`"${p}"`).join('|');
-
+                    if (p.indexOf('[') === 0 && p.indexOf(']') === p.length -  1 && !/(\\|\.|\*)/.test(p) ) {
+                        aliasType = p.replace(/\[/, '').replace(/\]/, '').split('').map(p => `"${p}"`).join('|');
+                    } else {
+                        aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(p => `"${p}"`).join('|');
+                    }
                 }
                 const [ns, localName] = aliasType.split('.');
 

@@ -2,25 +2,32 @@
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
 
 
-<xs:element name="age">
-    <xs:simpleType>
+    <xs:element name="age1">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:minInclusive value="0"/>
+                <xs:maxInclusive value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+
+    <xs:simpleType name="age2">
         <xs:restriction base="xs:integer">
             <xs:minInclusive value="0"/>
             <xs:maxInclusive value="100"/>
         </xs:restriction>
     </xs:simpleType>
-</xs:element>
 
- <xs:element name="option">
+    <xs:element name="option">
         <xs:simpleType>
             <xs:restriction base="xs:string">
                 <xs:enumeration value="A"/>
                 <xs:enumeration value="B"/>
             </xs:restriction>
         </xs:simpleType>
- </xs:element>
+    </xs:element>
 
- <xs:element name="colors">
+    <xs:element name="colors">
         <xs:simpleType>
             <xs:restriction base="xs:string">
                 <xs:enumeration value="RED"/>
@@ -30,6 +37,30 @@
         </xs:simpleType>
     </xs:element>
 
+    <xs:element name="ActionElm">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:pattern value="add|remove|update"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+
+    <xs:simpleType name="Action">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="add|remove|update"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name="directionElm">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:enumeration value="NORTH"/>
+                <xs:enumeration value="SOUTH"/>
+                <xs:enumeration value="WEST"/>
+                <xs:enumeration value="EAST"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
 
     <xs:simpleType name="direction">
         <xs:restriction base="xs:string">
@@ -47,17 +78,18 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <simpleType name="longitudeType">
-        <restriction base="double">
-            <minInclusive value="-180"/>
-            <maxInclusive value="180"/>
-        </restriction>
-    </simpleType>
-
-    <xs:simpleType name="Action">
-        <xs:restriction base="xs:string">
-            <xs:pattern value="add|remove|update"/>
+    <xs:simpleType name="longitudeType">
+        <xs:restriction base="xs:double">
+            <xs:minInclusive value="-180"/>
+            <xs:maxInclusive value="180"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:simpleType name="alphabet">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[ABC]"/>
+        </xs:restriction>
+    </xs:simpleType>
+
 
 </xs:schema>

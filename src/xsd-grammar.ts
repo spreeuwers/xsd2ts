@@ -4,7 +4,7 @@
 import {attribs , capFirst} from './xml-utils';
 import {
     ASTNode, Proxy, AstNodeFactory, Terminal, AstNodeMerger, astNode, match, oneOf, astClass, astField,
-    astEnum, astEnumValue,astPatternValue,astLengthValue
+    astNamedUntypedElm, astEnumValue,astPatternValue,astLengthValue
 } from './parsing';
 
 
@@ -48,7 +48,7 @@ const arrayFldHandler: AstNodeFactory = (n) => (attribs(n).type && attribs(n).ma
 const cmpFldHandler: AstNodeFactory = (n) => astField().prop('label2', 'cmpFldHandler').addField(n, capFirst(attribs(n).name));
 
 const classHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n).prop('label3','classHandler');
-const enumElmHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astEnum(n);
+const namedUntypedElmHandler: AstNodeFactory = (n) => (attribs(n).type || !attribs(n).name) ? null : astNamedUntypedElm(n);
 const enumerationHandler: AstNodeFactory = (n) => (attribs(n).value) ?  astEnumValue(n): null;
 const patternHandler: AstNodeFactory = (n) => ( attribs(n).value) ?  astPatternValue(n) : null;
 
@@ -56,7 +56,7 @@ const extensionHandler: AstNodeFactory = (n) => astNode('Extension').addAttribs(
 
 
 const nrRestrictionHandler: AstNodeFactory = (n) => numberRegExp.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'number') : null;
-const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).base) ?  astNode('EnumType').prop('value', 'string') : null;
+const strRestrictionHandler: AstNodeFactory = (n) => /string/.test(attribs(n).base) ?  astNode('EnumOrAliasType').prop('value', 'string') : null;
 const dtRestrictionHandler: AstNodeFactory = (n) => /(dateTime|date)/.test(attribs(n).base) ?  astNode('AliasType').prop('value', 'Date') : null;
 
 
@@ -92,11 +92,17 @@ const ccontSeqAttrMerger: AstNodeMerger = (r1, r2) => {
 
 const enumMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.attr.values = r2.children; return r1; };
 const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.attr.type = r2.attr.value; return r1; };
-const patternMerger: AstNodeMerger = (r1, r2) => {
+const patternChildrenMerger: AstNodeMerger = (r1, r2) => {
     if (!r2.children?.length) return null;
     r1.nodeType  = 'AliasType';
     r1.attr.type = 'string';
     r1.attr.pattern = r2.children?.reduce( ( r, c ) => r + c.attr.pattern || '' , '');
+    return r1;
+};
+const patternChildMerger: AstNodeMerger = (r1, r2) => {
+    r1.nodeType  = 'AliasType';
+    r1.attr.type = 'string';
+    r1.attr.pattern = r2.attr.pattern;
     return r1;
 };
 
@@ -125,8 +131,7 @@ export class XsdGrammar {
         const arrFldElement  = new Terminal("element:array", arrayFldHandler);
         const classElement   = new Terminal("element:class", classHandler);
         const topFldElement  = new Terminal("element:topFld", topFieldHandler);
-        const enumElement    = new Terminal("element:enumElm", enumElmHandler);
-        const enumType       = new Terminal("simpleType:enumType", enumElmHandler);
+        const eNamedUntyped   = new Terminal("element:namedUntypedElm", namedUntypedElmHandler);
 
         const attributeGroup = new Terminal("attributeGroup:attrGrp", namedGroupHandler);
         const schema         = new Terminal("schema:Schema", makeSchemaHandler(this.schemaName));
@@ -145,7 +150,7 @@ export class XsdGrammar {
         const strRestriction = new Terminal("restriction:strRestr", strRestrictionHandler);
         const nrRestriction  = new Terminal("restriction:nrRestr", nrRestrictionHandler);
         const dtRestriction  = new Terminal("restriction:dtRestr", dtRestrictionHandler);
-        dtRestriction
+
         const strPattern     = new Terminal("pattern",   patternHandler);
         const strMaxLength   = new Terminal("maxLength", patternHandler);
         const strLength      = new Terminal("length",    patternHandler);
@@ -191,17 +196,17 @@ export class XsdGrammar {
         const S_CLASS  = match(classType).empty().labeled('EMPTY_CLASS'); //simple empty class
         const F_CLASS  = match(topFldElement).labeled('F_CLASS');
         const N_GROUP  = match(namedGroup).child(sequence, childsMerger).children(FIELD).labeled('N_GROUP');
-        const ENUMELM  = match(enumElement, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
-        const ENUMTYPE = match(enumType, enumMerger).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
-        const ENUM2    = match(namedSimpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE2');
-        const ALIAS1   = match(enumElement, typeMerger).child(simpleType).child(nrRestriction).labeled('ALIAS1');
+        const ENUMELM  = match(eNamedUntyped, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMELM');
+        const ENUMTYPE = match(namedSimpleType, enumMerger).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
+        //const ENUM2    = match(namedSimpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE2');
+        const ALIAS1   = match(eNamedUntyped, typeMerger).child(simpleType).child(nrRestriction).labeled('ALIAS1');
         const ALIAS2   = match(namedSimpleType, typeMerger).child(nrRestriction).labeled('ALIAS2');
         const ALIAS3   = match(namedSimpleType, typeMerger).child(dtRestriction).labeled('ALIAS3');
         const STYPES   = oneOf(match(strPattern), match(strMaxLength), match(strLength));
-        const ALIAS4   = match(namedSimpleType, patternMerger).child(strRestriction, childsMerger).children(STYPES).labeled('STYPES');
-        //const ALIAS5   = match(namedSimpleType, lengthMerger).child(strRestriction, lengthMerger).child(strMaxLength).labeled('ALIAS4');
+        const ALIAS4   = match(namedSimpleType, patternChildrenMerger).child(strRestriction, childsMerger).children(STYPES).labeled('STYPES1');
+        const ALIAS5   = match(eNamedUntyped, patternChildMerger).child(simpleType, patternChildrenMerger).child(strRestriction, childsMerger).children(STYPES).labeled('STYPES2');
 
-        const TYPES    = oneOf(ALIAS1,  ALIAS2 , ALIAS3, ALIAS4, S_CLASS, ENUMELM, ENUMTYPE, ENUM2, E_CLASS, C_CLASS, X_CLASS,  N_GROUP, G_CLASS, A_CLASS,  R_CLASS, Z_CLASS, F_CLASS);
+        const TYPES    = oneOf(ALIAS1,  ALIAS2 , ALIAS3, ALIAS4, ALIAS5, S_CLASS, ENUMELM, ENUMTYPE,  E_CLASS, C_CLASS, X_CLASS,  N_GROUP, G_CLASS, A_CLASS,  R_CLASS, Z_CLASS, F_CLASS);
         const SCHEMA   = match(schema, childsMerger).children(TYPES);
         const result   = SCHEMA.parse(node, '');
         return result;

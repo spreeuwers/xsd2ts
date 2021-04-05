@@ -96,14 +96,18 @@ describe("grammar", () => {
     it(" can parse a simple enumeration and simpletypes starting with element", () => {
         let ast = testGrammar(simpleTypeXsd);
         expect(ast.children[0].nodeType).toBe('AliasType');
-        expect(ast.children[0].name).toBe('age');
+        expect(ast.children[0].name).toBe('age1');
         expect(ast.children[0].attr.type).toBe('number');
 
-        expect(ast.children[1].nodeType).toBe('Enumeration');
-        expect(ast.children[1].name).toBe('option');
-        expect(ast.children[1].attr.values).toBeDefined();
-        expect(ast.children[1].attr.values[0].attr.value).toBe('A');
-        expect(ast.children[1].attr.values[1].attr.value).toBe('B');
+        expect(ast.children[1].nodeType).toBe('AliasType');
+        expect(ast.children[1].name).toBe('age2');
+        expect(ast.children[1].attr.type).toBe('number');
+
+        expect(ast.children[2].nodeType).toBe('Enumeration');
+        expect(ast.children[2].name).toBe('option');
+        expect(ast.children[2].attr.values).toBeDefined();
+        expect(ast.children[2].attr.values[0].attr.value).toBe('A');
+        expect(ast.children[2].attr.values[1].attr.value).toBe('B');
 
     });
 
