@@ -203,8 +203,10 @@ var ClassGenerator = /** @class */ (function () {
             xml_utils_1.log('alias type: ', t.attr.type, '->', aliasType);
             if (t.attr.pattern) {
                 var p = t.attr.pattern;
-                if (p.indexOf('[') === 0 && p.indexOf(']') === p.length - 1 && !/(\\|\.|\*)/.test(p)) {
-                    aliasType = p.replace(/\[/, '').replace(/\]/, '').split('').map(function (p) { return "\"" + p + "\""; }).join('|');
+                if (p.indexOf('[') === 0 && p.indexOf(']') === p.length - 1) {
+                    if (!/(\\|\.|\*)/.test(p)) {
+                        aliasType = p.replace(/\[/, '').replace(/\]/, '').split('').map(function (p) { return "\"" + p + "\""; }).join('|');
+                    }
                 }
                 else {
                     aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(function (p) { return "\"" + p + "\""; }).join('|');
