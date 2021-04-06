@@ -1,5 +1,6 @@
 src/generated
-src/compiled
-src/xml
+compiled
+test/xml
 node_modules
 jasmine.json
+.idea
