@@ -161,6 +161,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 
 function regexpPattern2typeAlias(pattern, aliasType: string) {
     pattern.split(NEWLINE).forEach(p => {
+        //ignore complex stuff
         if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') + p.indexOf('][') > -4) {
             return;
         }
