@@ -12,6 +12,8 @@ var xsd_grammar_1 = require("./xsd-grammar");
 var XMLNS = 'xmlns';
 var definedTypes;
 //const COLON = ":";
+var A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var DIGITS = '0123456789';
 var GROUP_PREFIX = 'group_';
 var XSD_NS = "http://www.w3.org/2001/XMLSchema";
 var CLASS_PREFIX = ".";
@@ -21,6 +23,9 @@ var ns2modMap = {};
 var primitive = /(string|number)/i;
 var namespaces = { default: "", xsd: "xs" };
 var targetNamespace = 's1';
+function a2z(p) {
+    return (p.toLowerCase() == p) ? A2Z.toLowerCase() : A2Z;
+}
 function capfirst(s) {
     var _a;
     if (s === void 0) { s = ""; }
@@ -141,6 +146,25 @@ function addClassForASTNode(fileDef, astNode, indent) {
         }
     });
 }
+function regexpPattern2typeAlias(pattern, aliasType) {
+    pattern.split(parsing_1.NEWLINE).forEach(function (p) {
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
+            return;
+        }
+        p = p.replace(/\[([^\]]*)\]/, function (x, y) {
+            console.log('y:', y);
+            var z = y.replace(/([A-Z])\-([A-Z])/ig, function (a, b, c) { return b + a2z(b).split(b).reverse().shift().split(c).shift() + c; });
+            z = z.replace(/([0-9])\-([0-9])/ig, function (a, b, c) { return b + DIGITS.split(b).reverse().shift().split(c).shift() + c; });
+            z = z.replace('\\d', DIGITS);
+            console.log('z:', z);
+            return '' + z.split('').join('|') + '';
+        });
+        //remove pre and post |
+        p = p.replace('||', '|').replace(/^|/, '').replace(/|$/, '');
+        aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(function (p) { return "\"" + p + "\""; }).join('|');
+    });
+    return aliasType;
+}
 var ClassGenerator = /** @class */ (function () {
     function ClassGenerator(depMap, classPrefix) {
         if (classPrefix === void 0) { classPrefix = CLASS_PREFIX; }
@@ -202,15 +226,8 @@ var ClassGenerator = /** @class */ (function () {
             var aliasType = parsing_1.getFieldType(t.attr.type, null);
             xml_utils_1.log('alias type: ', t.attr.type, '->', aliasType);
             if (t.attr.pattern) {
-                var p = t.attr.pattern;
-                if (p.indexOf('[') === 0 && p.indexOf(']') === p.length - 1) {
-                    if (!/(\\|\.|\*)/.test(p)) {
-                        aliasType = p.replace(/\[/, '').replace(/\]/, '').split('').map(function (p) { return "\"" + p + "\""; }).join('|');
-                    }
-                }
-                else {
-                    aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(function (p) { return "\"" + p + "\""; }).join('|');
-                }
+                //try to translate regexp pattern to type aliases as far as possible
+                aliasType = regexpPattern2typeAlias(t.attr.pattern, aliasType);
             }
             var _a = aliasType.split('.'), ns = _a[0], localName = _a[1];
             if (targetNamespace === ns && t.name === localName) {

@@ -4,7 +4,7 @@
 import {attribs , capFirst} from './xml-utils';
 import {
     ASTNode, Proxy, AstNodeFactory, Terminal, AstNodeMerger, astNode, match, oneOf, astClass, astField,
-    astNamedUntypedElm, astEnumValue,astPatternValue,astLengthValue
+    astNamedUntypedElm, astEnumValue,astPatternValue, NEWLINE
 } from './parsing';
 
 
@@ -92,11 +92,12 @@ const ccontSeqAttrMerger: AstNodeMerger = (r1, r2) => {
 
 const enumMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'Enumeration'; r1.attr.values = r2.children; return r1; };
 const typeMerger: AstNodeMerger = (r1, r2) => {r1.nodeType = 'AliasType'; r1.attr.type = r2.attr.value; return r1; };
+const komma =  (s) => s ? NEWLINE : '';
 const patternChildrenMerger: AstNodeMerger = (r1, r2) => {
     if (!r2.children?.length) return null;
     r1.nodeType  = 'AliasType';
-    r1.attr.type = 'string';
-    r1.attr.pattern = r2.children?.reduce( ( r, c ) => r + c.attr.pattern || '' , '');
+    r1.attr.type = 'string';0
+    r1.attr.pattern = r2.children?.reduce( ( r, c ) => r + komma(r) +  c.attr.pattern || '' , '');
     return r1;
 };
 const patternChildMerger: AstNodeMerger = (r1, r2) => {

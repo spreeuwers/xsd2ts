@@ -3,7 +3,7 @@
  */
 import {ClassDefinition, createFile, EnumDefinition, FileDefinition} from "ts-code-generator";
 import {DOMParser} from "xmldom-reborn";
-import {ASTNode, getFieldType} from "./parsing";
+import {ASTNode, getFieldType, NEWLINE} from "./parsing";
 import {capFirst, log} from "./xml-utils";
 import {XsdGrammar} from "./xsd-grammar";
 
@@ -11,6 +11,8 @@ let XMLNS = 'xmlns';
 let definedTypes: string[];
 
 //const COLON = ":";
+const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const DIGITS = '0123456789';
 const GROUP_PREFIX = 'group_';
 const XSD_NS = "http://www.w3.org/2001/XMLSchema";
 const CLASS_PREFIX = ".";
@@ -26,8 +28,10 @@ const primitive = /(string|number)/i;
 const namespaces = {default: "", xsd: "xs"};
 let   targetNamespace = 's1';
 
-
-function capfirst(s: string = "") {
+function a2z(p:string){
+    return (p.toLowerCase() == p) ? A2Z.toLowerCase() : A2Z;
+}
+function capfirst(s: string = "")  {
     return s[0]?.toUpperCase() + s?.substring(1);
 }
 
@@ -155,6 +159,26 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 }
 
 
+function regexpPattern2typeAlias(pattern, aliasType: string) {
+    pattern.split(NEWLINE).forEach(p => {
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
+            return;
+        }
+        p = p.replace(/\[([^\]]*)\]/, (x, y) => {
+            console.log('y:', y);
+            let z = y.replace(/([A-Z])\-([A-Z])/ig, (a, b, c) => b + a2z(b).split(b).reverse().shift().split(c).shift() + c);
+            z = z.replace(/([0-9])\-([0-9])/ig, (a, b, c) => b + DIGITS.split(b).reverse().shift().split(c).shift() + c);
+            z = z.replace('\\d', DIGITS);
+            console.log('z:', z);
+            return '' + z.split('').join('|') + '';
+        });
+        //remove pre and post |
+        p = p.replace('||', '|').replace(/^|/, '').replace(/|$/, '');
+        aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(p => `"${p}"`).join('|');
+
+    });
+    return aliasType;
+}
 export class ClassGenerator {
     public types: string[] = [];
     public schemaName = "schema";
@@ -237,14 +261,10 @@ export class ClassGenerator {
                 let aliasType = getFieldType(t.attr.type, null);
                 log('alias type: ', t.attr.type , '->', aliasType);
                 if (t.attr.pattern){
-                    let p = t.attr.pattern;
-                    if (p.indexOf('[') === 0 && p.indexOf(']') === p.length -  1 ) {
-                        if (!/(\\|\.|\*)/.test(p)) {
-                            aliasType = p.replace(/\[/, '').replace(/\]/, '').split('').map(p => `"${p}"`).join('|');
-                        }
-                    } else {
-                        aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(p => `"${p}"`).join('|');
-                    }
+
+                    //try to translate regexp pattern to type aliases as far as possible
+                    aliasType = regexpPattern2typeAlias(t.attr.pattern, aliasType);
+
                 }
                 const [ns, localName] = aliasType.split('.');
 

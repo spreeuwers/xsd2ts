@@ -85,11 +85,42 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="alphabet">
+    <xs:simpleType name="ABC">
         <xs:restriction base="xs:string">
             <xs:pattern value="[ABC]"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="yn">
+      <xs:restriction base="xs:string">
 
-
+      <xs:pattern value="[y|n]"/>
+      <xs:length value="1"/>
+      </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="digits">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[\d]"/>
+            <xs:length value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="invalid">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="**"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="ALPHABET">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="alphabet">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-z]"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="mixed">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="pre|[b-fC-J4-7]|post"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>

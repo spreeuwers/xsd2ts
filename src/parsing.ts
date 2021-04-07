@@ -23,6 +23,8 @@ export function astNode(s:string) {
     return new ASTNode(s);
 }
 
+export const NEWLINE = '\n';
+
 export function astClass(n?: Node) {
     let result = astNode('Class');
     if (n) result.addName(n);
