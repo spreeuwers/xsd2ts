@@ -148,14 +148,14 @@ function addClassForASTNode(fileDef, astNode, indent) {
 }
 function regexpPattern2typeAlias(pattern, aliasType) {
     pattern.split(parsing_1.NEWLINE).forEach(function (p) {
-        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') + p.indexOf('][') > -4) {
             return;
         }
         p = p.replace(/\[([^\]]*)\]/, function (x, y) {
             console.log('y:', y);
             var z = y.replace(/([A-Z])\-([A-Z])/ig, function (a, b, c) { return b + a2z(b).split(b).reverse().shift().split(c).shift() + c; });
             z = z.replace(/([0-9])\-([0-9])/ig, function (a, b, c) { return b + DIGITS.split(b).reverse().shift().split(c).shift() + c; });
-            z = z.replace('\\d', DIGITS);
+            z = z.replace('\\d', DIGITS).replace(/\\-/g, '-');
             console.log('z:', z);
             return '' + z.split('').join('|') + '';
         });

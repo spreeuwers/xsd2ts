@@ -161,14 +161,14 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 
 function regexpPattern2typeAlias(pattern, aliasType: string) {
     pattern.split(NEWLINE).forEach(p => {
-        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') + p.indexOf('][') > -4) {
             return;
         }
         p = p.replace(/\[([^\]]*)\]/, (x, y) => {
             console.log('y:', y);
             let z = y.replace(/([A-Z])\-([A-Z])/ig, (a, b, c) => b + a2z(b).split(b).reverse().shift().split(c).shift() + c);
             z = z.replace(/([0-9])\-([0-9])/ig, (a, b, c) => b + DIGITS.split(b).reverse().shift().split(c).shift() + c);
-            z = z.replace('\\d', DIGITS);
+            z = z.replace('\\d', DIGITS).replace(/\\-/g,'-');
             console.log('z:', z);
             return '' + z.split('').join('|') + '';
         });
