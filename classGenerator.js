@@ -480,7 +480,7 @@ function regexpPattern2typeAlias(pattern, base) {
         if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
             return false;
         }
-        return true;
+        return !/^\d+$/.test(p);
     }).shift();
     if (!pattern)
         return base;

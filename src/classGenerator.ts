@@ -569,7 +569,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string): string {
         if  (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3){
             return false;
         }
-        return true;
+       return !/^\d+$/.test(p)
 
     }).shift();
     if (!pattern) return base;
