@@ -3,6 +3,7 @@
  * Created by Eddy Spreeuwers at 11 march 2018
  */
 import { FileDefinition } from "ts-code-generator";
+export declare function regexpPattern2typeAliasOld(pattern: any, aliasType: string): string;
 export declare class ClassGenerator {
     private classPrefix;
     types: string[];
@@ -26,3 +27,4 @@ export declare class ClassGenerator {
     private addProtectedPropToClass;
     private findHierachyDepth;
 }
+export declare function regexpPattern2typeAlias(pattern: string, base: string): string;

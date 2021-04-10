@@ -16,6 +16,8 @@ const DIGITS = '0123456789';
 const GROUP_PREFIX = 'group_';
 const XSD_NS = "http://www.w3.org/2001/XMLSchema";
 const CLASS_PREFIX = ".";
+const square_bracket1 = '\x01';
+const square_bracket2 = '\x02';
 
 const defaultSchemaName = 'Schema';
 
@@ -159,20 +161,76 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 }
 
 
-function regexpPattern2typeAlias(pattern, aliasType: string) {
+export function regexpPattern2typeAliasOld(pattern, aliasType: string) {
     pattern.split(NEWLINE).forEach(p => {
         //ignore complex stuff
-        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') + p.indexOf('][') > -4) {
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.')  > -3) {
             return;
         }
-        p = p.replace(/\[([^\]]*)\]/, (x, y) => {
+        const  o = p;
+        const  replaced = [];
+        p = p.replace(/(\\.)/g, (x, y) => {replaced.push(y[1]); return `<${replaced.length - 1}>`;} );
+        console.log('p before:',p, replaced);
+        p = p.replace(/\[([^\]]*)\]/g, (x, y) => {
+            //console.log('y:', y);
+            replaced.forEach((r,i) => {
+                y = y.replace(`<${i}>`, replaced[i])
+                    .replace('[', square_bracket1)
+                    .replace(']', square_bracket2)
+                    .replace('-', '\\-')
+                    .replace('d', '\\d');
+            });
             console.log('y:', y);
             let z = y.replace(/([A-Z])\-([A-Z])/ig, (a, b, c) => b + a2z(b).split(b).reverse().shift().split(c).shift() + c);
             z = z.replace(/([0-9])\-([0-9])/ig, (a, b, c) => b + DIGITS.split(b).reverse().shift().split(c).shift() + c);
-            z = z.replace('\\d', DIGITS).replace(/\\-/g,'-');
-            console.log('z:', z);
-            return '' + z.split('').join('|') + '';
+            z = z.replace('\\d', DIGITS).replace(/\\-/g, '-');
+            //console.log('z:', z);
+            z =  '[' + z.split('').join('|') + ']';
+            //console.log('z:', z);
+            return z;
         });
+        console.log('p:',p);
+        const z = p.split(/\[|\]\[|\]/);
+        console.log('z:', z);
+        const prodZ = [];
+        let first = true;
+        let length = 0;
+        let alts = [];
+        z.forEach( (x, i, a) => {
+            if (x) {
+                //console.log('i:', i);
+                if (/^\||\|$/g.test(x)){
+                    alts.push(x.replace(/^\||\|$/g, ''));
+                    return;
+                }
+                const options = x.split('|');
+                length += (options.length > 1) ? 1 : x.length;
+                options.forEach( (y, j, b) => {
+                    if (first ){
+                       prodZ.push(y);
+                    } else {
+
+                        prodZ.forEach( (e, k, c) => {
+                            if (j == e.length) {
+                                c[k] =  e + y;
+                            } else {
+                                prodZ.push(e + y);
+                            }
+
+                        });
+                    }
+
+                });
+                first = false;
+            }
+        });
+
+        console.log('prodZ' + ':', prodZ);
+        p = prodZ.filter(f => f.length === length).filter((f, i, a) => a.indexOf(f) === i).sort().join('|');
+        p = alts.push(p);
+        p = alts.join('|');
+        p = p.split('').map(c => c.replace(square_bracket1, '[').replace(square_bracket2, ']')).join('');
+        console.log('p:', p);
         //remove pre and post |
         p = p.replace('||', '|').replace(/^|/, '').replace(/|$/, '');
         aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(p => `"${p}"`).join('|');
@@ -180,6 +238,11 @@ function regexpPattern2typeAlias(pattern, aliasType: string) {
     });
     return aliasType;
 }
+
+
+
+
+
 export class ClassGenerator {
     public types: string[] = [];
     public schemaName = "schema";
@@ -483,4 +546,122 @@ export class ClassGenerator {
 
 
 }
+
+export function regexpPattern2typeAlias(pattern: string, base: string): string {
+    let result = '';
+    let escaped = false;
+    let charModus = false;
+    let options = [];
+    let optionVariants = null;
+    let inRange = false;
+    let rangeStart = null;
+    let newOptionVariants = [];
+    let option  = '';
+    const digits = '0123456789';
+    const a2z = 'abcdefghijklmnopqrstuvwxyz';
+    const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const all = digits + a2z + A2Z;
+
+
+
+    pattern = pattern.split(NEWLINE).filter(p => {
+        //ignore complex stuff
+        if  (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3){
+            return false;
+        }
+        return true;
+
+    }).shift();
+    if (!pattern) return base;
+    pattern.split('').forEach((c, idx) => {
+        if (c === '\\'){
+            escaped = true;
+            return;
+        }
+
+        if (c === '|' && !escaped && !charModus){
+            if (option){
+                options.push(option);
+            }
+            if (optionVariants){
+                optionVariants.forEach( ov => {
+                    options.push(ov);
+                });
+            }
+            optionVariants=null;
+            option = '';
+            return;
+        }
+
+        if (c === '[' && !escaped){
+            charModus = true;
+            optionVariants = (optionVariants) ? optionVariants : [option];
+            newOptionVariants = [];
+            option = '';
+            return;
+        }
+
+        if (c === ']' && !escaped){
+            optionVariants = newOptionVariants;
+            charModus = false;
+            return;
+        }
+        console.log('c:', c, escaped, charModus);
+        if (charModus) {
+
+
+            optionVariants.forEach( (ov, i, a) => {
+                if (c === 'd' && escaped) {
+
+                    digits.split('').forEach(d =>{
+                        newOptionVariants.push(ov + d);
+                    });
+
+                } else if (c === '-' && !escaped) {
+                    inRange = true;
+
+                } else if (inRange && rangeStart) {
+                    //newOptionVariants =[];
+                    let range = rangeStart + all.split(rangeStart).reverse().shift().split(c).shift() + c;
+                    console.log('range:', range);
+                    range.split('').forEach(r => {
+                        newOptionVariants.push(ov + r);
+                    });
+                    inRange=false;
+                    rangeStart=null;
+                } else if (pattern[idx+1] === '-'  && !escaped) {
+                    rangeStart = c;
+                } else {
+                    newOptionVariants.push(ov + c);
+
+                }
+            });
+
+        } else {
+            option += c;
+        }
+
+
+        console.log('newOptionVariants:', newOptionVariants);
+        console.log('optionVariants:', optionVariants);
+        console.log('options:', options);
+        escaped = false;
+    });
+
+    //after all chars processed
+    if (option) {
+        options.push(option);
+    }
+    if (optionVariants){
+        optionVariants.forEach( ov => {
+            options.push(ov);
+        });
+    }
+    result = options.map(o => `"${o}"`).join('|');
+
+    console.log('\n' , pattern, '=>' , result, '\n');
+    return result || base;
+}
+
+
 

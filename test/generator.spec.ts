@@ -46,7 +46,7 @@ describe("generator", () => {
             compile("./src/generated/xep-004.ts");
         });
 
-        fit("creates simpleType.ts", () => {
+        it("creates simpleType.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/simpleType.xsd"));
             printFile("./src/generated/simpleType.ts");
             compile("./src/generated/simpleType.ts");

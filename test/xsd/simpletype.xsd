@@ -120,12 +120,17 @@
     </xs:simpleType>
     <xs:simpleType name="mixed">
         <xs:restriction base="xs:string">
-            <xs:pattern value="pre|[b-fC-J4-7]|post"/>
+            <xs:pattern value="pre|[b-fC-J4-7]|mid|[A]|post"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="dashes">
         <xs:restriction base="xs:string">
-            <xs:pattern value="[P\-][B\-][A\-]"/>
+            <xs:pattern value="[P\-][B\-][A]"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="brackets">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[<>\[\]]"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

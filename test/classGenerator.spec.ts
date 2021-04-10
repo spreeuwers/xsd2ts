@@ -2,7 +2,7 @@
  * Created by eddy spreeuwers 14-02-18.
  */
 import {FileDefinition} from "ts-code-generator";
-import {ClassGenerator} from "../src/classGenerator";
+import {ClassGenerator, regexpPattern2typeAlias} from "../src/classGenerator";
 import {log} from "../src/xml-utils";
 import * as fs from "fs";
 
@@ -186,8 +186,8 @@ describe("ClassGenerator", () => {
             expect(classFile.classes.length).toBe(1);
             const c  = classFile.getClass("Schema");
             expect(c.name).toBe("Schema");
-            expect(classFile.typeAliases.length).toBe(7);
-            expect(classFile.getTypeAlias('Alphabet').type.text).toEqual('"A"|"B"|"C"');
+            expect(classFile.typeAliases.length).toBe(15);
+            expect(classFile.getTypeAlias('ABC').type.text).toEqual('"A"|"B"|"C"');
             expect(classFile.enums.length).toBe(4);
 
         });
@@ -219,5 +219,26 @@ describe("ClassGenerator", () => {
             console.log("-------------------------------------\n");
             console.log(classFile.write());
             expect(classFile.classes.length).toBe(3);
+        });
+
+        it ("returns as type alias for regexps" , ()=> {
+            let alias = regexpPattern2typeAlias('', 'string');
+            expect(alias).toBe('string');
+            alias = regexpPattern2typeAlias('A', 'string');
+            expect(alias).toBe('"A"');
+            alias = regexpPattern2typeAlias('A|B|C', 'string');
+            expect(alias).toBe('"A"|"B"|"C"');
+            alias = regexpPattern2typeAlias('[ABC]', 'string');
+            expect(alias).toBe('"A"|"B"|"C"');
+            alias = regexpPattern2typeAlias('A[12]|B|C[34]', 'string');
+            expect(alias).toBe('"A1"|"A2"|"B"|"C3"|"C4"');
+            alias = regexpPattern2typeAlias('A[\\d]|B', 'string');
+            expect(alias).toBe('"A0"|"A1"|"A2"|"A3"|"A4"|"A5"|"A6"|"A7"|"A8"|"A9"|"B"');
+            alias = regexpPattern2typeAlias('pre|[b-dC-E4-7]|mid|[A]|post', 'string');
+            expect(alias).toBe('"pre"|"b"|"c"|"d"|"C"|"D"|"E"|"4"|"5"|"6"|"7"|"mid"|"A"|"post"');
+            alias = regexpPattern2typeAlias('a[b-c1-3]', 'string');
+            expect(alias).toBe('"ab"|"ac"|"a1"|"a2"|"a3"');
+            alias = regexpPattern2typeAlias("[P\\-][B\\-][A\\-]", 'string');
+            expect(alias).toBe('"PBA"|"-BA"|"P-A"|"--A"|"PB-"|"-B-"|"P--"|"---"');
         });
 });

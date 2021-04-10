@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ClassGenerator = void 0;
+exports.regexpPattern2typeAlias = exports.ClassGenerator = exports.regexpPattern2typeAliasOld = void 0;
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
@@ -17,6 +17,8 @@ var DIGITS = '0123456789';
 var GROUP_PREFIX = 'group_';
 var XSD_NS = "http://www.w3.org/2001/XMLSchema";
 var CLASS_PREFIX = ".";
+var square_bracket1 = '\x01';
+var square_bracket2 = '\x02';
 var defaultSchemaName = 'Schema';
 var groups = {};
 var ns2modMap = {};
@@ -146,25 +148,81 @@ function addClassForASTNode(fileDef, astNode, indent) {
         }
     });
 }
-function regexpPattern2typeAlias(pattern, aliasType) {
+function regexpPattern2typeAliasOld(pattern, aliasType) {
     pattern.split(parsing_1.NEWLINE).forEach(function (p) {
-        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') + p.indexOf('][') > -4) {
+        //ignore complex stuff
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
             return;
         }
-        p = p.replace(/\[([^\]]*)\]/, function (x, y) {
+        var o = p;
+        var replaced = [];
+        p = p.replace(/(\\.)/g, function (x, y) { replaced.push(y[1]); return "<" + (replaced.length - 1) + ">"; });
+        console.log('p before:', p, replaced);
+        p = p.replace(/\[([^\]]*)\]/g, function (x, y) {
+            //console.log('y:', y);
+            replaced.forEach(function (r, i) {
+                y = y.replace("<" + i + ">", replaced[i])
+                    .replace('[', square_bracket1)
+                    .replace(']', square_bracket2)
+                    .replace('-', '\\-')
+                    .replace('d', '\\d');
+            });
             console.log('y:', y);
             var z = y.replace(/([A-Z])\-([A-Z])/ig, function (a, b, c) { return b + a2z(b).split(b).reverse().shift().split(c).shift() + c; });
             z = z.replace(/([0-9])\-([0-9])/ig, function (a, b, c) { return b + DIGITS.split(b).reverse().shift().split(c).shift() + c; });
             z = z.replace('\\d', DIGITS).replace(/\\-/g, '-');
-            console.log('z:', z);
-            return '' + z.split('').join('|') + '';
+            //console.log('z:', z);
+            z = '[' + z.split('').join('|') + ']';
+            //console.log('z:', z);
+            return z;
         });
+        console.log('p:', p);
+        var z = p.split(/\[|\]\[|\]/);
+        console.log('z:', z);
+        var prodZ = [];
+        var first = true;
+        var length = 0;
+        var alts = [];
+        z.forEach(function (x, i, a) {
+            if (x) {
+                //console.log('i:', i);
+                if (/^\||\|$/g.test(x)) {
+                    alts.push(x.replace(/^\||\|$/g, ''));
+                    return;
+                }
+                var options = x.split('|');
+                length += (options.length > 1) ? 1 : x.length;
+                options.forEach(function (y, j, b) {
+                    if (first) {
+                        prodZ.push(y);
+                    }
+                    else {
+                        prodZ.forEach(function (e, k, c) {
+                            if (j == e.length) {
+                                c[k] = e + y;
+                            }
+                            else {
+                                prodZ.push(e + y);
+                            }
+                        });
+                    }
+                });
+                first = false;
+            }
+        });
+        console.log('prodZ' + ':', prodZ);
+        p = prodZ.filter(function (f) { return f.length === length; }).filter(function (f, i, a) { return a.indexOf(f) === i; }).sort().join('|');
+        p = alts.push(p);
+        p = alts.join('|');
+        p = p.split('').map(function (c) { return c.replace(square_bracket1, '[').replace(square_bracket2, ']'); }).join('');
+        console.log('p:', p);
         //remove pre and post |
         p = p.replace('||', '|').replace(/^|/, '').replace(/|$/, '');
         aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(function (p) { return "\"" + p + "\""; }).join('|');
     });
     return aliasType;
 }
+exports.regexpPattern2typeAliasOld = regexpPattern2typeAliasOld;
 var ClassGenerator = /** @class */ (function () {
     function ClassGenerator(depMap, classPrefix) {
         if (classPrefix === void 0) { classPrefix = CLASS_PREFIX; }
@@ -403,3 +461,107 @@ var ClassGenerator = /** @class */ (function () {
     return ClassGenerator;
 }());
 exports.ClassGenerator = ClassGenerator;
+function regexpPattern2typeAlias(pattern, base) {
+    var result = '';
+    var escaped = false;
+    var charModus = false;
+    var options = [];
+    var optionVariants = null;
+    var inRange = false;
+    var rangeStart = null;
+    var newOptionVariants = [];
+    var option = '';
+    var digits = '0123456789';
+    var a2z = 'abcdefghijklmnopqrstuvwxyz';
+    var A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var all = digits + a2z + A2Z;
+    pattern = pattern.split(parsing_1.NEWLINE).filter(function (p) {
+        //ignore complex stuff
+        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
+            return false;
+        }
+        return true;
+    }).shift();
+    if (!pattern)
+        return base;
+    pattern.split('').forEach(function (c, idx) {
+        if (c === '\\') {
+            escaped = true;
+            return;
+        }
+        if (c === '|' && !escaped && !charModus) {
+            if (option) {
+                options.push(option);
+            }
+            if (optionVariants) {
+                optionVariants.forEach(function (ov) {
+                    options.push(ov);
+                });
+            }
+            optionVariants = null;
+            option = '';
+            return;
+        }
+        if (c === '[' && !escaped) {
+            charModus = true;
+            optionVariants = (optionVariants) ? optionVariants : [option];
+            newOptionVariants = [];
+            option = '';
+            return;
+        }
+        if (c === ']' && !escaped) {
+            optionVariants = newOptionVariants;
+            charModus = false;
+            return;
+        }
+        console.log('c:', c, escaped, charModus);
+        if (charModus) {
+            optionVariants.forEach(function (ov, i, a) {
+                if (c === 'd' && escaped) {
+                    digits.split('').forEach(function (d) {
+                        newOptionVariants.push(ov + d);
+                    });
+                }
+                else if (c === '-' && !escaped) {
+                    inRange = true;
+                }
+                else if (inRange && rangeStart) {
+                    //newOptionVariants =[];
+                    var range = rangeStart + all.split(rangeStart).reverse().shift().split(c).shift() + c;
+                    console.log('range:', range);
+                    range.split('').forEach(function (r) {
+                        newOptionVariants.push(ov + r);
+                    });
+                    inRange = false;
+                    rangeStart = null;
+                }
+                else if (pattern[idx + 1] === '-' && !escaped) {
+                    rangeStart = c;
+                }
+                else {
+                    newOptionVariants.push(ov + c);
+                }
+            });
+        }
+        else {
+            option += c;
+        }
+        console.log('newOptionVariants:', newOptionVariants);
+        console.log('optionVariants:', optionVariants);
+        console.log('options:', options);
+        escaped = false;
+    });
+    //after all chars processed
+    if (option) {
+        options.push(option);
+    }
+    if (optionVariants) {
+        optionVariants.forEach(function (ov) {
+            options.push(ov);
+        });
+    }
+    result = options.map(function (o) { return "\"" + o + "\""; }).join('|');
+    console.log('\n', pattern, '=>', result, '\n');
+    return result || base;
+}
+exports.regexpPattern2typeAlias = regexpPattern2typeAlias;
