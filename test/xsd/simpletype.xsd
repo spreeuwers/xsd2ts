@@ -2,21 +2,7 @@
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
 
 
-    <xs:element name="age1">
-        <xs:simpleType>
-            <xs:restriction base="xs:integer">
-                <xs:minInclusive value="0"/>
-                <xs:maxInclusive value="100"/>
-            </xs:restriction>
-        </xs:simpleType>
-    </xs:element>
 
-    <xs:simpleType name="age2">
-        <xs:restriction base="xs:integer">
-            <xs:minInclusive value="0"/>
-            <xs:maxInclusive value="100"/>
-        </xs:restriction>
-    </xs:simpleType>
 
     <xs:element name="option">
         <xs:simpleType>
@@ -91,11 +77,11 @@
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="yn">
-      <xs:restriction base="xs:string">
+        <xs:restriction base="xs:string">
 
-      <xs:pattern value="[y|n]"/>
-      <xs:length value="1"/>
-      </xs:restriction>
+            <xs:pattern value="[y|n]"/>
+            <xs:length value="1"/>
+        </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="digits">
         <xs:restriction base="xs:string">
@@ -136,6 +122,30 @@
     <xs:simpleType name="namestring">
         <xs:restriction base="xs:string">
             <xs:maxLength value="50"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="numbers">
+        <xs:simpleType>
+            <xs:restriction base="xs:positiveInteger">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="[\d]"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+
+    <xs:element name="age1">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:minInclusive value="0"/>
+                <xs:maxInclusive value="100"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+
+    <xs:simpleType name="age2">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="100"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

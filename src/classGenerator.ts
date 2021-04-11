@@ -161,85 +161,6 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 }
 
 
-export function regexpPattern2typeAliasOld(pattern, aliasType: string) {
-    pattern.split(NEWLINE).forEach(p => {
-        //ignore complex stuff
-        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.')  > -3) {
-            return;
-        }
-        const  o = p;
-        const  replaced = [];
-        p = p.replace(/(\\.)/g, (x, y) => {replaced.push(y[1]); return `<${replaced.length - 1}>`;} );
-        console.log('p before:',p, replaced);
-        p = p.replace(/\[([^\]]*)\]/g, (x, y) => {
-            //console.log('y:', y);
-            replaced.forEach((r,i) => {
-                y = y.replace(`<${i}>`, replaced[i])
-                    .replace('[', square_bracket1)
-                    .replace(']', square_bracket2)
-                    .replace('-', '\\-')
-                    .replace('d', '\\d');
-            });
-            console.log('y:', y);
-            let z = y.replace(/([A-Z])\-([A-Z])/ig, (a, b, c) => b + a2z(b).split(b).reverse().shift().split(c).shift() + c);
-            z = z.replace(/([0-9])\-([0-9])/ig, (a, b, c) => b + DIGITS.split(b).reverse().shift().split(c).shift() + c);
-            z = z.replace('\\d', DIGITS).replace(/\\-/g, '-');
-            //console.log('z:', z);
-            z =  '[' + z.split('').join('|') + ']';
-            //console.log('z:', z);
-            return z;
-        });
-        console.log('p:',p);
-        const z = p.split(/\[|\]\[|\]/);
-        console.log('z:', z);
-        const prodZ = [];
-        let first = true;
-        let length = 0;
-        let alts = [];
-        z.forEach( (x, i, a) => {
-            if (x) {
-                //console.log('i:', i);
-                if (/^\||\|$/g.test(x)){
-                    alts.push(x.replace(/^\||\|$/g, ''));
-                    return;
-                }
-                const options = x.split('|');
-                length += (options.length > 1) ? 1 : x.length;
-                options.forEach( (y, j, b) => {
-                    if (first ){
-                       prodZ.push(y);
-                    } else {
-
-                        prodZ.forEach( (e, k, c) => {
-                            if (j == e.length) {
-                                c[k] =  e + y;
-                            } else {
-                                prodZ.push(e + y);
-                            }
-
-                        });
-                    }
-
-                });
-                first = false;
-            }
-        });
-
-        console.log('prodZ' + ':', prodZ);
-        p = prodZ.filter(f => f.length === length).filter((f, i, a) => a.indexOf(f) === i).sort().join('|');
-        p = alts.push(p);
-        p = alts.join('|');
-        p = p.split('').map(c => c.replace(square_bracket1, '[').replace(square_bracket2, ']')).join('');
-        console.log('p:', p);
-        //remove pre and post |
-        p = p.replace('||', '|').replace(/^|/, '').replace(/|$/, '');
-        aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(p => `"${p}"`).join('|');
-
-    });
-    return aliasType;
-}
-
-
 
 
 
@@ -323,13 +244,27 @@ export class ClassGenerator {
             .filter((t) => t.nodeType === 'AliasType')
             .forEach( (t) => {
                 let aliasType = getFieldType(t.attr.type, null);
-                log('alias type: ', t.attr.type , '->', aliasType);
+                log('alias type: ', t.name, ': ' , t.attr.type , '->', aliasType, '\tattribs:',  t.attr);
                 if (t.attr.pattern){
 
                     //try to translate regexp pattern to type aliases as far as possible
                     aliasType = regexpPattern2typeAlias(t.attr.pattern, aliasType);
 
                 }
+
+                if (t.attr.minInclusive && t.attr.maxInclusive){
+                    const x1 = parseInt(t.attr.minInclusive);
+                    const x2 = parseInt(t.attr.maxInclusive);
+                    const nrs = [];
+                    for (let n = x1;  n <= x2; n++) {
+                        nrs.push(n);
+                    }
+                    if (nrs.length <= 101){
+                        aliasType = nrs.join('|');
+                    }
+
+                }
+
                 const [ns, localName] = aliasType.split('.');
 
                 if (targetNamespace === ns && t.name === localName){
@@ -572,6 +507,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string): string {
        return !/^\d+$/.test(p)
 
     }).shift();
+
     if (!pattern) return base;
     pattern.split('').forEach((c, idx) => {
         if (c === '\\'){
@@ -606,7 +542,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string): string {
             charModus = false;
             return;
         }
-        console.log('c:', c, escaped, charModus);
+        //console.log('c:', c, escaped, charModus);
         if (charModus) {
 
 
@@ -642,9 +578,9 @@ export function regexpPattern2typeAlias(pattern: string, base: string): string {
         }
 
 
-        console.log('newOptionVariants:', newOptionVariants);
-        console.log('optionVariants:', optionVariants);
-        console.log('options:', options);
+        //console.log('newOptionVariants:', newOptionVariants);
+        //console.log('optionVariants:', optionVariants);
+        //console.log('options:', options);
         escaped = false;
     });
 
@@ -657,7 +593,12 @@ export function regexpPattern2typeAlias(pattern: string, base: string): string {
             options.push(ov);
         });
     }
-    result = options.map(o => `"${o}"`).join('|');
+    if (base ==='string'){
+        result = options.map(o => `"${o}"`).join('|');
+    } else {
+        result = options.join('|');
+    }
+
 
     console.log('\n' , pattern, '=>' , result, '\n');
     return result || base;

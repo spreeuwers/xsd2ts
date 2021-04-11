@@ -38,8 +38,8 @@ export function astNamedUntypedElm(n:Node) {
 export function astEnumValue(n: Node){
     return astNode('EnumValue').prop('value', attribs(n).value);
 }
-export function astPatternValue(n: Node){
-    return astNode('PatternValue').prop('pattern', attribs(n).value);
+export function astRestrictions(n: Node){
+    return astNode('Restrictions').prop(xml(n).localName, attribs(n).value);
 }
 
 export function astLengthValue(n: Node){
