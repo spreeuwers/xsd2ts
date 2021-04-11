@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.regexpPattern2typeAlias = exports.ClassGenerator = exports.regexpPattern2typeAliasOld = void 0;
+exports.regexpPattern2typeAlias = exports.ClassGenerator = void 0;
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
@@ -148,81 +148,6 @@ function addClassForASTNode(fileDef, astNode, indent) {
         }
     });
 }
-function regexpPattern2typeAliasOld(pattern, aliasType) {
-    pattern.split(parsing_1.NEWLINE).forEach(function (p) {
-        //ignore complex stuff
-        if (p.indexOf('*') + p.indexOf('+') + p.indexOf('.') > -3) {
-            return;
-        }
-        var o = p;
-        var replaced = [];
-        p = p.replace(/(\\.)/g, function (x, y) { replaced.push(y[1]); return "<" + (replaced.length - 1) + ">"; });
-        console.log('p before:', p, replaced);
-        p = p.replace(/\[([^\]]*)\]/g, function (x, y) {
-            //console.log('y:', y);
-            replaced.forEach(function (r, i) {
-                y = y.replace("<" + i + ">", replaced[i])
-                    .replace('[', square_bracket1)
-                    .replace(']', square_bracket2)
-                    .replace('-', '\\-')
-                    .replace('d', '\\d');
-            });
-            console.log('y:', y);
-            var z = y.replace(/([A-Z])\-([A-Z])/ig, function (a, b, c) { return b + a2z(b).split(b).reverse().shift().split(c).shift() + c; });
-            z = z.replace(/([0-9])\-([0-9])/ig, function (a, b, c) { return b + DIGITS.split(b).reverse().shift().split(c).shift() + c; });
-            z = z.replace('\\d', DIGITS).replace(/\\-/g, '-');
-            //console.log('z:', z);
-            z = '[' + z.split('').join('|') + ']';
-            //console.log('z:', z);
-            return z;
-        });
-        console.log('p:', p);
-        var z = p.split(/\[|\]\[|\]/);
-        console.log('z:', z);
-        var prodZ = [];
-        var first = true;
-        var length = 0;
-        var alts = [];
-        z.forEach(function (x, i, a) {
-            if (x) {
-                //console.log('i:', i);
-                if (/^\||\|$/g.test(x)) {
-                    alts.push(x.replace(/^\||\|$/g, ''));
-                    return;
-                }
-                var options = x.split('|');
-                length += (options.length > 1) ? 1 : x.length;
-                options.forEach(function (y, j, b) {
-                    if (first) {
-                        prodZ.push(y);
-                    }
-                    else {
-                        prodZ.forEach(function (e, k, c) {
-                            if (j == e.length) {
-                                c[k] = e + y;
-                            }
-                            else {
-                                prodZ.push(e + y);
-                            }
-                        });
-                    }
-                });
-                first = false;
-            }
-        });
-        console.log('prodZ' + ':', prodZ);
-        p = prodZ.filter(function (f) { return f.length === length; }).filter(function (f, i, a) { return a.indexOf(f) === i; }).sort().join('|');
-        p = alts.push(p);
-        p = alts.join('|');
-        p = p.split('').map(function (c) { return c.replace(square_bracket1, '[').replace(square_bracket2, ']'); }).join('');
-        console.log('p:', p);
-        //remove pre and post |
-        p = p.replace('||', '|').replace(/^|/, '').replace(/|$/, '');
-        aliasType = (p.indexOf('|') < 0) ? aliasType : p.split('|').map(function (p) { return "\"" + p + "\""; }).join('|');
-    });
-    return aliasType;
-}
-exports.regexpPattern2typeAliasOld = regexpPattern2typeAliasOld;
 var ClassGenerator = /** @class */ (function () {
     function ClassGenerator(depMap, classPrefix) {
         if (classPrefix === void 0) { classPrefix = CLASS_PREFIX; }
@@ -282,10 +207,21 @@ var ClassGenerator = /** @class */ (function () {
             .filter(function (t) { return t.nodeType === 'AliasType'; })
             .forEach(function (t) {
             var aliasType = parsing_1.getFieldType(t.attr.type, null);
-            xml_utils_1.log('alias type: ', t.attr.type, '->', aliasType);
+            xml_utils_1.log('alias type: ', t.name, ': ', t.attr.type, '->', aliasType, '\tattribs:', t.attr);
             if (t.attr.pattern) {
                 //try to translate regexp pattern to type aliases as far as possible
                 aliasType = regexpPattern2typeAlias(t.attr.pattern, aliasType);
+            }
+            if (t.attr.minInclusive && t.attr.maxInclusive) {
+                var x1 = parseInt(t.attr.minInclusive);
+                var x2 = parseInt(t.attr.maxInclusive);
+                var nrs = [];
+                for (var n = x1; n <= x2; n++) {
+                    nrs.push(n);
+                }
+                if (nrs.length <= 101) {
+                    aliasType = nrs.join('|');
+                }
             }
             var _a = aliasType.split('.'), ns = _a[0], localName = _a[1];
             if (targetNamespace === ns && t.name === localName) {
@@ -514,7 +450,7 @@ function regexpPattern2typeAlias(pattern, base) {
             charModus = false;
             return;
         }
-        console.log('c:', c, escaped, charModus);
+        //console.log('c:', c, escaped, charModus);
         if (charModus) {
             optionVariants.forEach(function (ov, i, a) {
                 if (c === 'd' && escaped) {
@@ -546,9 +482,9 @@ function regexpPattern2typeAlias(pattern, base) {
         else {
             option += c;
         }
-        console.log('newOptionVariants:', newOptionVariants);
-        console.log('optionVariants:', optionVariants);
-        console.log('options:', options);
+        //console.log('newOptionVariants:', newOptionVariants);
+        //console.log('optionVariants:', optionVariants);
+        //console.log('options:', options);
         escaped = false;
     });
     //after all chars processed
@@ -560,7 +496,12 @@ function regexpPattern2typeAlias(pattern, base) {
             options.push(ov);
         });
     }
-    result = options.map(function (o) { return "\"" + o + "\""; }).join('|');
+    if (base === 'string') {
+        result = options.map(function (o) { return "\"" + o + "\""; }).join('|');
+    }
+    else {
+        result = options.join('|');
+    }
     console.log('\n', pattern, '=>', result, '\n');
     return result || base;
 }
