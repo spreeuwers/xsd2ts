@@ -216,15 +216,16 @@ export class XsdGrammar {
         const N_GROUP  = match(namedGroup).child(sequence, childsMerger).children(FIELD).labeled('N_GROUP');
         const ENUMELM  = match(eNamedUntyped, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMELM');
         const ENUMTYPE = match(namedSimpleType, enumMerger).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
-        //const ENUM2    = match(namedSimpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE2');
-        //const ALIAS1   = match(eNamedUntyped, typeMerger).child(simpleType).child(nrRestriction).labeled('ALIAS1');
-        const ALIAS2   = match(namedSimpleType, typeMerger).child(nrRestriction).labeled('ALIAS2');
-        const ALIAS3   = match(namedSimpleType, typeMerger).child(dtRestriction).labeled('ALIAS3');
         const SRESTR   = oneOf(match(strPattern), match(strMaxLength), match(strLength));
         const NRESTR   = oneOf(match(strPattern), match(minInclusive), match(maxInclusive));
-        const ALIAS4   = match(namedSimpleType, patternChildrenMerger).child(strRestriction, childsMerger).children(SRESTR).labeled('ALIAS4');
-        const ALIAS5   = match(eNamedUntyped, patternChildMerger).child(simpleType, patternChildrenMerger).child(strRestriction, childsMerger).children(SRESTR).labeled('ALIAS5');
-        const ALIAS1   = match(eNamedUntyped, patternChildMerger).child(simpleType, patternChildrenMerger).child(nrRestriction, childsMerger).children(NRESTR).labeled('ALIAS1');
+
+        //const ENUM2    = match(namedSimpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE2');
+        //const ALIAS1   = match(eNamedUntyped, typeMerger).child(simpleType).child(nrRestriction).labeled('ALIAS1');
+        const ALIAS1   = match(namedSimpleType, typeMerger).child(dtRestriction).labeled('ALIAS1');
+        const ALIAS2   = match(namedSimpleType, patternChildrenMerger).child(nrRestriction, childsMerger).children(NRESTR).labeled('ALIAS2');
+        const ALIAS3   = match(namedSimpleType, patternChildrenMerger).child(strRestriction, childsMerger).children(SRESTR).labeled('ALIAS3');
+        const ALIAS4   = match(eNamedUntyped, patternChildMerger).child(simpleType, patternChildrenMerger).child(strRestriction, childsMerger).children(SRESTR).labeled('ALIAS4');
+        const ALIAS5   = match(eNamedUntyped, patternChildMerger).child(simpleType, patternChildrenMerger).child(nrRestriction, childsMerger).children(NRESTR).labeled('ALIAS5');
 
         const TYPES    = oneOf(ALIAS1,  ALIAS2 , ALIAS3, ALIAS4, ALIAS5, S_CLASS, ENUMELM, ENUMTYPE,  E_CLASS, C_CLASS, X_CLASS,  N_GROUP, G_CLASS, A_CLASS,  R_CLASS, Z_CLASS, F_CLASS);
         const SCHEMA   = match(schema, childsMerger).children(TYPES);

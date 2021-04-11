@@ -259,6 +259,7 @@ export class ClassGenerator {
                     for (let n = x1;  n <= x2; n++) {
                         nrs.push(n);
                     }
+
                     if (nrs.length <= 101){
                         aliasType = nrs.join('|');
                     }
