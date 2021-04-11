@@ -597,7 +597,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string): string {
     if (base ==='string'){
         result = options.map(o => `"${o}"`).join('|');
     } else {
-        result = options.join('|');
+        result = options.join('|').replace(/\|+/g, '|');
     }
 
 

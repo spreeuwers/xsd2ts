@@ -146,6 +146,14 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
+    <xs:element name="priority">
+        <xs:simpleType>
+            <xs:restriction base="xs:positiveInteger">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="[0|1|2|3]"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
 
 
 </xs:schema>
