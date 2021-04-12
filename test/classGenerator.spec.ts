@@ -178,7 +178,7 @@ describe("ClassGenerator", () => {
 
         });
 
-       fit("returns a classFile for a simpleTypeXsd", () => {
+       it("returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
             log("------------ classes -------------------------\n");
@@ -186,10 +186,10 @@ describe("ClassGenerator", () => {
             expect(classFile.classes.length).toBe(1);
             const c  = classFile.getClass("Schema");
             expect(c.name).toBe("Schema");
-            expect(classFile.typeAliases.length).toBe(18);
-            expect(classFile.getTypeAlias('ABC').type.text).toEqual('"A"|"B"|"C"');
+            expect(classFile.typeAliases.length).toBe(25);
+            expect(classFile.getTypeAlias('ABC7').type.text).toEqual('"A"|"B"|"C"');
             expect(classFile.enums.length).toBe(4);
-            expect(classFile.getTypeAlias('Priority').type.text).toEqual('0|1|2|3');
+            expect(classFile.getTypeAlias('Priority18').type.text).toEqual('0|1|2|3');
 
 
         });
@@ -242,5 +242,7 @@ describe("ClassGenerator", () => {
             expect(alias).toBe('"ab"|"ac"|"a1"|"a2"|"a3"');
             alias = regexpPattern2typeAlias("[P\\-][B\\-][A\\-]", 'string');
             expect(alias).toBe('"PBA"|"-BA"|"P-A"|"--A"|"PB-"|"-B-"|"P--"|"---"');
+            alias = regexpPattern2typeAlias("\\d+", 'number', {maxLength: 1});
+            expect(alias).toBe('0|1|2|3|4|5|6|7|8|9');
         });
 });

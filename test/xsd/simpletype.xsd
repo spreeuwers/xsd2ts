@@ -37,7 +37,7 @@
         </xs:simpleType>
     </xs:element>
 
-    <xs:element name="ActionElm">
+    <xs:element name="ActionElm3">
         <xs:simpleType>
             <xs:restriction base="xs:string">
                 <xs:pattern value="add|remove|update"/>
@@ -45,7 +45,7 @@
         </xs:simpleType>
     </xs:element>
 
-    <xs:simpleType name="Action">
+    <xs:simpleType name="Action4">
         <xs:restriction base="xs:string">
             <xs:pattern value="add|remove|update"/>
         </xs:restriction>
@@ -71,74 +71,75 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="percentage">
+    <xs:simpleType name="percentage5">
         <xs:restriction base="xs:integer">
             <xs:minInclusive value="0"/>
             <xs:maxInclusive value="100"/>
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="longitudeType">
+    <xs:simpleType name="longitudeType6">
         <xs:restriction base="xs:double">
             <xs:minInclusive value="-180"/>
             <xs:maxInclusive value="180"/>
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="ABC">
+    <xs:simpleType name="ABC7">
         <xs:restriction base="xs:string">
             <xs:pattern value="[ABC]"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="yn">
-        <xs:restriction base="xs:string">
 
+    <xs:simpleType name="yn8">
+        <xs:restriction base="xs:string">
             <xs:pattern value="[y|n]"/>
             <xs:length value="1"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="digits">
+
+    <xs:simpleType name="digits9">
         <xs:restriction base="xs:string">
             <xs:pattern value="[\d]"/>
             <xs:length value="1"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="invalid">
+    <xs:simpleType name="invalid10">
         <xs:restriction base="xs:string">
-            <xs:pattern value="**"/>
+            <xs:pattern value=".*"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="ALPHABET">
+    <xs:simpleType name="ALPHABET11">
         <xs:restriction base="xs:string">
             <xs:pattern value="[A-Z]"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="alphabet">
+    <xs:simpleType name="alphabet12">
         <xs:restriction base="xs:string">
             <xs:pattern value="[a-z]"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="mixed">
+    <xs:simpleType name="mixed13">
         <xs:restriction base="xs:string">
             <xs:pattern value="pre|[b-fC-J4-7]|mid|[A]|post"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="dashes">
+    <xs:simpleType name="dashes14">
         <xs:restriction base="xs:string">
             <xs:pattern value="[P\-][B\-][A]"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="brackets">
+    <xs:simpleType name="brackets15">
         <xs:restriction base="xs:string">
             <xs:pattern value="[<>\[\]]"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="namestring">
+    <xs:simpleType name="namestring165">
         <xs:restriction base="xs:string">
             <xs:maxLength value="50"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:element name="numbers">
+    <xs:element name="numbers17">
         <xs:simpleType>
             <xs:restriction base="xs:positiveInteger">
                 <xs:maxLength value="1"/>
@@ -146,7 +147,7 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="priority">
+    <xs:element name="priority18">
         <xs:simpleType>
             <xs:restriction base="xs:positiveInteger">
                 <xs:maxLength value="1"/>
@@ -154,6 +155,61 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-
-
+    <xs:element name="anynumber19">
+        <xs:simpleType>
+            <xs:restriction base="xs:positiveInteger">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="."/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="papersize20">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="A\d"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="anychar21">
+        <xs:simpleType>
+            <xs:restriction base="xs:string">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="."/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="err_int22">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="\."/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="decimal23">
+        <xs:simpleType>
+            <xs:restriction base="xs:decimal">
+                <xs:maxLength value="3"/>
+                <xs:pattern value="\d\.\d"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="nrMaxLength24">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:maxLength value="1"/>
+                <xs:pattern value="\d+"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="nrMaxinclusive">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:maxInclusive value="95"/>
+                <xs:minInclusive value="9"/>
+                <xs:pattern value="[\d]+"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
 </xs:schema>

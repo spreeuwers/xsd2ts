@@ -92,7 +92,7 @@ export function getFieldType(type: string, defNs: string): string {
     } else {
         type = type?.split(':').map( (p, i, a) => (i < a.length - 1) ? p.toLowerCase() : capFirst(p)).join('.');
     }
-
+    if (type === 'Number') type = 'number';
     return typeMap[key] || type || 'any';
 }
 

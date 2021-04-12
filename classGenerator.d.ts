@@ -26,4 +26,4 @@ export declare class ClassGenerator {
     private addProtectedPropToClass;
     private findHierachyDepth;
 }
-export declare function regexpPattern2typeAlias(pattern: string, base: string): string;
+export declare function regexpPattern2typeAlias(pattern: string, base: string, attr?: object): string;

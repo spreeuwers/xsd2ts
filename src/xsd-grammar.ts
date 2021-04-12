@@ -217,7 +217,7 @@ export class XsdGrammar {
         const ENUMELM  = match(eNamedUntyped, enumMerger).child(simpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMELM');
         const ENUMTYPE = match(namedSimpleType, enumMerger).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE');
         const SRESTR   = oneOf(match(strPattern), match(strMaxLength), match(strLength));
-        const NRESTR   = oneOf(match(strPattern), match(minInclusive), match(maxInclusive));
+        const NRESTR   = oneOf(match(strPattern), match(minInclusive), match(maxInclusive), match(strMaxLength));
 
         //const ENUM2    = match(namedSimpleType).child(strRestriction).children(match(enumeration)).labeled('ENUMTYPE2');
         //const ALIAS1   = match(eNamedUntyped, typeMerger).child(simpleType).child(nrRestriction).labeled('ALIAS1');
