@@ -178,6 +178,7 @@ describe("ClassGenerator", () => {
 
         });
 
+
        it("returns a classFile for a simpleTypeXsd", () => {
 
             let classFile = generator.generateClassFileDefinition(simpleTypeXsd, "", true);
