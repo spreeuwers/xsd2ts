@@ -1,0 +1,590 @@
+/**
+ * Created by eddyspreeuwers on 4/24/21.
+ */
+import {log} from "./xml-utils";
+
+
+export const digits = '0123456789';
+export const a2z = 'abcdefghijklmnopqrstuvwxyz';
+export const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
+export const allW = digits + a2z + A2Z;
+export const allC = digits + a2z + A2Z + leestekens;
+
+const tokens = {
+    '\\d': digits,
+    '\\w': allW,
+    '\\.': '.',
+    '\\-': '-',
+    '\\[': '[',
+    '\\]': ']',
+    '.'  : allC,
+    '\\\\': '\\\\'
+};
+
+
+function makeVariants(optionVariants: any, series: string, maxLength: number, ) {
+    const newOptionVariants: string[] = [];
+    optionVariants.forEach((ov) => {
+        series.split('').forEach(s => {
+            if ((maxLength || 10000) >= (ov + s).length && newOptionVariants.indexOf(ov + s) < 0) {
+                newOptionVariants.push(ov + s);
+            }
+        });
+    });
+    return newOptionVariants;
+
+}
+
+
+function variants2options(optionVariants: string[], options: string[]) {
+    if (optionVariants) {
+        optionVariants.forEach(ov => {
+            options.push(ov);
+        });
+    }
+}
+
+export function range(index: number, pattern: string): [string, number] {
+    let result = '';
+    const part = pattern.substring(index);
+
+    let matches = part.match(/(\w-\w)/);
+    console.log('range matches:', matches);
+    if (matches && matches.index === 0) {
+        const [start, end] = matches[1].split('-');
+        console.log('start:', start, 'end', end);
+        result += start + allW.split(start).reverse().shift().split(end).shift() + end;
+        index += matches[1].length;
+    }
+    return [result, index];
+}
+
+export function char(index: number, pattern: string): [string, number] {
+    let result = '';
+    const part = pattern.substring(index);
+    const matches = part.match(/(\w)/);
+    console.log('char matches:', matches);
+    if (matches && matches.index === 0) {
+        console.log('char:', matches[1]);
+        result += matches[1];
+        index ++;
+    }
+    return [result, index];
+}
+
+export function specials(index: number, pattern: string): [string, number] {
+    let result = '';
+    let part = pattern.substring(index);
+    console.log('idx, pattern:', index, pattern);
+    for (let t in tokens) {
+        if (part.indexOf(t) === 0) {
+            console.log('special found:', t);
+            result = tokens[t];
+            index += t.length;
+            break;
+        }
+    }
+    return [result, index];
+}
+
+
+export function series(index: number, pattern: string): [string, number] {
+
+    if (pattern[index] !== '[') {
+        return ['', index];
+    }
+    const offset = index;
+    let  [r, i] = ['', 0];
+    let result = '';
+    index++;
+    while (pattern[index] !== ']') {
+
+
+        [r, i] = specials(index, pattern);
+        if (r) {
+            result += r;
+            index = i;
+            continue;
+        }
+        [r, i] = range(index, pattern);
+        if (r) {
+            result += r;
+            index = i;
+            continue;
+        }
+
+        [r, i] = char(index, pattern);
+        if (r) {
+            result += r;
+            index = i;
+            continue;
+        }
+
+        if (index >= pattern.length){
+            return ['', offset];
+        }
+        console.log('result:', result, index , pattern.length);
+    }
+    console.log('result:', result, index , pattern.length);
+    return [result, index];
+}
+
+// export function option(index: number, pattern: string): string{
+//
+// }
+
+export function variants( pattern: string, index = 0): [string, number]  {
+    let part = pattern.substring(index);
+    console.log('pattern:', index, pattern);
+
+    let [result, idx] = series(index, part);
+
+
+    return [result, idx];
+}
+
+export function regexpPattern2typeAlias(pattern: string, base: string, attr?: object): string {
+
+        const MAX_LENGTH_VARIANTS = 100;
+        const digits = '0123456789';
+        const a2z = 'abcdefghijklmnopqrstuvwxyz';
+        const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
+        const allW = digits + a2z + A2Z;
+        const allC = digits + a2z + A2Z + leestekens;
+        const seriesMap = {
+            escaped: {'.': '.', d: digits, w: allW},
+            unescaped: {'.': allC}
+        };
+
+        let idx = 0;
+        let c = '';
+        let result = '';
+        const options = [];
+        let optionVariants = null;
+        //const newOptionVariants = [];
+        let option = '';
+        let series = '';
+        let lastChar = '';
+        let escaped = false;
+        let inBraces = false;
+        let inSeries = false;
+        let inRange = false;
+        let splitOptions = false;
+        let maxInt = (attr && /\d+/.test(attr['maxInclusive'])) ? parseInt(attr['maxInclusive']) : undefined;
+        let minInt = (attr && /\d+/.test(attr['minInclusive'])) ? parseInt(attr['minInclusive']) : undefined;
+        let maxLength = (attr &&/\d+/.test(attr['maxLength'])) ? parseInt(attr['maxLength']): undefined;
+
+        let modus = 0;
+        const MODI = 'START|CHAR|START_VARIANTS|END_VARIANTS|IN_VARIANTS|IN_RANGE|IN_SERIES|NIL_OR_MORE|ONE_OR_MORE'.split('|');
+        const START = MODI.indexOf('START');
+        const CHAR = MODI.indexOf('CHAR');
+        //const ESCAPED = MODI.indexOf('ESCAPED');
+        const START_VARIANTS = MODI.indexOf('START_VARIANTS');
+        const END_VARIANTS = MODI.indexOf('END_VARIANTS');
+        const IN_VARIANTS = MODI.indexOf('IN_VARIANTS');
+        const IN_RANGE  = MODI.indexOf('IN_RANGE');
+        const IN_SERIES  = MODI.indexOf('IN_SERIES');
+        const NIL_OR_MORE = MODI.indexOf('NIL_OR_MORE');
+        const ONE_OR_MORE = MODI.indexOf('ONE_OR_MORE');
+
+
+
+        if (!pattern) return base;
+        while (c = pattern[idx] ) {
+            splitOptions = false;
+            switch (c) {
+                case '\\' :
+                    escaped = !escaped;
+                    break;
+                case '('  :
+                    inBraces = !escaped;
+                    break;
+                case ')'  :
+                    inBraces = !escaped;
+                    break;
+                case '['  :
+                    modus = (!escaped) ? START_VARIANTS : CHAR;
+                    break;
+                case '|'  :
+                    splitOptions = !escaped;
+                    break;
+                case ']'  :
+                    modus = (!escaped) ? END_VARIANTS : CHAR;
+                    break;
+                case '*'  :
+                    modus = (!escaped) ? NIL_OR_MORE : CHAR;
+                    break;
+                case '+'  :
+                    modus = (!escaped) ? ONE_OR_MORE : CHAR;
+                    break;
+                case '-'  :
+                    if (modus === IN_VARIANTS){
+                        inRange = !escaped;
+                    }
+                    break;
+                case '.'  :
+                    modus = (!escaped) ? IN_SERIES  : modus;
+                    break;
+
+                case 'd'  :
+                    if (modus === IN_VARIANTS){
+                        inSeries = !escaped;
+                    }
+                    break;
+                default :
+                    modus = (modus === START) ? CHAR : modus;
+            }
+
+            if (modus === IN_RANGE) {
+                const rangeStart = pattern[idx - 2];
+                series += allW.split(rangeStart).reverse().shift().split(c).shift();
+                modus = IN_VARIANTS;
+            }
+
+            if (modus === IN_VARIANTS) {
+                series += c;
+            }
+
+            if (modus === CHAR  && !splitOptions){
+                option += c;
+            }
+
+            if (splitOptions){
+                if ( option ){
+                    options.push(option);
+                    option = '';
+                }
+                variants2options(optionVariants, options);
+                optionVariants = null;
+                splitOptions = false;
+            }
+
+
+            if (modus === START_VARIANTS){
+                series = '';
+                modus = IN_VARIANTS;
+                optionVariants = (optionVariants) ? optionVariants : [option];
+                option = '';
+
+            }
+
+            if (modus === END_VARIANTS) {
+                if (series &&  optionVariants) {
+                    optionVariants = makeVariants(optionVariants, series, maxLength);
+                }
+                modus = CHAR;
+            }
+            if (modus === ONE_OR_MORE) {
+                log('ONE_OR_MORE maxLength', maxLength);
+                for (let r = 1; r <= maxLength; r++) {
+                    optionVariants = (optionVariants) ? optionVariants : [option];
+                    if (series) {
+                        optionVariants = makeVariants(optionVariants, series, maxLength);
+                    }
+                }
+            }
+
+            if (modus === NIL_OR_MORE) {
+                log('NIL_OR_MORE maxLength', maxLength);
+                optionVariants = (optionVariants) ? optionVariants : [option];
+                for (let r = 1; r <= maxLength; r++) {
+                    if (series) {
+
+                        optionVariants = optionVariants.concat(makeVariants(optionVariants, series, maxLength).filter(e=>optionVariants.indexOf(e)<0));
+                    }
+                }
+            }
+
+            log('# c esc  #m modus series option');
+            log(idx, c, escaped, modus, MODI[modus], series, option);
+            log(options, optionVariants);
+            escaped = (c === '\\') ? escaped : false;
+            lastChar = c;
+            idx++;
+        }
+
+        //////////////////////////////////////////////
+
+        if (option) {
+            options.push(option);
+        }
+
+        variants2options(optionVariants, options);
+
+        log('# c esc  #m modus series option');
+        log(idx, c, escaped, modus, MODI[modus], series, option);
+        log(options, optionVariants);//, newOptionVariants);
+
+        if (base === 'string'){
+            result = options.map(o => `"${o}"`).join('|');
+        } else if (base === 'number'){
+            result = options
+                .filter(o => /\d\.?\d*/.test(o))
+                .filter(o => !/0\d+/.test(o))
+                .filter(n => (!maxInt || n <= maxInt))
+                .filter(n => (!minInt || n >= minInt))
+                .join('|').replace(/\|+/g, '|');
+
+
+        } else {
+            result = base;
+        }
+
+        if (result.length > 100000) {
+            result = null;
+        }
+        log('state:', option, options, optionVariants);//, newOptionVariants);
+
+        console.log('\n' , pattern, '=>' , result, '\n');
+
+        return result || base;
+    }
+
+
+
+
+//
+// export function regexpPattern2typeAliasOld(pattern: string, base: string, attr?: object): string {
+//     let result = '';
+//     let escaped = false;
+//     let charModus = false;
+//     let options = [];
+//     let optionVariants = null;
+//     let inRange = false;
+//     let rangeStart = null;
+//     let newOptionVariants = [];
+//     let option  = '';
+//     let lastChar = '';
+//     let repeat = false;
+//     let wasEscaped =false;
+//     let maxInt = (attr &&/\d+/.test(attr['maxInclusive'])) ? parseInt(attr['maxInclusive']): undefined;
+//     let minInt = (attr &&/\d+/.test(attr['minInclusive'])) ? parseInt(attr['minInclusive']): undefined;
+//     let maxLength = (attr &&/\d+/.test(attr['maxLength'])) ? parseInt(attr['maxLength']): undefined;
+//     const MAX_LENGTH_VARIANTS = 100;
+//     const digits = '0123456789';
+//     const a2z = 'abcdefghijklmnopqrstuvwxyz';
+//     const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+//     const leestekens =  '~§±!@#$%^&*()-_=+[]{}|;:.,';
+//     const allW = digits + a2z + A2Z;
+//     const allC = digits + a2z + A2Z + leestekens;
+//     const seriesMap = {
+//             escaped:   {'.': '.', d: digits, w: allW},
+//             unescaped: {'.': allC }
+//         };
+//
+//
+//
+//     if (!pattern) return base;
+//
+//
+//     function enterCharModus() {
+//         charModus = true;
+//         optionVariants = (optionVariants) ? optionVariants : [option];
+//         newOptionVariants = [];
+//         option = '';
+//         return false;
+//     }
+//
+//     function leaveCharModus() {
+//         optionVariants = newOptionVariants;
+//         charModus = false;
+//         return false;
+//     }
+//
+//     pattern.split('').some((ch, idx) => {
+//         let repeatCount = 0;
+//
+//         let key, series, c = ch;
+//         //log('c:', c, ch);
+//         //at least once
+//         do  {
+//             repeatCount++;
+//             //log('repeatCount c:', c, repeatCount, charModus, repeat);
+//
+//             //never more then 100 options
+//             //quit whenever solution will be to long
+//             if  (options?.length + optionVariants?.length > MAX_LENGTH_VARIANTS) {
+//                 return true;
+//             };
+//
+//             if (c === '\\') {
+//                 escaped = true;
+//                 return false;
+//             }
+//
+//             if (base !== 'string' && base !== 'number' && c === '.') {
+//                 //no valid outcome possible for  other types
+//                 //log('invalid pattern for base:', base);
+//                 return true;
+//             }
+//
+//
+//
+//             //enter repeat loop
+//             if (pattern[idx + 1] === '+' || pattern[idx + 1] === '*' ) {
+//                 repeat = true;
+//                 enterCharModus();
+//
+//             }
+//
+//             if (pattern[idx + 1] === ']') {
+//                 if (pattern[idx + 2] === '+' || pattern[idx + 2] === '*' ) {
+//                     repeat = true;
+//                     enterCharModus();
+//                }
+//             }
+//
+//
+//             if (c === '|' && !escaped && !charModus) {
+//                 if (option) {
+//                     options.push(option);
+//                 }
+//                 if (optionVariants) {
+//                     optionVariants.forEach(ov => {
+//                         options.push(ov);
+//                     });
+//                 }
+//                 optionVariants = null;
+//                 option = '';
+//                 return false;
+//             }
+//
+//             if (c === '[' && !escaped) {
+//                 return enterCharModus();
+//             }
+//
+//             if (c === ']' && !escaped) {
+//
+//                 return leaveCharModus();
+//             }
+//
+//             key    = (escaped) ? 'escaped' : 'unescaped';
+//             series = seriesMap[key][c];
+//             log('series', series, c, key);
+//
+//             if (series) {
+//                 enterCharModus();
+//             }
+//
+//             //console.log('c:', c, escaped, charModus);
+//
+//             if (charModus) {
+//                 //for * also add empty option
+//                 if (pattern[idx + 1] === '*' ){
+//                     newOptionVariants = optionVariants;
+//                 }
+//
+//                 optionVariants.forEach((ov, i, a) => {
+//                     if (series) {
+//                         series.split('').forEach(c => {
+//                             newOptionVariants.push(ov + c);
+//                         });
+//
+//                     } else if (c === '-' && !escaped) {
+//                         inRange = true;
+//
+//                     } else if (inRange && rangeStart) {
+//                         //newOptionVariants =[];
+//                         let range = rangeStart + allW.split(rangeStart).reverse().shift().split(c).shift() + c;
+//                         //console.log('range:', range);
+//                         range.split('').forEach(r => {
+//                             newOptionVariants.push(ov + r);
+//                         });
+//                         inRange = false;
+//                         rangeStart = null;
+//                     } else if (pattern[idx + 1] === '-' && !escaped) {
+//                         rangeStart = c;
+//                     } else {
+//                         newOptionVariants.push(ov + c);
+//
+//                     }
+//                 });
+//
+//             } else {
+//                 log('option + c:', option,c);
+//                 option += c;
+//             }
+//             if (series) {
+//                 leaveCharModus();
+//             }
+//
+//             //log(attr, optionVariants);
+//             if (optionVariants && attr) {
+//                 const lastItem = optionVariants[optionVariants?.length - 1];
+//
+//                 log('test', lastItem, attr['maxLength'], attr['maxInclusive'],maxInt,parseInt(lastItem), option, options,optionVariants, newOptionVariants);
+//
+//                 if ( lastItem?.length >= attr['maxLength']) {
+//                     repeat = false;
+//
+//                 }
+//                 if (maxInt > attr['maxInclusive']) {
+//                     repeat = false;
+//                     log('>>>');
+//                 }
+//             }
+//
+//
+//             //never more then 3 times
+//             if  (repeatCount > 5) {
+//
+//                 repeat = false;
+//             };
+//
+//             log('repeatCount', repeatCount)
+//             if  (options?.length + optionVariants?.length > MAX_LENGTH_VARIANTS) {
+//                 return true;
+//             };
+//
+//         } while(repeat);
+//         //log('left repeat loop' ,c);
+//         escaped = false;
+//         series = 0;
+//
+//     });
+//
+//
+//     log('state1:', option, options, optionVariants, newOptionVariants);
+//
+//     //after all chars processed
+//     if (option) {
+//         options.push(option);
+//     }
+//
+//     if (optionVariants){
+//         optionVariants.forEach( ov => {
+//             options.push(ov);
+//         });
+//     }
+//     log('state2:', option, options, optionVariants, newOptionVariants);
+//
+//
+//     if (base === 'string'){
+//         result = options.map(o => `"${o}"`).join('|');
+//     } else if (base === 'number'){
+//         result = options
+//             .filter(o => /\d\.?\d*/.test(o))
+//             .filter(n => (!maxInt || n <= maxInt))
+//             .filter(n => (!minInt || n >= minInt))
+//             .join('|').replace(/\|+/g, '|');
+//         // if (result === '.'){
+//         //     result = '0|1|2|3|4|5|6|7|8|9';
+//         // }
+//
+//     } else {
+//         result = base;
+//     }
+//
+//     if (result.length > 500) {
+//         result = null;
+//     }
+//     log('state3:', option, options, optionVariants, newOptionVariants);
+//
+//     console.log('\n' , pattern, '=>' , result, '\n');
+//     return result || base;
+// }
+//
+//
+//
