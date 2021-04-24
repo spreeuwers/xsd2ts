@@ -3,7 +3,7 @@
  */
 import {FileDefinition} from "ts-code-generator";
 import {ClassGenerator} from "../src/classGenerator";
-import {regexpPattern2typeAlias, series, variants, range, char, specials} from "../src/regexp2aliasType";
+import {regexpPattern2typeAlias, series, variants, range, char, specials, option, group, expression} from "../src/regexp2aliasType";
 import {log} from "../src/xml-utils";
 import * as fs from "fs";
 
@@ -263,58 +263,138 @@ describe("ClassGenerator", () => {
 
         });
 
-        fit ("returns as type alias for regexps" , () => {
-            let v = null;
-            let i = 0;
-            //
-            // [v, i] = specials(0, '\\d');
-            // expect(v).toBe('0123456789');
-            // [v, i] = specials(0, 'a');
-            // expect(v).toBe('');
-            //
-            // [v, i] = specials(0, '\\\\');
-            // expect(v).toBe('\\\\');
-            //
-            // [v, i] = char(0, 'a');
-            // expect(v).toBe('a');
-            // [v, i] = range(0, '[');
-            // expect(v).toBe('');
-            //
-            // [v, i] = range(0, 'a-z');
-            // expect(v).toBe('abcdefghijklmnopqrstuvwxyz');
-            // [v, i] = range(0, 'a');
-            // expect(v).toBe('');
-            //
-            // [v, i] = series(0, '[\\d]');
-            // expect(v).toBe('0123456789');
-            //
-            // [v, i] = series(0, '[\\w]');
-            // expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-            //
-            // [v, i] = series(0, '[.]');
-            // expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~§±!@#$%^&*()-_=+[]{}|;:.,');
-            // //
-            // [v, i] = series(0, '[A\\d]');
-            // expect(v).toBe('A0123456789');
-            //
-            // [v, i] = series(0, '[A-Z]');
-            // expect(v).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-            // [v, i] = series(0, '[a-Z]');
-            // expect(v).toBe('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-            // [v, i] = series(0, '[5-g]');
-            // expect(v).toBe('56789abcdefg');
-            // [v, i] = variants('5g');
-            // expect(v).toBe('5g');
-            //
-            // [v, i] = variants('\\d');
-            // expect(v).toBe('0|1|2|3|4|5|6|7|8|9');
-            // [v, i] = variants('A\\d');
-            // expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+    it ("returns a charset   for special chars" , () => {
+        let v = null;
+        let i = 0;
+        //
+        [v, i] = specials(0, '\\d');
+        expect(v).toBe('0123456789');
+        [v, i] = specials(0, 'a');
+        expect(v).toBe('');
 
-            [v, i] = variants('A\\d+', 0, 3);
-            expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+        [v, i] = specials(0, '\\\\');
+        expect(v).toBe('\\\\');
+    });
+
+    it ("returns a charset for series" , () => {
+        let v = null;
+        let i = 0;
+        [v, i] = char(0, 'a');
+        expect(v).toBe('a');
+
+        [v, i] = range(0, '[');
+        expect(v).toBe('');
+
+        [v, i] = range(0, 'a-z');
+        expect(v).toBe('abcdefghijklmnopqrstuvwxyz');
+        [v, i] = range(0, 'a');
+        expect(v).toBe('');
+
+        [v, i] = series(0, '[\\d]');
+        expect(v).toBe('0123456789');
+
+        [v, i] = series(0, '[\\w]');
+        expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+        [v, i] = series(0, '[.]');
+        expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~§±!@#$%^&*()-_=+[]{}|;:.,');
+        //
+        [v, i] = series(0, '[A\\d]');
+        expect(v).toBe('A0123456789');
+
+        [v, i] = series(0, '[A-Z]');
+        expect(v).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+        [v, i] = series(0, '[a-Z]');
+        expect(v).toBe('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+        [v, i] = series(0, '[5-g]');
+        expect(v).toBe('56789abcdefg');
+    });
+
+   it("returns options for variants []", () => {
+        let v = null;
+        let i = 0;
+
+        [v, i] = variants('5g');
+        expect(v).toBe('5g');
+
+        [v, i] = variants('\\d');
+        expect(v).toBe('0|1|2|3|4|5|6|7|8|9');
+        [v, i] = variants('A\\d');
+        expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+
+        [v, i] = variants('A\\d+', 0, 2);
+        expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+
+        [v, i] = variants('(A|B)C', 5, 2);
+        expect(v).toBe('C');
+
+        [v, i] = option('A|B', 0, 2);
+        expect(v).toBe('A|B');
 
 
 
-        });
+        // [v, i] = group('(A|B)', 0, 2);
+        // expect(v).toBe('A|B');
+        // //
+        // [v, i] = expression('(A|B)C', 0, 2);
+        // expect(v).toBe('AC|BC');
+
+
+    });
+
+
+    it("returns options for option", () => {
+        let v = null;
+        let i = 0;
+
+        [v, i] = option('A|B', 0, 2);
+        expect(v).toBe('A|B');
+        [v, i] = option('A|\\d', 0, 2);
+        expect(v).toBe('A|0|1|2|3|4|5|6|7|8|9');
+        [v, i] = option('A|\\d|B', 0, 2);
+        expect(v).toBe('A|0|1|2|3|4|5|6|7|8|9|B');
+        [v, i] = option('A|123|B', 0, 2);
+        expect(v).toBe('A|123|B');
+
+        [v, i] = option('(A|B)C', 5, 2);
+        expect(v).toBe('C');
+
+
+
+
+    });
+
+    it("returns options for group", () => {
+        let v = null;
+        let i = 0;
+
+
+        [v, i] = group('(A|B)', 0, 2);
+        expect(v).toBe('A|B');
+        [v, i] = group('(A|B|\\d)', 0, 2);
+        expect(v).toBe('A|B|0|1|2|3|4|5|6|7|8|9');
+
+        [v, i] = group('(A|B)C', 5, 2);
+        expect(v).toBe('');
+        [v, i] = group('(A|BC', 0, 2);
+        expect(v).toBe('');
+
+
+
+    });
+
+    fit("returns options for expression", () => {
+        let v = null;
+        let i = 0;
+        // [v, i] = expression('(A|B)', 0, 2);
+        // expect(v).toBe('A|B');
+
+        [v, i] = expression('(A|B)C', 0, 2);
+        expect(v).toBe('AC|BC');
+
+        [v, i] = expression('A(B|C)D', 0);
+        expect(v).toBe('ABD|ACD');
+
+
+    });
 });
