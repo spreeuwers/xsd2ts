@@ -266,43 +266,55 @@ describe("ClassGenerator", () => {
         fit ("returns as type alias for regexps" , () => {
             let v = null;
             let i = 0;
-
-            [v, i] = specials(0, '\\d');
-            expect(v).toBe('0123456789');
-            [v, i] = specials(0, 'a');
-            expect(v).toBe('');
-
-            [v, i] = char(0, 'a');
-            expect(v).toBe('a');
-            [v, i] = range(0, '[');
-            expect(v).toBe('');
-
-            [v, i] = range(0, 'a-z');
-            expect(v).toBe('abcdefghijklmnopqrstuvwxyz');
-            [v, i] = range(0, 'a');
-            expect(v).toBe('');
-
-            [v, i] = series(0, '[\\d]');
-            expect(v).toBe('0123456789');
-
-            [v, i] = series(0, '[\\w]');
-            expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-
-            [v, i] = series(0, '[.]');
-            expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~§±!@#$%^&*()-_=+[]{}|;:.,');
             //
-            [v, i] = series(0, '[A\\d]');
-            expect(v).toBe('A0123456789');
+            // [v, i] = specials(0, '\\d');
+            // expect(v).toBe('0123456789');
+            // [v, i] = specials(0, 'a');
+            // expect(v).toBe('');
+            //
+            // [v, i] = specials(0, '\\\\');
+            // expect(v).toBe('\\\\');
+            //
+            // [v, i] = char(0, 'a');
+            // expect(v).toBe('a');
+            // [v, i] = range(0, '[');
+            // expect(v).toBe('');
+            //
+            // [v, i] = range(0, 'a-z');
+            // expect(v).toBe('abcdefghijklmnopqrstuvwxyz');
+            // [v, i] = range(0, 'a');
+            // expect(v).toBe('');
+            //
+            // [v, i] = series(0, '[\\d]');
+            // expect(v).toBe('0123456789');
+            //
+            // [v, i] = series(0, '[\\w]');
+            // expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+            //
+            // [v, i] = series(0, '[.]');
+            // expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~§±!@#$%^&*()-_=+[]{}|;:.,');
+            // //
+            // [v, i] = series(0, '[A\\d]');
+            // expect(v).toBe('A0123456789');
+            //
+            // [v, i] = series(0, '[A-Z]');
+            // expect(v).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+            // [v, i] = series(0, '[a-Z]');
+            // expect(v).toBe('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+            // [v, i] = series(0, '[5-g]');
+            // expect(v).toBe('56789abcdefg');
+            // [v, i] = variants('5g');
+            // expect(v).toBe('5g');
+            //
+            // [v, i] = variants('\\d');
+            // expect(v).toBe('0|1|2|3|4|5|6|7|8|9');
+            // [v, i] = variants('A\\d');
+            // expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
 
-            [v, i] = series(0, '[A-Z]');
-            expect(v).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-            [v, i] = series(0, '[a-Z]');
-            expect(v).toBe('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-            [v, i] = series(0, '[5-g]');
-            expect(v).toBe('56789abcdefg');
-            [v, i] = variants('5g');
-            expect(v).toBe('5g');
-            v = series(0, '\\\\');
-            expect(v).toBe('\\\\');
+            [v, i] = variants('A\\d+', 0, 3);
+            expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+
+
+
         });
 });

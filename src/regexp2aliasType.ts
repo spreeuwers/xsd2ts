@@ -11,19 +11,23 @@ export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
 export const allW = digits + a2z + A2Z;
 export const allC = digits + a2z + A2Z + leestekens;
 
-const tokens = {
+const SPECIALS = {
     '\\d': digits,
     '\\w': allW,
     '\\.': '.',
     '\\-': '-',
     '\\[': '[',
     '\\]': ']',
+    '\\*': '*',
+    '\\+': '+',
     '.'  : allC,
-    '\\\\': '\\\\'
+    '\\\\': '\\\\',
 };
 
 
-function makeVariants(optionVariants: any, series: string, maxLength: number, ) {
+
+
+function makeVariants(optionVariants: any, series: string, maxLength: number) {
     const newOptionVariants: string[] = [];
     optionVariants.forEach((ov) => {
         series.split('').forEach(s => {
@@ -68,7 +72,7 @@ export function char(index: number, pattern: string): [string, number] {
     if (matches && matches.index === 0) {
         console.log('char:', matches[1]);
         result += matches[1];
-        index ++;
+        index++;
     }
     return [result, index];
 }
@@ -77,10 +81,10 @@ export function specials(index: number, pattern: string): [string, number] {
     let result = '';
     let part = pattern.substring(index);
     console.log('idx, pattern:', index, pattern);
-    for (let t in tokens) {
+    for (let t in SPECIALS) {
         if (part.indexOf(t) === 0) {
             console.log('special found:', t);
-            result = tokens[t];
+            result = SPECIALS[t];
             index += t.length;
             break;
         }
@@ -107,6 +111,7 @@ export function series(index: number, pattern: string): [string, number] {
             index = i;
             continue;
         }
+
         [r, i] = range(index, pattern);
         if (r) {
             result += r;
@@ -124,9 +129,9 @@ export function series(index: number, pattern: string): [string, number] {
         if (index >= pattern.length){
             return ['', offset];
         }
-        console.log('result:', result, index , pattern.length);
+        console.log('series subresult:', result, index , pattern.length);
     }
-    console.log('result:', result, index , pattern.length);
+    console.log('series result:', result, index , pattern.length);
     return [result, index];
 }
 
@@ -134,14 +139,56 @@ export function series(index: number, pattern: string): [string, number] {
 //
 // }
 
-export function variants( pattern: string, index = 0): [string, number]  {
-    let part = pattern.substring(index);
-    console.log('pattern:', index, pattern);
+export function variants( pattern: string, index = 0, maxLength = 10): [string, number]  {
+    console.log('variants pattern:', index, pattern);
+    const offset = index;
+    let  [r, i] = ['', 0];
+    let result = '';
+    let options = [''];
+    while (pattern[index] !== '|' && index < pattern.length) {
 
-    let [result, idx] = series(index, part);
+        [r, i] = specials(index, pattern);
+        if (r) {
+            options = makeVariants(options, r, maxLength);
+            index = i;
+            result = r;
+            continue;
+        }
 
+        [r, i] = series(index, pattern);
+        if (r) {
+            options = makeVariants(options, r, maxLength);
+            index = i;
+            result = r;
+            continue;
+        }
 
-    return [result, idx];
+        [r, i] = char(index, pattern);
+        if (r) {
+            options = makeVariants(options, r, maxLength);
+            index = i;
+            result = r;
+            continue;
+        }
+
+        if (pattern[index] === '+') {
+            let prevLength = options.length;
+            do {
+                options = makeVariants(options, result, maxLength);
+                prevLength = options.length;
+            }
+            while (prevLength < options.length);
+
+            index++;
+            continue;
+        }
+        break;
+
+    }
+    result = options.join('|');
+    console.log('variants result:', result);
+
+    return [result, index];
 }
 
 export function regexpPattern2typeAlias(pattern: string, base: string, attr?: object): string {
