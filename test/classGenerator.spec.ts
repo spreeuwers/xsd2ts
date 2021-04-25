@@ -228,7 +228,7 @@ describe("ClassGenerator", () => {
             expect(classFile.classes.length).toBe(3);
         });
 
-        it ("returns as type alias for regexps" , () => {
+        fit ("returns as type alias for regexps" , () => {
             let alias = '';
             alias = regexpPattern2typeAlias('', 'string');
             expect(alias).toBe('string');
@@ -244,16 +244,17 @@ describe("ClassGenerator", () => {
             expect(alias).toBe('"A1"|"A2"|"B"|"C3"|"C4"');
             alias = regexpPattern2typeAlias('A[\\d]|B', 'string');
             expect(alias).toBe('"A0"|"A1"|"A2"|"A3"|"A4"|"A5"|"A6"|"A7"|"A8"|"A9"|"B"');
-             //alias = regexpPattern2typeAlias('pre|[b-dC-E4-7]|mid|[A]|post', 'string');
-             //expect(alias).toBe('"pre"|"b"|"c"|"d"|"C"|"D"|"E"|"4"|"5"|"6"|"7"|"mid"|"A"|"post"');
-             //alias = regexpPattern2typeAlias('a[b-c1-3]', 'string');
-             //expect(alias).toBe('"ab"|"ac"|"a1"|"a2"|"a3"');
-             //alias = regexpPattern2typeAlias("[P\\-][B\\-][A\\-]", 'string');
-             //expect(alias).toBe('"PBA"|"-BA"|"P-A"|"--A"|"PB-"|"-B-"|"P--"|"---"');
-            // alias = regexpPattern2typeAlias("[\\d]+", 'number', {maxLength: 1});
-            // expect(alias).toBe('0|1|2|3|4|5|6|7|8|9');
-            // alias = regexpPattern2typeAlias("\\d+", 'number', {maxLength: 2});
-            // expect(alias).toBe(zero_99);
+            //
+            // alias = regexpPattern2typeAlias('pre|[b-dC-E4-7]|mid|[A]|post', 'string');
+            // expect(alias).toBe('"pre"|"b"|"c"|"d"|"C"|"D"|"E"|"4"|"5"|"6"|"7"|"mid"|"A"|"post"');
+            // alias = regexpPattern2typeAlias('a[b-c1-3]', 'string');
+            // expect(alias).toBe('"ab"|"ac"|"a1"|"a2"|"a3"');
+            // alias = regexpPattern2typeAlias("[P\\-][B\\-][A\\-]", 'string');
+            // expect(alias).toBe('"PBA"|"PB-"|"P-A"|"P--"|"-BA"|"-B-"|"--A"|"---"');
+            alias = regexpPattern2typeAlias("[\\d]+", 'number', {maxLength: 1});
+            expect(alias).toBe('0|1|2|3|4|5|6|7|8|9');
+            alias = regexpPattern2typeAlias("\\d+", 'number', {maxLength: 2});
+            expect(alias).toBe(zero_99);
             // alias = regexpPattern2typeAlias("[\\d]+", 'number', {maxLength: 2});
             // expect(alias).toEqual(zero_99);
             // alias = regexpPattern2typeAlias("(\\d*)", 'number', {maxLength: 2});
@@ -287,11 +288,13 @@ describe("ClassGenerator", () => {
 
         [v, i] = range(0, 'a-z');
         expect(v).toBe('abcdefghijklmnopqrstuvwxyz');
+
         [v, i] = range(0, 'a');
         expect(v).toBe('');
 
         [v, i] = series(0, '[\\d]');
         expect(v).toBe('0123456789');
+        expect(i).toBe(4);
 
         [v, i] = series(0, '[\\w]');
         expect(v).toBe('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
@@ -324,20 +327,22 @@ describe("ClassGenerator", () => {
 
         [v, i] = variants('A\\d+', 0, 2);
         expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
-
+        //
+        //
+        //
         [v, i] = variants('(A|B)C', 5, 2);
         expect(v).toBe('C');
 
         [v, i] = option('A|B', 0, 2);
-        expect(v).toBe('A|B');
+        expect(v).toEqual([ 'A', 'B' ]);
+
+        [v, i] = group('(A|B)', 0, 2);
+        expect(v).toEqual([ 'A', 'B' ]);
+        //
+        [v, i] = expression('(A|B)C', 0, 2);
+        expect(v).toBe('AC|BC');
 
 
-
-        // [v, i] = group('(A|B)', 0, 2);
-        // expect(v).toBe('A|B');
-        // //
-        // [v, i] = expression('(A|B)C', 0, 2);
-        // expect(v).toBe('AC|BC');
 
 
     });
@@ -348,16 +353,16 @@ describe("ClassGenerator", () => {
         let i = 0;
 
         [v, i] = option('A|B', 0, 2);
-        expect(v).toBe('A|B');
+        expect(v).toEqual([ 'A', 'B' ]);
         [v, i] = option('A|\\d', 0, 2);
-        expect(v).toBe('A|0|1|2|3|4|5|6|7|8|9');
+        expect(v.join('|')).toBe('A|0|1|2|3|4|5|6|7|8|9');
         [v, i] = option('A|\\d|B', 0, 2);
-        expect(v).toBe('A|0|1|2|3|4|5|6|7|8|9|B');
+        expect(v.join('|')).toBe('A|0|1|2|3|4|5|6|7|8|9|B');
         [v, i] = option('A|123|B', 0, 2);
-        expect(v).toBe('A|123|B');
+        expect(v.join('|')).toBe('A|123|B');
 
         [v, i] = option('(A|B)C', 5, 2);
-        expect(v).toBe('C');
+        expect(v.join('|')).toBe('C');
 
 
 
@@ -370,31 +375,52 @@ describe("ClassGenerator", () => {
 
 
         [v, i] = group('(A|B)', 0, 2);
-        expect(v).toBe('A|B');
+        expect(v.join('|')).toBe('A|B');
+
         [v, i] = group('(A|B|\\d)', 0, 2);
-        expect(v).toBe('A|B|0|1|2|3|4|5|6|7|8|9');
+        expect(v.join('|')).toBe('A|B|0|1|2|3|4|5|6|7|8|9');
 
         [v, i] = group('(A|B)C', 5, 2);
-        expect(v).toBe('');
+        expect(v).toBe(null);
+
         [v, i] = group('(A|BC', 0, 2);
-        expect(v).toBe('');
+        expect(v).toBe(null);
 
 
 
     });
 
-    fit("returns options for expression", () => {
+    it("returns options for expression", () => {
         let v = null;
         let i = 0;
-        // [v, i] = expression('(A|B)', 0, 2);
-        // expect(v).toBe('A|B');
+        [v, i] = expression('A|B', 0, 2);
+        expect(v).toBe('A|B');
+
+        [v, i] = expression('(A|B|\\d)', 0, 2);
+        expect(v).toBe('A|B|0|1|2|3|4|5|6|7|8|9');
+
+        [v, i] = expression('(A|B)', 0, 2);
+        expect(v).toBe('A|B');
 
         [v, i] = expression('(A|B)C', 0, 2);
         expect(v).toBe('AC|BC');
-
+        //
         [v, i] = expression('A(B|C)D', 0);
         expect(v).toBe('ABD|ACD');
 
+        [v, i] = expression('A(B|C)|D|E', 0);
+        expect(v).toBe('AB|AC|D|E');
 
+        [v, i] = expression('(A|B)(D|E)', 0);
+        expect(v).toBe('AD|AE|BD|BE');
+
+        [v, i] = expression('(A|B)(D|E)(F|G)', 0);
+        expect(v).toBe('ADF|ADG|AEF|AEG|BDF|BDG|BEF|BEG');
+
+        [v, i] = expression('(A|B)|(D|E)|(F|G)', 0);
+        expect(v).toBe('A|B|D|E|F|G');
+
+        [v,i] = expression('A[12]|B|C[34]');
+        expect(v).toBe('A1|A2|B|C3|C4');
     });
 });
