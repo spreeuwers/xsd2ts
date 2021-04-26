@@ -109,20 +109,21 @@ describe("regexpPattern2typeAlias", () => {
         let i = 0;
 
         [v, i] = variants('5g');
-        expect(v).toBe('5g');
+        expect(v.join('|')).toBe('5g');
 
         [v, i] = variants('\\d');
-        expect(v).toBe('0|1|2|3|4|5|6|7|8|9');
+        expect(v.join('|')).toBe('0|1|2|3|4|5|6|7|8|9');
+
         [v, i] = variants('A\\d');
-        expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+        expect(v.join('|')).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
 
         [v, i] = variants('A\\d+', 0, 2);
-        expect(v).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+        expect(v.join('|')).toBe('A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
         //
         //
         //
         [v, i] = variants('(A|B)C', 5, 2);
-        expect(v).toBe('C');
+        expect(v.join('|')).toBe('C');
 
         [v, i] = option('A|B', 0, 2);
         expect(v).toEqual([ 'A', 'B' ]);
@@ -131,7 +132,7 @@ describe("regexpPattern2typeAlias", () => {
         expect(v).toEqual([ 'A', 'B' ]);
         //
         [v, i] = expression('(A|B)C', 0, 2);
-        expect(v).toBe('AC|BC');
+        expect(v.join('|')).toBe('AC|BC');
 
 
 
@@ -185,33 +186,33 @@ describe("regexpPattern2typeAlias", () => {
         let v = null;
         let i = 0;
         [v, i] = expression('A|B', 0, 2);
-        expect(v).toBe('A|B');
+        expect(v.join('|')).toBe('A|B');
 
         [v, i] = expression('(A|B|\\d)', 0, 2);
-        expect(v).toBe('A|B|0|1|2|3|4|5|6|7|8|9');
+        expect(v.join('|')).toBe('A|B|0|1|2|3|4|5|6|7|8|9');
 
         [v, i] = expression('(A|B)', 0, 2);
-        expect(v).toBe('A|B');
+        expect(v.join('|')).toBe('A|B');
 
         [v, i] = expression('(A|B)C', 0, 2);
-        expect(v).toBe('AC|BC');
+        expect(v.join('|')).toBe('AC|BC');
         //
         [v, i] = expression('A(B|C)D', 0);
-        expect(v).toBe('ABD|ACD');
+        expect(v.join('|')).toBe('ABD|ACD');
 
         [v, i] = expression('A(B|C)|D|E', 0);
-        expect(v).toBe('AB|AC|D|E');
+        expect(v.join('|')).toBe('AB|AC|D|E');
 
         [v, i] = expression('(A|B)(D|E)', 0);
-        expect(v).toBe('AD|AE|BD|BE');
+        expect(v.join('|')).toBe('AD|AE|BD|BE');
 
         [v, i] = expression('(A|B)(D|E)(F|G)', 0);
-        expect(v).toBe('ADF|ADG|AEF|AEG|BDF|BDG|BEF|BEG');
+        expect(v.join('|')).toBe('ADF|ADG|AEF|AEG|BDF|BDG|BEF|BEG');
 
         [v, i] = expression('(A|B)|(D|E)|(F|G)', 0);
-        expect(v).toBe('A|B|D|E|F|G');
+        expect(v.join('|')).toBe('A|B|D|E|F|G');
 
         [v,i] = expression('A[12]|B|C[34]');
-        expect(v).toBe('A1|A2|B|C3|C4');
+        expect(v.join('|')).toBe('A1|A2|B|C3|C4');
     });
 });
