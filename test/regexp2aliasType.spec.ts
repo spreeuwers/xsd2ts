@@ -12,22 +12,22 @@ const zero_99 = '0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|2
 
 
 describe("regexpPattern2typeAlias", () => {
-       fit ("returns as type alias for regexps" , () => {
+       it ("returns as type alias for regexps" , () => {
             let alias = '';
-            // alias = regexpPattern2typeAlias('', 'string');
-            // expect(alias).toBe('string');
-            // alias = regexpPattern2typeAlias('A', 'string');
-            // expect(alias).toBe('"A"');
-            // alias = regexpPattern2typeAlias('A|B|C', 'string');
-            // expect(alias).toBe('"A"|"B"|"C"');
-            // alias = regexpPattern2typeAlias('[ABC]', 'string');
-            // expect(alias).toBe('"A"|"B"|"C"');
-            // alias = regexpPattern2typeAlias('A[12]', 'string');
-            // expect(alias).toBe('"A1"|"A2"');
-            // alias = regexpPattern2typeAlias('A[12]|B|C[34]', 'string');
-            // expect(alias).toBe('"A1"|"A2"|"B"|"C3"|"C4"');
-            // alias = regexpPattern2typeAlias('A[\\d]|B', 'string');
-            // expect(alias).toBe('"A0"|"A1"|"A2"|"A3"|"A4"|"A5"|"A6"|"A7"|"A8"|"A9"|"B"');
+            alias = regexpPattern2typeAlias('', 'string');
+            expect(alias).toBe('string');
+            alias = regexpPattern2typeAlias('A', 'string');
+            expect(alias).toBe('"A"');
+            alias = regexpPattern2typeAlias('A|B|C', 'string');
+            expect(alias).toBe('"A"|"B"|"C"');
+            alias = regexpPattern2typeAlias('[ABC]', 'string');
+            expect(alias).toBe('"A"|"B"|"C"');
+            alias = regexpPattern2typeAlias('A[12]', 'string');
+            expect(alias).toBe('"A1"|"A2"');
+            alias = regexpPattern2typeAlias('A[12]|B|C[34]', 'string');
+            expect(alias).toBe('"A1"|"A2"|"B"|"C3"|"C4"');
+            alias = regexpPattern2typeAlias('A[\\d]|B', 'string');
+            expect(alias).toBe('"A0"|"A1"|"A2"|"A3"|"A4"|"A5"|"A6"|"A7"|"A8"|"A9"|"B"');
             // //
             alias = regexpPattern2typeAlias('pre|[b-dC-E4-7]|mid|[A]|post', 'string');
             expect(alias).toBe('"pre"|"4"|"5"|"6"|"7"|"C"|"D"|"E"|"b"|"c"|"d"|"mid"|"A"|"post"');
@@ -41,17 +41,18 @@ describe("regexpPattern2typeAlias", () => {
             expect(alias).toBe(zero_99);
             alias = regexpPattern2typeAlias("[\\d]+", 'number', {maxLength: 2});
             expect(alias).toEqual(zero_99);
-            alias = regexpPattern2typeAlias("\\d*", 'number', {maxLength: 2});
-            expect(alias).toEqual(zero_99);
             alias = regexpPattern2typeAlias("\\d+", 'number', {maxLength: 1});
             expect(alias).toBe('0|1|2|3|4|5|6|7|8|9');
-            // let options = buildVariants(['A'], ['','B','BB', 'BBB'], 3);
-            // console.log(options);
-            // expect(options.join('|')).toEqual('A|AB|ABB');
-            // alias = regexpPattern2typeAlias("AB*", 'string', {maxLength: 3});
-            // expect(alias).toEqual('"A"|"AB"|"ABB"');
-            // alias = regexpPattern2typeAlias("AB+", 'string', {maxLength: 5});
-            // expect(alias).toEqual('"AB"|"ABB"|"ABBB"|"ABBBB"');
+            let options = buildVariants(['A'], ['', 'B', 'BB', 'BBB'], 3);
+            console.log(options);
+            expect(options.join('|')).toEqual('A|AB|ABB');
+
+            alias = regexpPattern2typeAlias("AB*", 'string', {maxLength: 3});
+            console.log('alias:', alias);
+            expect(alias).toEqual('"A"|"AB"|"ABB"');
+
+            alias = regexpPattern2typeAlias("AB+", 'string', {maxLength: 5});
+            expect(alias).toEqual('"AB"|"ABB"|"ABBB"|"ABBBB"');
 
         });
 

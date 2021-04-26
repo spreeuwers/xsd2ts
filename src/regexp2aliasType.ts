@@ -230,9 +230,11 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
 
         if (pattern[index] === '*') {
             options = options.map(o => o.substring(0, o.length - 1));
+            const chars = result.split('');
+            chars.unshift('');
             while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){
                 console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
-                options = makeVariants(options, result, maxLength);
+                options = buildVariants(options, chars, maxLength);
             }
             index++;
             continue;
@@ -395,6 +397,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
         result = options
             .filter(n => !maxLength || ('' + n).length <= maxLength)
             .map(o => `"${o}"`).join('|');
+        //log('string result :', result);
     } else if (base === 'number'){
         result = options
             .filter( o => /\d\.?\d*/.test(o))
@@ -409,6 +412,11 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
     } else {
         result = base;
     }
+    if (result.length > 500){
+        result = base;
+    }
+    log('result :', result);
+
     return result || base;
 }
 

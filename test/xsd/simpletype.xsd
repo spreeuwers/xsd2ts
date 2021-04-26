@@ -167,7 +167,7 @@
         <xs:simpleType>
             <xs:restriction base="xs:string">
                 <xs:maxLength value="1"/>
-                <xs:pattern value="A\d"/>
+                <xs:pattern value="A\\d"/>
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
@@ -203,7 +203,7 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="nrMaxinclusive95_25">
+    <xs:element name="nrMinMaxinclusive9to95_25">
         <xs:simpleType>
             <xs:restriction base="xs:integer">
                 <xs:maxInclusive value="95"/>
