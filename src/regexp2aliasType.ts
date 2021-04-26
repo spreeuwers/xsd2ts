@@ -3,6 +3,7 @@
  */
 import {log} from "./xml-utils";
 import max = require("lodash/fp/max");
+import last = require("lodash/fp/last");
 
 
 export const digits = '0123456789';
@@ -11,6 +12,7 @@ export const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
 export const allW = digits + a2z + A2Z;
 export const allC = digits + a2z + A2Z + leestekens;
+const CHAR_TYPE = 'char';
 
 const SPECIALS = {
     '\\d': digits,
@@ -19,15 +21,18 @@ const SPECIALS = {
     '\\-': '-',
     '\\[': '[',
     '\\]': ']',
+    '\\{': '{',
+    '\\}': '}',
     '\\*': '*',
     '\\+': '+',
+    '\\?': '?',
     '.'  : allC,
     '\\\\': '\\\\',
 };
 
 
 
-function buildVariants(optionVariants: any, series: string[], maxLength: number) {
+export function buildVariants(optionVariants: any, series: string[], maxLength: number) {
     const newOptionVariants: string[] = [];
     (optionVariants || []).forEach((ov) => {
         (series || []).forEach(s => {
@@ -42,7 +47,7 @@ function buildVariants(optionVariants: any, series: string[], maxLength: number)
 
 }
 
-function makeVariants(optionVariants: any, series: string, maxLength: number) {
+export function makeVariants(optionVariants: any, series: string, maxLength: number) {
     return buildVariants(optionVariants, series.split(''), maxLength);
 }
 
@@ -74,7 +79,7 @@ export function range(index: number, pattern: string): [string, number] {
 export function char(index: number, pattern: string): [string, number] {
     let result = '';
     const part = pattern.substring(index);
-    const matches = part.match(/(\w)/);
+    const matches = part.match(/(\w|<|>)/);
     //console.log('char matches:', matches);
     if (matches && matches.index === 0) {
         //console.log('char:', matches[1]);
@@ -138,7 +143,8 @@ export function series(index: number, pattern: string): [string, number] {
         if (index >= pattern.length){
             return ['', offset];
         }
-        //console.log('series subresult:', result, index , pattern.length);
+        console.log('series subresult:', result, index , pattern.length);
+        break;
     }
     if (pattern[index] === ']'){
         index++;
@@ -148,6 +154,17 @@ export function series(index: number, pattern: string): [string, number] {
 }
 
 
+function makeZeroOrMoreSeries(c: string, maxLength: number): string[] {
+    const result = [''];
+    while (result[result.length - 1].length <= maxLength) {
+        let s = result[result.length - 1];
+        result.push(s + c);
+    }
+    return result;
+}
+
+
+
 
 export function variants( pattern: string, index = 0, maxLength = 10): [string[], number]  {
     console.log('   variants pattern:', index, pattern);
@@ -155,48 +172,74 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
     let  [r, i] = ['', 0];
     let result = null;
     let options = [''];
+    let startOptionIndex = 0;
+    let lastOptionType = null;
     while (pattern[index] !== '|' && index < pattern.length) {
-        //console.log('while:', result, options );
+        console.log('while:', result, options, pattern );
+
         [r, i] = specials(index, pattern);
         if (r) {
+            startOptionIndex = options.length;
             options = makeVariants(options, r, maxLength);
             index = i;
             result = r;
+            lastOptionType = 'special';
             continue;
         }
 
         [r, i] = series(index, pattern);
         if (r) {
+            startOptionIndex = options.length;
             options = makeVariants(options, r, maxLength);
             index = i;
             result = r;
+            lastOptionType = 'series';
             continue;
         }
         //console.log('na series:', result, options );
 
         [r, i] = char(index, pattern);
+
         if (r) {
+            startOptionIndex = options.length;
             options = makeVariants(options, r, maxLength);
             index = i;
             result = r;
+            lastOptionType = CHAR_TYPE;
             continue;
         }
         //console.log('na char:', result, options );
 
         if (pattern[index] === '+') {
 
-            let prevLength = options.length;
-            do {
+            if (lastOptionType === CHAR_TYPE) {
+                const c = pattern[index - 1];
+                result = makeZeroOrMoreSeries(c, maxLength);
+                //console.log('    buildVariants options:', options , result, maxLength);
+                options = buildVariants(options, result, maxLength);
+            } else {
                 options = makeVariants(options, result, maxLength);
-
-                prevLength = options.length;
-                console.log('makeVariants:', result, options );
             }
-            while (prevLength < options.length);
 
             index++;
             continue;
         }
+
+        if (pattern[index] === '*') {
+
+            if (lastOptionType === CHAR_TYPE) {
+                options = options.map(o => o.substring(0, o.length - 1));
+                const c = pattern[index - 1];
+                result = makeZeroOrMoreSeries(c, maxLength);
+                options = buildVariants(options, result, maxLength);
+            } else {
+                options = makeVariants(options, result, maxLength);
+            }
+
+            index++;
+            continue;
+        }
+
         break;
 
     }
@@ -332,7 +375,7 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
 
     }
     result = options;
-    console.log('expression result:', result);
+    //console.log('expression result:', result);
     index++;
     return [result, index];
 }
@@ -368,7 +411,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
     } else {
         result = base;
     }
-    return result;
+    return result || base;
 }
 
 
