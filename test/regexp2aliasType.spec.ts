@@ -130,25 +130,25 @@ describe("regexpPattern2typeAlias", () => {
        [v, i] = variants('\\d+', 0, 1);
        expect(v.join('|')).toBe( '0|1|2|3|4|5|6|7|8|9');
 
-       // [v, i] = variants('AB*', 0, 2);
-       // expect(v.join('|')).toBe('A|AB');
-       //
-       // [v, i] = variants('A\\d*', 0, 2);
-       // expect(v.join('|')).toBe('A|A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+       [v, i] = variants('AB*', 0, 2);
+       expect(v.join('|')).toBe('A|AB');
+
+       [v, i] = variants('A\\d*', 0, 2);
+       expect(v.join('|')).toBe('A|A0|A1|A2|A3|A4|A5|A6|A7|A8|A9');
+
+
+
+        [v, i] = variants('(A|B)C', 5, 2);
+        expect(v.join('|')).toBe('C');
+
+        [v, i] = option('A|B', 0, 2);
+        expect(v).toEqual([ 'A', 'B' ]);
+
+        [v, i] = group('(A|B)', 0, 2);
+        expect(v).toEqual([ 'A', 'B' ]);
         //
-        //
-        //
-        // [v, i] = variants('(A|B)C', 5, 2);
-        // expect(v.join('|')).toBe('C');
-        //
-        // [v, i] = option('A|B', 0, 2);
-        // expect(v).toEqual([ 'A', 'B' ]);
-        //
-        // [v, i] = group('(A|B)', 0, 2);
-        // expect(v).toEqual([ 'A', 'B' ]);
-        // //
-        // [v, i] = expression('(A|B)C', 0, 2);
-        // expect(v.join('|')).toBe('AC|BC');
+        [v, i] = expression('(A|B)C', 0, 2);
+        expect(v.join('|')).toBe('AC|BC');
 
 
 
