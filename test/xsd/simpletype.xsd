@@ -167,7 +167,7 @@
         <xs:simpleType>
             <xs:restriction base="xs:string">
                 <xs:maxLength value="1"/>
-                <xs:pattern value="A\\d"/>
+                <xs:pattern value="A\d"/>
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
