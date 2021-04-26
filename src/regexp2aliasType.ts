@@ -13,6 +13,7 @@ export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
 export const allW = digits + a2z + A2Z;
 export const allC = digits + a2z + A2Z + leestekens;
 const CHAR_TYPE = 'char';
+const MAX_OPTIONS_LENGTH = 1000;
 
 const SPECIALS = {
     '\\d': digits,
@@ -33,17 +34,18 @@ const SPECIALS = {
 
 
 export function buildVariants(optionVariants: any, series: string[], maxLength: number) {
-    const newOptionVariants: string[] = [];
+    const newOptionVariants: {[key: string]: number} = {};
     (optionVariants || []).forEach((ov) => {
         (series || []).forEach(s => {
-            if ((maxLength || 10000) >= (ov + s).length && newOptionVariants.indexOf(ov + s) < 0) {
-                newOptionVariants.push(ov + s);
-            } else if (newOptionVariants.indexOf(ov) < 0) {
-                newOptionVariants.push(ov);
+            if ((maxLength || 10000) >= (ov + s).length) {
+                newOptionVariants[ov + s] = 1;
+            } else  {
+                newOptionVariants[ov] = 1;
             }
         });
     });
-    return newOptionVariants;
+
+    return Object.keys(newOptionVariants).sort();
 
 }
 
@@ -175,7 +177,7 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
     let startOptionIndex = 0;
     let lastOptionType = null;
     while (pattern[index] !== '|' && index < pattern.length) {
-        console.log('while:', result, options, pattern );
+        console.log('while variant:', result, options, pattern );
 
         [r, i] = specials(index, pattern);
         if (r) {
@@ -214,6 +216,7 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
 
             if (lastOptionType === CHAR_TYPE) {
                 const c = pattern[index - 1];
+
                 result = makeZeroOrMoreSeries(c, maxLength);
                 //console.log('    buildVariants options:', options , result, maxLength);
                 options = buildVariants(options, result, maxLength);
@@ -226,16 +229,11 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
         }
 
         if (pattern[index] === '*') {
-
-            if (lastOptionType === CHAR_TYPE) {
-                options = options.map(o => o.substring(0, o.length - 1));
-                const c = pattern[index - 1];
-                result = makeZeroOrMoreSeries(c, maxLength);
-                options = buildVariants(options, result, maxLength);
-            } else {
+            options = options.map(o => o.substring(0, o.length - 1));
+            while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){
+                console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
                 options = makeVariants(options, result, maxLength);
             }
-
             index++;
             continue;
         }
@@ -327,7 +325,7 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
 
         if (pattern[index] === '|') {
             startIndex = options.length;
-            console.log('------option |', options, startIndex);
+            //log('------option |', options, startIndex);
             index++;
         }
 
@@ -335,7 +333,7 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
         [r, i] = group(pattern, index);
         if (r) {
             const lastOptions = options.filter( (e,i,a) => i >= startIndex);
-            console.log('   expression group: r:', r, 'result:', result, 'options:', options, pattern[index], startIndex);
+            //log('   expression group: r:', r, 'result:', result, 'options:', options, pattern[index], startIndex);
 
             //remember index of start of options in group
             //startIndex = options.length;
@@ -343,7 +341,7 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             if (lastOptions.length === 0){
                 options = options.concat(r);
             } else {
-                console.log('   group buildVariants:', lastOptions, startIndex, options, r);
+                //log('   group buildVariants:', lastOptions, startIndex, options, r);
                 options = buildVariants(lastOptions, r, maxLength);
             }
             index = i;
