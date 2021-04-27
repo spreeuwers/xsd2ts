@@ -95,12 +95,14 @@ export function char(index: number, pattern: string): [string, number] {
 export function repeat(index: number, pattern: string): [string, number] {
     let result = '';
     const part = pattern.substring(index);
-    const matches = part.match(/\{(\d+)\}/);
-    //console.log('char matches:', matches);
+    const matches = part.match(/\{(\d+)(,\d+)?\}/);
+    console.log('char matches:', matches);
     if (matches && matches.index === 0) {
         //console.log('char:', matches[1]);
-        result += matches[1];
-        index += matches[1].length;
+        let min = matches[1];
+        let max = matches[2] || (','+matches[1]);
+        result = [min, max].join('');
+        index  += matches[0].length;
     }
     console.log('  repeat:', result);
     return [result, index];
@@ -227,19 +229,24 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
 
 
         //dectect {1} construct
-        // [r, i] = repeat(index, pattern);
-        //
-        // if (r) {
-        //     options = options.map(o => o.substring(0, o.length - 1));
-        //     const chars = result.split('');
-        //     chars.unshift('');
-        //     while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){
-        //         console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
-        //         options = buildVariants(options, chars, maxLength);
-        //     }
-        //     index++;
-        //     continue;;
-        // }
+        [r, i] = repeat(index, pattern);
+
+        if (r) {
+            const [min, max] = r.split(',').map(s => +s);
+
+            options = options.map(o => o.substring(0, o.length - 1));
+            const orgLength = options[options.length - 1].length;
+            //options = options.map(o => o.substring(0, o.length - 1));
+            const chars = result.split('');
+            chars.unshift('');
+            while (options[options.length - 1].length < Math.min(maxLength, (1+max)) && options.length < MAX_OPTIONS_LENGTH){
+                //console.log('    buildVariants options:', options, result, Math.min(maxLength, +max), options[options.length - 1].length, r);
+                options = buildVariants(options, chars, maxLength);
+            }
+            options = options.filter(o => o.length >= orgLength + min);
+            index = i;
+            continue;
+        }
 
         if (pattern[index] === '*'  || pattern[index] === '+') {
             if (pattern[index] === '*') {
