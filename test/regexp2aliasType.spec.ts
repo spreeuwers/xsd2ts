@@ -105,7 +105,7 @@ describe("regexpPattern2typeAlias", () => {
         expect(v).toBe('56789abcdefg');
     });
 
-    fit("returns options for variants {}", () => {
+    it("returns options for variants {}", () => {
         let v = null;
         let i = 0;
 
@@ -121,6 +121,9 @@ describe("regexpPattern2typeAlias", () => {
 
         // [v, i] = variants('A{3}');
         // expect(v.join('|')).toBe('AAA');
+
+        let alias = regexpPattern2typeAlias("[\\d]+", 'number', {maxLength: 1});
+        expect(alias).toBe('0|1|2|3|4|5|6|7|8|9');
     });
 
 

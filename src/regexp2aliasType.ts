@@ -421,6 +421,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
             .filter(n => !maxLength || ('' + n).length <= maxLength)
             .filter(n => (!maxInt || n <= maxInt))
             .filter(n => (!minInt || n >= minInt))
+            .filter( (n, i, a) => a.indexOf(n) === i) //ontdubbelen
             .join('|').replace(/\|+/g, '|');
 
 
