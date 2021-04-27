@@ -92,6 +92,20 @@ export function char(index: number, pattern: string): [string, number] {
     return [result, index];
 }
 
+export function repeat(index: number, pattern: string): [string, number] {
+    let result = '';
+    const part = pattern.substring(index);
+    const matches = part.match(/\{(\d+)\}/);
+    //console.log('char matches:', matches);
+    if (matches && matches.index === 0) {
+        //console.log('char:', matches[1]);
+        result += matches[1];
+        index += matches[1].length;
+    }
+    console.log('  repeat:', result);
+    return [result, index];
+}
+
 export function specials(index: number, pattern: string): [string, number] {
     let result = '';
     let part = pattern.substring(index);
@@ -210,26 +224,27 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
             lastOptionType = CHAR_TYPE;
             continue;
         }
-        //console.log('na char:', result, options );
 
-        if (pattern[index] === '+') {
 
-            if (lastOptionType === CHAR_TYPE) {
-                const c = pattern[index - 1];
+        //dectect {1} construct
+        // [r, i] = repeat(index, pattern);
+        //
+        // if (r) {
+        //     options = options.map(o => o.substring(0, o.length - 1));
+        //     const chars = result.split('');
+        //     chars.unshift('');
+        //     while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){
+        //         console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
+        //         options = buildVariants(options, chars, maxLength);
+        //     }
+        //     index++;
+        //     continue;;
+        // }
 
-                result = makeZeroOrMoreSeries(c, maxLength);
-                //console.log('    buildVariants options:', options , result, maxLength);
-                options = buildVariants(options, result, maxLength);
-            } else {
-                options = makeVariants(options, result, maxLength);
+        if (pattern[index] === '*'  || pattern[index] === '+') {
+            if (pattern[index] === '*') {
+                options = options.map(o => o.substring(0, o.length - 1));
             }
-
-            index++;
-            continue;
-        }
-
-        if (pattern[index] === '*') {
-            options = options.map(o => o.substring(0, o.length - 1));
             const chars = result.split('');
             chars.unshift('');
             while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){

@@ -105,6 +105,25 @@ describe("regexpPattern2typeAlias", () => {
         expect(v).toBe('56789abcdefg');
     });
 
+    fit("returns options for variants {}", () => {
+        let v = null;
+        let i = 0;
+
+        [v, i] = variants('[A]+', 0, 4);
+        expect(v.join('|')).toBe('A|AA|AAA|AAAA');
+        [v, i] = variants('A+', 0, 4);
+        expect(v.join('|')).toBe('A|AA|AAA|AAAA');
+
+        [v, i] = variants('[A]*', 0, 4);
+        expect(v.join('|')).toBe('|A|AA|AAA|AAAA');
+        [v, i] = variants('A*', 0, 4);
+        expect(v.join('|')).toBe('|A|AA|AAA|AAAA');
+
+        // [v, i] = variants('A{3}');
+        // expect(v.join('|')).toBe('AAA');
+    });
+
+
    it("returns options for variants []", () => {
         let v = null;
         let i = 0;
