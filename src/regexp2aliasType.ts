@@ -114,13 +114,13 @@ export function specials(index: number, pattern: string): [string, number] {
     //console.log('idx, pattern:', index, pattern);
     for (let t in SPECIALS) {
         if (part.indexOf(t) === 0) {
-            console.log('special found:', t);
+            console.log('    special found:', t);
             result = SPECIALS[t];
             index += t.length;
             break;
         }
     }
-    console.log('   specials:', result);
+    console.log('    specials:', result);
     return [result, index];
 }
 
@@ -185,15 +185,15 @@ function makeZeroOrMoreSeries(c: string, maxLength: number): string[] {
 
 
 export function variants( pattern: string, index = 0, maxLength = 10): [string[], number]  {
-    console.log('   variants pattern:', index, pattern);
+    console.log('   variants pattern:', index, pattern, pattern[index]);
     const offset = index;
     let  [r, i] = ['', 0];
     let result = null;
     let options = [''];
     let startOptionIndex = 0;
     let lastOptionType = null;
-    while (pattern[index] !== '|' && index < pattern.length) {
-        console.log('while variant:', result, options, pattern );
+    while (pattern[index] !== '|' && pattern[index] !== ')' && index < pattern.length) {
+        console.log('    while variant:', result, options, pattern );
 
         [r, i] = specials(index, pattern);
         if (r) {
@@ -247,9 +247,9 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
             index = i;
             continue;
         }
-
-        if (pattern[index] === '*'  || pattern[index] === '+') {
-            if (pattern[index] === '*') {
+        let c = pattern[index];
+        if ((c === '*'  || c === '+') && result !== null) {
+            if (c === '*') {
                 options = options.map(o => o.substring(0, o.length - 1));
             }
             const chars = result.split('');
@@ -266,21 +266,21 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
 
     }
     result = (offset === index) ? null : options;
-    //console.log('variants result:', result);
-    if (pattern[index] === '|'){
-        index++;
-    }
+    console.log('   variants result:', result, 'next:', pattern[index]);
+    // if (pattern[index] === '|'){
+    //     index++;
+    // }
     return [result, index];
 }
 
 export function option(pattern: string, index = 0,  maxLength = 10): [string[], number]  {
-    console.log('  options pattern:', index, pattern);
+    console.log('  options pattern:', index, pattern, pattern[index]);
     const offset = index;
     let  [r, i] = [null, 0];
     let result = null;
 
     while (index < pattern.length) {
-        //console.log('while option:', result, options);
+        console.log('  while option:', result, pattern[index], 'subpattern:', pattern.substring(index));
         [r, i] = variants(pattern, index);
         if (r) {
             if (!result) result = [];
@@ -288,17 +288,17 @@ export function option(pattern: string, index = 0,  maxLength = 10): [string[], 
             index = i;
             continue;
         }
-        if (pattern[index] === '|') {
-            index++;
-            continue;
+        if (pattern[index] === '|' ) {
+            console.log('     new option:', result, pattern[index],  pattern.substring(index + 1));
+            break;
         }
         break;
     }
-    //console.log('options result:', result);
+    console.log('    options result:', result, 'next:', pattern[index]);
 
-    if (pattern[index] === '|') {
-        index++;
-    }
+    // if (pattern[index] === '|') {
+    //     index++;
+    // }
     return [result, index];
 }
 
@@ -306,6 +306,7 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
 
     console.log(' groups pattern:', index, pattern);
     if (pattern[index] !== '(') {
+        console.log(' groups result:', null, pattern[index]);
         return [null, index];
     }
     const offset = index;
@@ -314,7 +315,7 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
     let options = [];
     index++;
     while (index < pattern.length) {
-        //console.log('while group:', result, options);
+        console.log('  while group:', result, options, index, pattern[index]);
         [r, i] = option(pattern, index);
         if (r) {
             options = options.concat(r);
@@ -322,8 +323,14 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
             result = r;
             continue;
         }
-
+        console.log('  while group after option:', result, options, index, pattern[index]);
+        if (pattern[index] == '|') {
+            console.log('     new group option:', result, pattern[index],  pattern.substring(index + 1));
+            index++;
+            continue;
+        }
         if (pattern[index] !== ')') {
+            console.log(' groups result:', null, pattern[offset]);
             return [null, offset];
         }
         break;
@@ -333,8 +340,8 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
         return [null, offset];
     }
     result = (options.length > 0) ? options : null;
-    console.log(' groups result:', result);
     index++;
+    console.log(' groups result:', result, pattern[index]);
     return [result, index];
 }
 
@@ -349,15 +356,15 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
 
         if (pattern[index] === '|') {
             startIndex = options.length;
-            //log('------option |', options, startIndex);
+            log('------option |', options, startIndex);
             index++;
         }
 
-        console.log('while expression1:', 'result:', result, 'options:', options, pattern[index], startIndex);
+        console.log(' while expression1 before group:', 'result:', result, 'options:', options, pattern[index], startIndex);
         [r, i] = group(pattern, index);
         if (r) {
             const lastOptions = options.filter( (e,i,a) => i >= startIndex);
-            //log('   expression group: r:', r, 'result:', result, 'options:', options, pattern[index], startIndex);
+            log('   expression group: r:', r, 'result:', result, 'options:', options, pattern[index], startIndex, 'lastOptions:',lastOptions);
 
             //remember index of start of options in group
             //startIndex = options.length;
@@ -373,12 +380,13 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             continue;
         }
 
-        console.log('   expression2:', result, options, pattern[index]);
+        console.log(' expression before option:', result, options, pattern[index]);
 
         [r, i] = option(pattern, index);
         if (r) {
             console.log('expression option:', r);
             const lastOptions = options.filter( (e,i,a) => i >= startIndex);
+            console.log('expression option/lastOptions:', lastOptions);
             if (lastOptions.length === 0) {
                 options = options.concat(r);
             } else {
@@ -390,7 +398,27 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             continue;
         }
 
+        let c = pattern[index];
 
+        console.log('c', c);
+;        if ((c === '*'  || c === '+') && result !== null) {
+            console.log('  expression * or +:', result);
+            let lastOptions = options.filter( (e,i,a) => i >= startIndex);
+            const firstOptions = options.filter( (e,i,a) => i < startIndex);
+            if (c === '*') {
+                lastOptions = lastOptions.map( o => o.substring(0, o.length - 1));
+            }
+            console.log('  buildVariants first & lastOptions:', firstOptions, lastOptions, options);
+            const chars = result;
+            chars.unshift('');
+            while (lastOptions[lastOptions.length - 1].length < maxLength && lastOptions.length < MAX_OPTIONS_LENGTH){
+                //console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
+                lastOptions = buildVariants(lastOptions, chars, maxLength);
+            }
+            options = firstOptions.concat(lastOptions);
+            index++;
+            continue;
+        }
         //must be handled otherwise break
         console.log('no match:', i, pattern[i]);
         break;
@@ -399,6 +427,7 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
     result = options;
     //console.log('expression result:', result);
     index++;
+    console.log(' expression result:', result, 'rest:', pattern[index]);
     return [result, index];
 }
 

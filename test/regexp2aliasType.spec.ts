@@ -105,7 +105,7 @@ describe("regexpPattern2typeAlias", () => {
         expect(v).toBe('56789abcdefg');
     });
 
-    fit("returns options for variants {}", () => {
+    it("returns options for variants {}", () => {
         let v = null;
         let i = 0;
 
@@ -164,33 +164,21 @@ describe("regexpPattern2typeAlias", () => {
         [v, i] = variants('(A|B)C', 5, 2);
         expect(v.join('|')).toBe('C');
 
-        [v, i] = option('A|B', 0, 2);
-        expect(v).toEqual([ 'A', 'B' ]);
-
-        [v, i] = group('(A|B)', 0, 2);
-        expect(v).toEqual([ 'A', 'B' ]);
-        //
-        [v, i] = expression('(A|B)C', 0, 2);
-        expect(v.join('|')).toBe('AC|BC');
-
-
-
-
     });
 
 
-    it("returns options for option", () => {
+    it("returns one option for option", () => {
         let v = null;
         let i = 0;
 
         [v, i] = option('A|B', 0, 2);
-        expect(v).toEqual([ 'A', 'B' ]);
+        expect(v).toEqual(['A']);
         [v, i] = option('A|\\d', 0, 2);
-        expect(v.join('|')).toBe('A|0|1|2|3|4|5|6|7|8|9');
+        expect(v.join('|')).toBe('A');
         [v, i] = option('A|\\d|B', 0, 2);
-        expect(v.join('|')).toBe('A|0|1|2|3|4|5|6|7|8|9|B');
+        expect(v.join('|')).toBe('A');
         [v, i] = option('A|123|B', 0, 2);
-        expect(v.join('|')).toBe('A|123|B');
+        expect(v.join('|')).toBe('A');
 
         [v, i] = option('(A|B)C', 5, 2);
         expect(v.join('|')).toBe('C');
@@ -253,5 +241,22 @@ describe("regexpPattern2typeAlias", () => {
 
         [v,i] = expression('A[12]|B|C[34]');
         expect(v.join('|')).toBe('A1|A2|B|C3|C4');
+
+        [v,i] = expression('A(B|C)+', 0, 3);
+        expect(v.join('|')).toBe('AB|ABB|ABC|AC|ACB|ACC');
+        expect(v.filter(o => !/A(B|C)+/.test(o)).length).toBe(0);
+
+        [v,i] = expression('A(B|C)*', 0, 3);
+        expect(v.join('|')).toBe('A|AB|ABB|ABC|AC|ACB|ACC');
+        expect(v.filter(o => !/A(B|C)*/.test(o)).length).toBe(0);
+
+        [v,i] = expression('A|(B|C)+', 0, 3);
+        expect(v.join('|')).toBe('A|B|BB|BBB|BBC|BC|BCB|BCC|C|CB|CBB|CBC|CC|CCB|CCC');
+        expect(v.filter(o => !/A|(B|C)+/.test(o)).length).toBe(0);
+
+
+        [v,i] = expression('A|(B|C)*', 0, 3);
+        expect(v.join('|')).toBe('A||B|BB|BBB|BBC|BC|BCB|BCC|C|CB|CBB|CBC|CC|CCB|CCC');
+        expect(v.filter(o => !/A|(B|C)*/.test(o)).length).toBe(0);
     });
 });

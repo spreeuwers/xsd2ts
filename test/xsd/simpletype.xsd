@@ -5,7 +5,7 @@
         <xs:simpleType>
             <xs:restriction base="xs:integer">
                 <xs:minInclusive value="0"/>
-                <xs:maxInclusive value="100"/>
+                <xs:maxInclusive value="99"/>
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
@@ -13,7 +13,7 @@
     <xs:simpleType name="age2">
         <xs:restriction base="xs:integer">
             <xs:minInclusive value="0"/>
-            <xs:maxInclusive value="100"/>
+            <xs:maxInclusive value="99"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -166,7 +166,7 @@
     <xs:element name="papersize20">
         <xs:simpleType>
             <xs:restriction base="xs:string">
-                <xs:maxLength value="1"/>
+                <xs:maxLength value="2"/>
                 <xs:pattern value="A\d"/>
             </xs:restriction>
         </xs:simpleType>
