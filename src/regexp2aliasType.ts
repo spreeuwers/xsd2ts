@@ -9,7 +9,7 @@ import last = require("lodash/fp/last");
 export const digits = '0123456789';
 export const a2z = 'abcdefghijklmnopqrstuvwxyz';
 export const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
+export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,\'"';
 export const allW = digits + a2z + A2Z;
 export const allC = digits + a2z + A2Z + leestekens;
 const CHAR_TYPE = 'char';
@@ -66,13 +66,19 @@ export function range(index: number, pattern: string): [string, number] {
     let result = '';
     const part = pattern.substring(index);
 
-    let matches = part.match(/(\w-\w)/);
+    let matches = part.match(/\^?(\w-\w)/);
     console.log('    range matches:', matches);
     if (matches && matches.index === 0) {
         const [start, end] = matches[1].split('-');
         console.log('    start:', start, 'end', end);
-        result += start + allW.split(start).reverse().shift().split(end).shift() + end;
-        index += matches[1].length;
+         //select all chars in the range from all chars available
+        let res = start + allW.split(start).reverse().shift().split(end).shift() + end;
+         //invert selection by filtering out the res chars from all chars
+        if (part.indexOf('^') === 0) {
+            res = allC.split('').filter(e => res.indexOf(e) < 0).join('');
+        }
+        result += res;
+        index += matches[0].length;
     }
     console.log('    range:', result);
     return [result, index];
@@ -360,11 +366,11 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             index++;
         }
 
-        console.log(' while expression1 before group:', 'result:', result, 'options:', options, pattern[index], startIndex);
+        //console.log(' while expression1 before group:', 'result:', result, 'options:', options, pattern[index], startIndex);
         [r, i] = group(pattern, index);
         if (r) {
             const lastOptions = options.filter( (e,i,a) => i >= startIndex);
-            log('   expression group: r:', r, 'result:', result, 'options:', options, pattern[index], startIndex, 'lastOptions:',lastOptions);
+            //log('   expression group: r:', r, 'result:', result, 'options:', options, pattern[index], startIndex, 'lastOptions:',lastOptions);
 
             //remember index of start of options in group
             //startIndex = options.length;
@@ -380,17 +386,17 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             continue;
         }
 
-        console.log(' expression before option:', result, options, pattern[index]);
+        //console.log(' expression before option:', result, options, pattern[index]);
 
         [r, i] = option(pattern, index);
         if (r) {
-            console.log('expression option:', r);
+            //console.log('expression option:', r);
             const lastOptions = options.filter( (e,i,a) => i >= startIndex);
-            console.log('expression option/lastOptions:', lastOptions);
+            //console.log('expression option/lastOptions:', lastOptions);
             if (lastOptions.length === 0) {
                 options = options.concat(r);
             } else {
-                console.log('   option buildVariants:', lastOptions, startIndex, options);
+                //console.log('   option buildVariants:', lastOptions, startIndex, options);
                 options = buildVariants(lastOptions, [r[0]], maxLength);
             }
             index = i;
@@ -447,7 +453,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
     if (base === 'string'){
         result = options
             .filter(n => !maxLength || ('' + n).length <= maxLength)
-            .map(o => `"${o}"`).join('|');
+            .map(o => `"${o.replace('"','\\"')}"`).join('|');
         //log('string result :', result);
     } else if (base === 'number'){
         result = options
@@ -467,7 +473,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
     if (result.length > 500){
         result = base;
     }
-    log('result :', result);
+    log('alias result :', result);
 
     return result || base;
 }
