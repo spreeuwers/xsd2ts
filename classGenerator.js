@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.regexpPattern2typeAliasOld = exports.regexpPattern2typeAlias = exports.ClassGenerator = void 0;
+exports.ClassGenerator = void 0;
 /**
  * Created by Eddy Spreeuwers at 11 march 2018
  */
@@ -8,17 +8,13 @@ var ts_code_generator_1 = require("ts-code-generator");
 var xmldom_reborn_1 = require("xmldom-reborn");
 var parsing_1 = require("./parsing");
 var xml_utils_1 = require("./xml-utils");
+var regexp2aliasType_1 = require("./regexp2aliasType");
 var xsd_grammar_1 = require("./xsd-grammar");
 var XMLNS = 'xmlns';
 var definedTypes;
-//const COLON = ":";
-var A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-var DIGITS = '0123456789';
 var GROUP_PREFIX = 'group_';
 var XSD_NS = "http://www.w3.org/2001/XMLSchema";
 var CLASS_PREFIX = ".";
-var square_bracket1 = '\x01';
-var square_bracket2 = '\x02';
 var defaultSchemaName = 'Schema';
 var groups = {};
 var ns2modMap = {};
@@ -26,7 +22,7 @@ var primitive = /(string|number)/i;
 var namespaces = { default: "", xsd: "xs" };
 var targetNamespace = 's1';
 function a2z(p) {
-    return (p.toLowerCase() == p) ? A2Z.toLowerCase() : A2Z;
+    return (p.toLowerCase() == p) ? regexp2aliasType_1.A2Z.toLowerCase() : regexp2aliasType_1.A2Z;
 }
 function capfirst(s) {
     var _a;
@@ -210,7 +206,7 @@ var ClassGenerator = /** @class */ (function () {
             xml_utils_1.log('alias type: ', t.name, ': ', t.attr.type, '->', aliasType, '\tattribs:', t.attr);
             if (t.attr.pattern) {
                 //try to translate regexp pattern to type aliases as far as possible
-                aliasType = regexpPattern2typeAlias(t.attr.pattern, aliasType, t.attr);
+                aliasType = regexp2aliasType_1.regexpPattern2typeAlias(t.attr.pattern, aliasType, t.attr);
             }
             if (t.attr.minInclusive && t.attr.maxInclusive) {
                 var x1 = parseInt(t.attr.minInclusive);
@@ -397,363 +393,3 @@ var ClassGenerator = /** @class */ (function () {
     return ClassGenerator;
 }());
 exports.ClassGenerator = ClassGenerator;
-function regexpPattern2typeAlias(pattern, base, attr) {
-    var MAX_LENGTH_VARIANTS = 100;
-    var digits = '0123456789';
-    var a2z = 'abcdefghijklmnopqrstuvwxyz';
-    var A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
-    var allW = digits + a2z + A2Z;
-    var allC = digits + a2z + A2Z + leestekens;
-    var seriesMap = {
-        escaped: { '.': '.', d: digits, w: allW },
-        unescaped: { '.': allC }
-    };
-    var idx = 0;
-    var c = '';
-    var inCharSet = false;
-    var result = '';
-    var options = [];
-    var optionVariants = null;
-    var newOptionVariants = [];
-    var option = '';
-    var series = '';
-    var lastChar = '';
-    var escaped = false;
-    var maxInt = (attr && /\d+/.test(attr['maxInclusive'])) ? parseInt(attr['maxInclusive']) : undefined;
-    var minInt = (attr && /\d+/.test(attr['minInclusive'])) ? parseInt(attr['minInclusive']) : undefined;
-    var maxLength = (attr && /\d+/.test(attr['maxLength'])) ? parseInt(attr['maxLength']) : undefined;
-    var modus = 0;
-    var MODI = 'START|CHAR|OPTIONS|START_VARIANTS|END_VARIANTS|IN_VARIANTS|IN_RANGE|NIL_OR_MORE|ONE_OR_MORE'.split('|');
-    var CHAR = MODI.indexOf('CHAR');
-    //const ESCAPED = MODI.indexOf('ESCAPED');
-    var OPTIONS = MODI.indexOf('OPTIONS');
-    var START_VARIANTS = MODI.indexOf('START_VARIANTS');
-    var END_VARIANTS = MODI.indexOf('END_VARIANTS');
-    var IN_VARIANTS = MODI.indexOf('IN_VARIANTS');
-    var IN_RANGE = MODI.indexOf('IN_RANGE');
-    var NIL_OR_MORE = MODI.indexOf('NIL_OR_MORE');
-    var ONE_OR_MORE = MODI.indexOf('ONE_OR_MORE');
-    if (!pattern)
-        return base;
-    while (c = pattern[idx]) {
-        switch (c) {
-            case '\\':
-                escaped = !escaped;
-                break;
-            case '[':
-                modus = (!escaped) ? START_VARIANTS : CHAR;
-                break;
-            case '|':
-                modus = (!escaped) ? OPTIONS : CHAR;
-                break;
-            case ']':
-                modus = (!escaped) ? END_VARIANTS : CHAR;
-                break;
-            case '*':
-                modus = (!escaped) ? NIL_OR_MORE : CHAR;
-                break;
-            case '+':
-                modus = (!escaped) ? ONE_OR_MORE : CHAR;
-                break;
-            case '-':
-                modus = (!escaped && modus === IN_VARIANTS) ? IN_RANGE : CHAR;
-                break;
-            case '.':
-                series = (!escaped) ? allC : c;
-                break;
-            case 'd':
-                series = (escaped) ? digits : c;
-                break;
-            default:
-                if (modus === IN_RANGE) {
-                    var rangeStart = pattern[idx - 2];
-                    series = rangeStart + allW.split(rangeStart).reverse().shift().split(c).shift() + c;
-                }
-                else {
-                    series = c;
-                }
-        }
-        if (modus === START_VARIANTS) {
-            modus = IN_VARIANTS;
-            optionVariants = [''];
-        }
-        if (modus === END_VARIANTS) {
-            if (series && optionVariants) {
-                optionVariants.forEach(function (ov) {
-                    series.split('').forEach(function (s) {
-                        newOptionVariants.push(ov + s);
-                    });
-                });
-                optionVariants = newOptionVariants;
-            }
-        }
-        if (modus === ONE_OR_MORE) {
-            for (var r = 1; r < 3; r++) {
-                if (series && optionVariants) {
-                    optionVariants.forEach(function (ov) {
-                        series.split('').forEach(function (s) {
-                            newOptionVariants.push(ov + s);
-                        });
-                    });
-                    optionVariants = newOptionVariants;
-                }
-            }
-        }
-        if (modus === NIL_OR_MORE) {
-            for (var r = 1; r < 3; r++) {
-                if (series && optionVariants) {
-                    optionVariants.forEach(function (ov) {
-                        series.split('').forEach(function (s) {
-                            if ((maxLength || 10000) >= (ov + s).length) {
-                                optionVariants.push(ov + s);
-                                xml_utils_1.log(ov + s);
-                            }
-                        });
-                    });
-                }
-            }
-        }
-        xml_utils_1.log('# c esc  #m modus series option');
-        xml_utils_1.log(idx, c, escaped, modus, MODI[modus], series, option);
-        xml_utils_1.log(optionVariants, newOptionVariants);
-        escaped = (c === '\\') ? escaped : false;
-        lastChar = c;
-        idx++;
-    }
-    //////////////////////////////////////////////
-    if (option) {
-        options.push(option);
-    }
-    if (optionVariants) {
-        optionVariants.forEach(function (ov) {
-            options.push(ov);
-        });
-    }
-    xml_utils_1.log('# c esc  #m modus series option');
-    xml_utils_1.log(idx, c, escaped, modus, MODI[modus], series, option);
-    xml_utils_1.log(options, optionVariants, newOptionVariants);
-    if (base === 'string') {
-        result = options.map(function (o) { return "\"" + o + "\""; }).join('|');
-    }
-    else if (base === 'number') {
-        result = options
-            .filter(function (o) { return /\d\.?\d*/.test(o); })
-            .filter(function (o) { return !/0\d+/.test(o); })
-            .filter(function (n) { return (!maxInt || n <= maxInt); })
-            .filter(function (n) { return (!minInt || n >= minInt); })
-            .join('|').replace(/\|+/g, '|');
-    }
-    else {
-        result = base;
-    }
-    if (result.length > 100000) {
-        result = null;
-    }
-    xml_utils_1.log('state:', option, options, optionVariants, newOptionVariants);
-    console.log('\n', pattern, '=>', result, '\n');
-    return result || base;
-}
-exports.regexpPattern2typeAlias = regexpPattern2typeAlias;
-function regexpPattern2typeAliasOld(pattern, base, attr) {
-    var result = '';
-    var escaped = false;
-    var charModus = false;
-    var options = [];
-    var optionVariants = null;
-    var inRange = false;
-    var rangeStart = null;
-    var newOptionVariants = [];
-    var option = '';
-    var lastChar = '';
-    var repeat = false;
-    var wasEscaped = false;
-    var maxInt = (attr && /\d+/.test(attr['maxInclusive'])) ? parseInt(attr['maxInclusive']) : undefined;
-    var minInt = (attr && /\d+/.test(attr['minInclusive'])) ? parseInt(attr['minInclusive']) : undefined;
-    var maxLength = (attr && /\d+/.test(attr['maxLength'])) ? parseInt(attr['maxLength']) : undefined;
-    var MAX_LENGTH_VARIANTS = 100;
-    var digits = '0123456789';
-    var a2z = 'abcdefghijklmnopqrstuvwxyz';
-    var A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,';
-    var allW = digits + a2z + A2Z;
-    var allC = digits + a2z + A2Z + leestekens;
-    var seriesMap = {
-        escaped: { '.': '.', d: digits, w: allW },
-        unescaped: { '.': allC }
-    };
-    if (!pattern)
-        return base;
-    function enterCharModus() {
-        charModus = true;
-        optionVariants = (optionVariants) ? optionVariants : [option];
-        newOptionVariants = [];
-        option = '';
-        return false;
-    }
-    function leaveCharModus() {
-        optionVariants = newOptionVariants;
-        charModus = false;
-        return false;
-    }
-    pattern.split('').some(function (ch, idx) {
-        var repeatCount = 0;
-        var key, series, c = ch;
-        //log('c:', c, ch);
-        //at least once
-        do {
-            repeatCount++;
-            //log('repeatCount c:', c, repeatCount, charModus, repeat);
-            //never more then 100 options
-            //quit whenever solution will be to long
-            if ((options === null || options === void 0 ? void 0 : options.length) + (optionVariants === null || optionVariants === void 0 ? void 0 : optionVariants.length) > MAX_LENGTH_VARIANTS) {
-                return true;
-            }
-            ;
-            if (c === '\\') {
-                escaped = true;
-                return false;
-            }
-            if (base !== 'string' && base !== 'number' && c === '.') {
-                //no valid outcome possible for  other types
-                //log('invalid pattern for base:', base);
-                return true;
-            }
-            //enter repeat loop
-            if (pattern[idx + 1] === '+' || pattern[idx + 1] === '*') {
-                repeat = true;
-                enterCharModus();
-            }
-            if (pattern[idx + 1] === ']') {
-                if (pattern[idx + 2] === '+' || pattern[idx + 2] === '*') {
-                    repeat = true;
-                    enterCharModus();
-                }
-            }
-            if (c === '|' && !escaped && !charModus) {
-                if (option) {
-                    options.push(option);
-                }
-                if (optionVariants) {
-                    optionVariants.forEach(function (ov) {
-                        options.push(ov);
-                    });
-                }
-                optionVariants = null;
-                option = '';
-                return false;
-            }
-            if (c === '[' && !escaped) {
-                return enterCharModus();
-            }
-            if (c === ']' && !escaped) {
-                return leaveCharModus();
-            }
-            key = (escaped) ? 'escaped' : 'unescaped';
-            series = seriesMap[key][c];
-            xml_utils_1.log('series', series, c, key);
-            if (series) {
-                enterCharModus();
-            }
-            //console.log('c:', c, escaped, charModus);
-            if (charModus) {
-                //for * also add empty option
-                if (pattern[idx + 1] === '*') {
-                    newOptionVariants = optionVariants;
-                }
-                optionVariants.forEach(function (ov, i, a) {
-                    if (series) {
-                        series.split('').forEach(function (c) {
-                            newOptionVariants.push(ov + c);
-                        });
-                    }
-                    else if (c === '-' && !escaped) {
-                        inRange = true;
-                    }
-                    else if (inRange && rangeStart) {
-                        //newOptionVariants =[];
-                        var range = rangeStart + allW.split(rangeStart).reverse().shift().split(c).shift() + c;
-                        //console.log('range:', range);
-                        range.split('').forEach(function (r) {
-                            newOptionVariants.push(ov + r);
-                        });
-                        inRange = false;
-                        rangeStart = null;
-                    }
-                    else if (pattern[idx + 1] === '-' && !escaped) {
-                        rangeStart = c;
-                    }
-                    else {
-                        newOptionVariants.push(ov + c);
-                    }
-                });
-            }
-            else {
-                xml_utils_1.log('option + c:', option, c);
-                option += c;
-            }
-            if (series) {
-                leaveCharModus();
-            }
-            //log(attr, optionVariants);
-            if (optionVariants && attr) {
-                var lastItem = optionVariants[(optionVariants === null || optionVariants === void 0 ? void 0 : optionVariants.length) - 1];
-                xml_utils_1.log('test', lastItem, attr['maxLength'], attr['maxInclusive'], maxInt, parseInt(lastItem), option, options, optionVariants, newOptionVariants);
-                if ((lastItem === null || lastItem === void 0 ? void 0 : lastItem.length) >= attr['maxLength']) {
-                    repeat = false;
-                }
-                if (maxInt > attr['maxInclusive']) {
-                    repeat = false;
-                    xml_utils_1.log('>>>');
-                }
-            }
-            //never more then 3 times
-            if (repeatCount > 5) {
-                repeat = false;
-            }
-            ;
-            xml_utils_1.log('repeatCount', repeatCount);
-            if ((options === null || options === void 0 ? void 0 : options.length) + (optionVariants === null || optionVariants === void 0 ? void 0 : optionVariants.length) > MAX_LENGTH_VARIANTS) {
-                return true;
-            }
-            ;
-        } while (repeat);
-        //log('left repeat loop' ,c);
-        escaped = false;
-        series = 0;
-    });
-    xml_utils_1.log('state1:', option, options, optionVariants, newOptionVariants);
-    //after all chars processed
-    if (option) {
-        options.push(option);
-    }
-    if (optionVariants) {
-        optionVariants.forEach(function (ov) {
-            options.push(ov);
-        });
-    }
-    xml_utils_1.log('state2:', option, options, optionVariants, newOptionVariants);
-    if (base === 'string') {
-        result = options.map(function (o) { return "\"" + o + "\""; }).join('|');
-    }
-    else if (base === 'number') {
-        result = options
-            .filter(function (o) { return /\d\.?\d*/.test(o); })
-            .filter(function (n) { return (!maxInt || n <= maxInt); })
-            .filter(function (n) { return (!minInt || n >= minInt); })
-            .join('|').replace(/\|+/g, '|');
-        // if (result === '.'){
-        //     result = '0|1|2|3|4|5|6|7|8|9';
-        // }
-    }
-    else {
-        result = base;
-    }
-    if (result.length > 500) {
-        result = null;
-    }
-    xml_utils_1.log('state3:', option, options, optionVariants, newOptionVariants);
-    console.log('\n', pattern, '=>', result, '\n');
-    return result || base;
-}
-exports.regexpPattern2typeAliasOld = regexpPattern2typeAliasOld;
