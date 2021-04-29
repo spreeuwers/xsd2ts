@@ -9,9 +9,9 @@ import last = require("lodash/fp/last");
 export const digits = '0123456789';
 export const a2z = 'abcdefghijklmnopqrstuvwxyz';
 export const A2Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,\'"';
-export const allW = digits + a2z + A2Z;
-export const allC = digits + a2z + A2Z + leestekens;
+export const leestekens = '~§±!@#$%^&*()-_=+[]{}|;:.,\'"'.split('').sort().join('');
+export const allW = digits + A2Z + a2z ;
+export const allC = digits + A2Z + a2z + leestekens;
 const CHAR_TYPE = 'char';
 const MAX_OPTIONS_LENGTH = 1000;
 
@@ -62,6 +62,12 @@ function variants2options(optionVariants: string[], options: string[]) {
     }
 }
 
+function invertSeries(res: string) {
+    return allC.split('').filter(e => res.indexOf(e) < 0).join('');
+}
+function expandRange(start: string, end: string) {
+    return start + allW.split(start).reverse().shift().split(end).shift() + end;
+}
 export function range(index: number, pattern: string): [string, number] {
     let result = '';
     const part = pattern.substring(index);
@@ -72,10 +78,10 @@ export function range(index: number, pattern: string): [string, number] {
         const [start, end] = matches[1].split('-');
         console.log('    start:', start, 'end', end);
          //select all chars in the range from all chars available
-        let res = start + allW.split(start).reverse().shift().split(end).shift() + end;
+        let res = expandRange(start, end);
          //invert selection by filtering out the res chars from all chars
         if (part.indexOf('^') === 0) {
-            res = allC.split('').filter(e => res.indexOf(e) < 0).join('');
+            res = invertSeries(res);
         }
         result += res;
         index += matches[0].length;
@@ -87,12 +93,12 @@ export function range(index: number, pattern: string): [string, number] {
 export function char(index: number, pattern: string): [string, number] {
     let result = '';
     const part = pattern.substring(index);
-    const matches = part.match(/(\w|<|>)/);
+    const matches = part.match(/\^?(\w|<|>|!|#"%|&|=|_)/);
     //console.log('char matches:', matches);
     if (matches && matches.index === 0) {
         //console.log('char:', matches[1]);
-        result += matches[1];
-        index++;
+        result += (pattern[index] === '^') ? invertSeries(matches[1]) : matches[1];
+        index += matches[0].length;
     }
     console.log('    char:', result);
     return [result, index];
@@ -167,26 +173,15 @@ export function series(index: number, pattern: string): [string, number] {
         if (index >= pattern.length){
             return ['', offset];
         }
-        console.log('series subresult:', result, index , pattern.length);
+        //console.log('series subresult:', result, index , pattern.length);
         break;
     }
     if (pattern[index] === ']'){
         index++;
     }
-    console.log('series result:', result, index , pattern.length);
+    console.log('   series result:', result, index , pattern.length);
     return [result, index];
 }
-
-
-function makeZeroOrMoreSeries(c: string, maxLength: number): string[] {
-    const result = [''];
-    while (result[result.length - 1].length <= maxLength) {
-        let s = result[result.length - 1];
-        result.push(s + c);
-    }
-    return result;
-}
-
 
 
 
@@ -254,8 +249,8 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
             continue;
         }
         let c = pattern[index];
-        if ((c === '*'  || c === '+') && result !== null) {
-            if (c === '*') {
+        if ((c === '*'  || c === '+' || c === '?') && result !== null) {
+            if (c === '*'|| c === '?') {
                 options = options.map(o => o.substring(0, o.length - 1));
             }
             const chars = result.split('');
@@ -263,6 +258,9 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
             while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){
                 console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
                 options = buildVariants(options, chars, maxLength);
+                if (c=== '?'){
+                    break; // 0 or 1 time
+                }
             }
             index++;
             continue;
@@ -321,7 +319,7 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
     let options = [];
     index++;
     while (index < pattern.length) {
-        console.log('  while group:', result, options, index, pattern[index]);
+        //console.log('  while group:', result, options, index, pattern[index]);
         [r, i] = option(pattern, index);
         if (r) {
             options = options.concat(r);
@@ -329,9 +327,9 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
             result = r;
             continue;
         }
-        console.log('  while group after option:', result, options, index, pattern[index]);
+        //console.log('  while group after option:', result, options, index, pattern[index]);
         if (pattern[index] == '|') {
-            console.log('     new group option:', result, pattern[index],  pattern.substring(index + 1));
+            //console.log('     new group option:', result, pattern[index],  pattern.substring(index + 1));
             index++;
             continue;
         }
@@ -453,7 +451,7 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
     if (base === 'string'){
         result = options
             .filter(n => !maxLength || ('' + n).length <= maxLength)
-            .map(o => `"${o.replace('"','\\"')}"`).join('|');
+            .map(o => `"${o.replace('"', '\\"')}"`).join('|');
         //log('string result :', result);
     } else if (base === 'number'){
         result = options
