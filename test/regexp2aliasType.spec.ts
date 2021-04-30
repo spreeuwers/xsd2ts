@@ -224,7 +224,7 @@ describe("regexpPattern2typeAlias", () => {
 
     });
 
-    it("returns options for expression", () => {
+    fit("returns options for expression", () => {
         let v = null;
         let i = 0;
 
@@ -274,5 +274,14 @@ describe("regexpPattern2typeAlias", () => {
         [v,i] = expression('A|(B|C)*', 0, 3);
         expect(v.join('|')).toBe('A||B|BB|BBB|BBC|BC|BCB|BCC|C|CB|CBB|CBC|CC|CCB|CCC');
         expect(v.filter(o => !/A|(B|C)*/.test(o)).length).toBe(0);
+
+        [v,i] = expression('A|(B|C)?', 0, 3);
+        expect(v.join('|')).toBe('A||B|C');
+
+        [v,i] = expression('A(B|C)?', 0, 3);
+        expect(v.join('|')).toEqual('A|AB|AC');
+        [v,i] = expression('[\\d]?(A|B)?', 0, 3);
+        expect(v.join('|')).toEqual('|0|0A|0B|1|1A|1B|2|2A|2B|3|3A|3B|4|4A|4B|5|5A|5B|6|6A|6B|7|7A|7B|8|8A|8B|9|9A|9B|A|B');
+
     });
 });

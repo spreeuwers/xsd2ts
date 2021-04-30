@@ -399,11 +399,11 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
         let c = pattern[index];
 
         console.log('c', c);
-;        if ((c === '*'  || c === '+') && result !== null) {
+;        if ((c === '*'  || c === '+' || c === '?') && result !== null) {
             console.log('  expression * or +:', result);
             let lastOptions = options.filter( (e,i,a) => i >= startIndex);
             const firstOptions = options.filter( (e,i,a) => i < startIndex);
-            if (c === '*') {
+            if (c === '*' || c === '?') {
                 lastOptions = lastOptions.map( o => o.substring(0, o.length - 1));
             }
             console.log('  buildVariants first & lastOptions:', firstOptions, lastOptions, options);
@@ -412,6 +412,9 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             while (lastOptions[lastOptions.length - 1].length < maxLength && lastOptions.length < MAX_OPTIONS_LENGTH){
                 //console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
                 lastOptions = buildVariants(lastOptions, chars, maxLength);
+                if (c === '?') {
+                    break;
+                }
             }
             options = firstOptions.concat(lastOptions);
             index++;
