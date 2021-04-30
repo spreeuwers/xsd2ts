@@ -5,7 +5,7 @@
         <xs:simpleType>
             <xs:restriction base="xs:integer">
                 <xs:minInclusive value="0"/>
-                <xs:maxInclusive value="100"/>
+                <xs:maxInclusive value="99"/>
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
@@ -13,7 +13,7 @@
     <xs:simpleType name="age2">
         <xs:restriction base="xs:integer">
             <xs:minInclusive value="0"/>
-            <xs:maxInclusive value="100"/>
+            <xs:maxInclusive value="99"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -166,12 +166,12 @@
     <xs:element name="papersize20">
         <xs:simpleType>
             <xs:restriction base="xs:string">
-                <xs:maxLength value="1"/>
+                <xs:maxLength value="2"/>
                 <xs:pattern value="A\d"/>
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="anychar21">
+    <xs:element name="anychar_21">
         <xs:simpleType>
             <xs:restriction base="xs:string">
                 <xs:maxLength value="1"/>
@@ -179,7 +179,7 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="err_int22">
+    <xs:element name="err_int_22">
         <xs:simpleType>
             <xs:restriction base="xs:integer">
                 <xs:maxLength value="1"/>
@@ -187,7 +187,7 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="decimal23">
+    <xs:element name="decimal_maxlength_is3__23">
         <xs:simpleType>
             <xs:restriction base="xs:decimal">
                 <xs:maxLength value="3"/>
@@ -195,7 +195,7 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="nrMaxLength24">
+    <xs:element name="nrMaxLength_is_1_24">
         <xs:simpleType>
             <xs:restriction base="xs:integer">
                 <xs:maxLength value="1"/>
@@ -203,7 +203,7 @@
             </xs:restriction>
         </xs:simpleType>
     </xs:element>
-    <xs:element name="nrMaxinclusive">
+    <xs:element name="nrMinMaxinclusive9to95_25">
         <xs:simpleType>
             <xs:restriction base="xs:integer">
                 <xs:maxInclusive value="95"/>
