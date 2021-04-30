@@ -224,7 +224,7 @@ describe("regexpPattern2typeAlias", () => {
 
     });
 
-    fit("returns options for expression", () => {
+    it("returns options for expression", () => {
         let v = null;
         let i = 0;
 
