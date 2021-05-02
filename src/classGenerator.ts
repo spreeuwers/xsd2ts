@@ -50,7 +50,7 @@ function addNewImport(fileDef: FileDefinition, ns: string) {
         fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
     }
 }
-function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
+function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = ''): ClassDefinition {
     const c = fileDef.addClass({name: capfirst(astNode.name)});
 
     if (astNode.nodeType === 'Group') {
@@ -155,6 +155,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             }
         },
     );
+    return c;
 }
 
 
@@ -265,23 +266,25 @@ export class ClassGenerator {
                 const [ns, localName] = aliasType.split('.');
 
                 if (targetNamespace === ns && t.name === localName){
-                    console.log('skipping alias:', aliasType);
+                    log('skipping alias:', aliasType);
                 } else {
-                    if (ns == targetNamespace){
+                    if (ns === targetNamespace){
                         aliasType = capfirst(localName);
                     }
                     //skip circular refs
-                    if (t.name.toLowerCase() != aliasType.toLowerCase()) {
+                    log('circular refs:', aliasType, t.name.toLowerCase() === aliasType.toLowerCase());
+                    if (t.name.toLowerCase() !== aliasType.toLowerCase()) {
                         if (primitive.test(aliasType)){
                             aliasType = aliasType.toLowerCase();
                         }
                         //fileDef.addTypeAlias({name: capfirst(t.name), type: aliasType, isExported: true});
                         typeAliases[capfirst(t.name)] = aliasType;
                         //only add elements to scheme class
-                        if (t.attr.element) {
-                            schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
-                        }
+
                     }
+                }
+                if (t.attr.element) {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
                 }
 
             });
@@ -299,9 +302,16 @@ export class ClassGenerator {
         children
             .filter((t) => t.nodeType === 'Class')
             .forEach((t) => {
-                addClassForASTNode(fileDef, t);
+                const c = addClassForASTNode(fileDef, t);
                 if (t.attr.element) {
-                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                    //when th class represents an array en is a top level element then
+                    //add the class as field to the schemas class and remove the classdef
+                    if (c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0){
+                        schemaClass.addProperty({name: lowfirst(t.name), type: c.properties[0].type.text});
+                        fileDef.classes = fileDef.classes.filter(x => x !== c);
+                    } else {
+                        schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                    }
                 }
             });
 

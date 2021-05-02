@@ -143,6 +143,7 @@ function addClassForASTNode(fileDef, astNode, indent) {
             addClassForASTNode(fileDef, f.attr.nestedClass, indent + ' ');
         }
     });
+    return c;
 }
 var ClassGenerator = /** @class */ (function () {
     function ClassGenerator(depMap, classPrefix) {
@@ -221,24 +222,25 @@ var ClassGenerator = /** @class */ (function () {
             }
             var _a = aliasType.split('.'), ns = _a[0], localName = _a[1];
             if (targetNamespace === ns && t.name === localName) {
-                console.log('skipping alias:', aliasType);
+                xml_utils_1.log('skipping alias:', aliasType);
             }
             else {
-                if (ns == targetNamespace) {
+                if (ns === targetNamespace) {
                     aliasType = capfirst(localName);
                 }
                 //skip circular refs
-                if (t.name.toLowerCase() != aliasType.toLowerCase()) {
+                xml_utils_1.log('circular refs:', aliasType, t.name.toLowerCase() === aliasType.toLowerCase());
+                if (t.name.toLowerCase() !== aliasType.toLowerCase()) {
                     if (primitive.test(aliasType)) {
                         aliasType = aliasType.toLowerCase();
                     }
                     //fileDef.addTypeAlias({name: capfirst(t.name), type: aliasType, isExported: true});
                     typeAliases[capfirst(t.name)] = aliasType;
                     //only add elements to scheme class
-                    if (t.attr.element) {
-                        schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
-                    }
                 }
+            }
+            if (t.attr.element) {
+                schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
             }
         });
         fileDef.classes.push(schemaClass);
@@ -252,9 +254,15 @@ var ClassGenerator = /** @class */ (function () {
         children
             .filter(function (t) { return t.nodeType === 'Class'; })
             .forEach(function (t) {
-            addClassForASTNode(fileDef, t);
+            var c = addClassForASTNode(fileDef, t);
             if (t.attr.element) {
-                schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+                if (c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0) {
+                    schemaClass.addProperty({ name: lowfirst(t.name), type: c.properties[0].type.text });
+                    fileDef.classes = fileDef.classes.filter(function (x) { return x !== c; });
+                }
+                else {
+                    schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+                }
             }
         });
         children
