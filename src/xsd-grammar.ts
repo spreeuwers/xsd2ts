@@ -36,7 +36,7 @@ const topFieldHandler: AstNodeFactory = (n) => {
     }
 
     //return (primitives.test(attribs(n).type) || attribs(n).abstract == 'true') ? astNode('AliasType').addAttribs(n) : null;
-    return (attribs(n).type || attribs(n).abstract) ? astNode('AliasType').addAttribs(n) : null;
+    return (attribs(n).type || attribs(n).abstract) ? astNode('AliasType').addAttribs(n).prop('element','true') : null;
     //return /\w:/.test(attribs(n).type) ? astNode('AliasType').addAttribs(n) : null;
 };
 

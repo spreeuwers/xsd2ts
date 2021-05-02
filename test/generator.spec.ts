@@ -64,7 +64,7 @@ describe("generator", () => {
             compile("./src/generated/types.ts");
         });
 
-        it("creates element.ts", () => {
+        fit("creates element.ts", () => {
             expect(generateTemplateClassesFromXSD("./test/xsd/element.xsd",{ Xs : "./ns"} ));
             printFile("./src/generated/element.ts");
             compile("./src/generated/element.ts");
