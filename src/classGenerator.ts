@@ -277,7 +277,10 @@ export class ClassGenerator {
                         }
                         //fileDef.addTypeAlias({name: capfirst(t.name), type: aliasType, isExported: true});
                         typeAliases[capfirst(t.name)] = aliasType;
-                        schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                        //only add elements to scheme class
+                        if (t.attr.element) {
+                            schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                        }
                     }
                 }
 
@@ -297,7 +300,9 @@ export class ClassGenerator {
             .filter((t) => t.nodeType === 'Class')
             .forEach((t) => {
                 addClassForASTNode(fileDef, t);
-                schemaClass.addProperty({name: lowfirst(t.name), type: t.name});
+                if (t.attr.element) {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                }
             });
 
 
@@ -308,7 +313,9 @@ export class ClassGenerator {
                 t.attr.values.forEach (
                     (m) => { enumDef.addMember( {name: m.attr.value , value: `"${m.attr.value}"` as any } ); },
                 );
-                schemaClass.addProperty({name: lowfirst(t.name), type: capFirst(t.name)});
+                if (t.attr.element) {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                }
             });
 
         const tmp = this.makeSortedFileDefinition(fileDef.classes);

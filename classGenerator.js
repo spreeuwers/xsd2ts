@@ -234,7 +234,10 @@ var ClassGenerator = /** @class */ (function () {
                     }
                     //fileDef.addTypeAlias({name: capfirst(t.name), type: aliasType, isExported: true});
                     typeAliases[capfirst(t.name)] = aliasType;
-                    schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+                    //only add elements to scheme class
+                    if (t.attr.element) {
+                        schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+                    }
                 }
             }
         });
@@ -250,14 +253,18 @@ var ClassGenerator = /** @class */ (function () {
             .filter(function (t) { return t.nodeType === 'Class'; })
             .forEach(function (t) {
             addClassForASTNode(fileDef, t);
-            schemaClass.addProperty({ name: lowfirst(t.name), type: t.name });
+            if (t.attr.element) {
+                schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+            }
         });
         children
             .filter(function (t) { return t.nodeType === 'Enumeration'; })
             .forEach(function (t) {
             var enumDef = fileDef.addEnum({ name: xml_utils_1.capFirst(t.name) });
             t.attr.values.forEach(function (m) { enumDef.addMember({ name: m.attr.value, value: "\"" + m.attr.value + "\"" }); });
-            schemaClass.addProperty({ name: lowfirst(t.name), type: xml_utils_1.capFirst(t.name) });
+            if (t.attr.element) {
+                schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+            }
         });
         var tmp = this.makeSortedFileDefinition(fileDef.classes);
         Object.keys(typeAliases).forEach(function (k) {

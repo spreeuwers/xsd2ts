@@ -49,7 +49,9 @@ const arrayFldHandler: AstNodeFactory = (n) => (attribs(n).type && attribs(n).ma
 const cmpFldHandler: AstNodeFactory = (n) => astField().prop('label2', 'cmpFldHandler').addField(n, capFirst(attribs(n).name));
 
 const classHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n).prop('label3','classHandler');
-const namedUntypedElmHandler: AstNodeFactory = (n) => (attribs(n).type || !attribs(n).name) ? null : astNamedUntypedElm(n);
+const classElmHandler: AstNodeFactory = (n) => (attribs(n).type) ? null : astClass(n).prop('label3','classElmHandler').prop('element', 'true');
+
+const namedUntypedElmHandler: AstNodeFactory = (n) => (attribs(n).type || !attribs(n).name) ? null : astNamedUntypedElm(n).prop('element', 'true');
 const enumerationHandler: AstNodeFactory = (n) => (attribs(n).value) ?  astEnumValue(n): null;
 const restrictionHandler: AstNodeFactory = (n) => ( attribs(n).value) ?  astRestrictions(n) : null;
 
@@ -145,7 +147,7 @@ export class XsdGrammar {
         const fieldElement   = new Terminal("element:fld", fieldHandler);
         const cmpFldElement  = new Terminal("element:comp", cmpFldHandler);
         const arrFldElement  = new Terminal("element:array", arrayFldHandler);
-        const classElement   = new Terminal("element:class", classHandler);
+        const classElement   = new Terminal("element:class", classElmHandler);
         const topFldElement  = new Terminal("element:topFld", topFieldHandler);
         const eNamedUntyped   = new Terminal("element:namedUntypedElm", namedUntypedElmHandler);
 
