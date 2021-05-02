@@ -256,6 +256,8 @@ var ClassGenerator = /** @class */ (function () {
             .forEach(function (t) {
             var c = addClassForASTNode(fileDef, t);
             if (t.attr.element) {
+                //when th class represents an array en is a top level element then
+                //add the class as field to the schemas class and remove the classdef
                 if (c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0) {
                     schemaClass.addProperty({ name: lowfirst(t.name), type: c.properties[0].type.text });
                     fileDef.classes = fileDef.classes.filter(function (x) { return x !== c; });

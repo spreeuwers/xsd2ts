@@ -19,14 +19,21 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:complexType name="Things">
+        <xs:sequence>
+            <xs:element name="thing" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:complexType name="Show">
-        <xs:complexContent>
                 <xs:sequence>
                     <xs:element name="Status" type="xs:string"/>
+                    <xs:element name="things" type="Things"/>
                 </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
     </xs:complexType>
+
+
+
 </xs:schema>
 
 

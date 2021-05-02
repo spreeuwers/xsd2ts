@@ -145,8 +145,15 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             log('defined: ', fldType , undefinedType);
 
             if (undefinedType && namespaces.default && namespaces.default !== XSD_NS && 'xmlns' !== targetNamespace) {
-                fldType = getFieldType(f.attr.type, ('xmlns' != targetNamespace)? XMLNS : null);
+                fldType = getFieldType(f.attr.type, ('xmlns' !== targetNamespace)? XMLNS : null);
             }
+
+            //rewrite the classes for single array field to direct type
+            const classType = fileDef.getClass(fldType);
+            if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+                fldType = classType.properties[0].type.text;
+                fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+           }
             c.addProperty({name: f.attr.fieldName, type: fldType, scope: "protected"});
 
             log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
