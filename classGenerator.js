@@ -135,7 +135,13 @@ function addClassForASTNode(fileDef, astNode, indent) {
         var undefinedType = definedTypes.indexOf(fldType) < 0;
         xml_utils_1.log('defined: ', fldType, undefinedType);
         if (undefinedType && namespaces.default && namespaces.default !== XSD_NS && 'xmlns' !== targetNamespace) {
-            fldType = parsing_1.getFieldType(f.attr.type, ('xmlns' != targetNamespace) ? XMLNS : null);
+            fldType = parsing_1.getFieldType(f.attr.type, ('xmlns' !== targetNamespace) ? XMLNS : null);
+        }
+        //rewrite the classes for single array field to direct type
+        var classType = fileDef.getClass(fldType);
+        if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0) {
+            fldType = classType.properties[0].type.text;
+            fileDef.classes = fileDef.classes.filter(function (c) { return c !== classType; });
         }
         c.addProperty({ name: f.attr.fieldName, type: fldType, scope: "protected" });
         xml_utils_1.log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
@@ -357,6 +363,10 @@ var ClassGenerator = /** @class */ (function () {
                     classDef_1.isAbstract = c.isAbstract;
                     c.extendsTypes.forEach(function (t) { return classDef_1.addExtends(t.text); });
                     c.getPropertiesAndConstructorParameters().forEach(function (prop) {
+                        var ct = sortedClasses.filter(function (cd) { return cd.name === prop.type.text; })[0];
+                        if (ct && ct.properties.length === 1 && ct.properties[0].type.text.indexOf('[]') > 0) {
+                            prop.type.text = ct.properties[0].type.text;
+                        }
                         _this.addProtectedPropToClass(classDef_1, prop);
                     });
                     var constructor = classDef_1.addMethod({ name: 'constructor' });

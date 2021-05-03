@@ -406,6 +406,7 @@ export class ClassGenerator {
         let depth = 0;
         let max_depth = 1;
         // console.log('max_depth ',max_depth);
+        let skipArrayClasses:ClassDefinition[] = [];
         while (depth <= max_depth) {
             // console.log('depth ');
             sortedClasses.forEach(
@@ -423,7 +424,9 @@ export class ClassGenerator {
                             // return;
                         }
 
-
+                        if (skipArrayClasses.indexOf(c) >= 0) {
+                            return;
+                        }
 
                         outFile.addClass({name: c.name});
 
@@ -435,7 +438,11 @@ export class ClassGenerator {
                         c.extendsTypes.forEach((t) => classDef.addExtends(t.text));
                         c.getPropertiesAndConstructorParameters().forEach(
                             (prop) => {
-
+                                const ct = sortedClasses.filter(cd => cd.name === prop.type.text)[0];
+                                if (ct && ct.properties.length === 1 && ct.properties[0].type.text.indexOf('[]') > 0){
+                                    prop.type.text = ct.properties[0].type.text;
+                                    skipArrayClasses.push(ct);
+                                }
                                 this.addProtectedPropToClass(classDef, prop);
 
                             },

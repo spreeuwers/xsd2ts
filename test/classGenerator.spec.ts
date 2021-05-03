@@ -156,15 +156,25 @@ describe("ClassGenerator", () => {
 
     });
 
-    it("returns a classFile for a single element with nested type", () => {
+    fit("returns a classFile for a single element with nested type", () => {
 
         let classFile = generator.generateClassFileDefinition(elmXsd, "", true);
-
+        let c = null;
         console.log(classFile.write());
-        expect(classFile.classes.length).toBe(2);
-        let c = classFile.getClass("Naam");
+        expect(classFile.classes.length).toBe(3);
+         c = classFile.getClass("Naam");
         expect(c).toBeDefined();
-
+        c = classFile.getClass('Show');
+        expect(c).toBeDefined();
+        let p = c.getProperty('things');
+        expect(p).not.toBe(null);
+        expect(p.type.test).not.toBe('string[]');
+        c = classFile.getClass('Shows');
+        expect(c).toBe(null);
+        c = classFile.getClass('Thing');
+        expect(c).toBe(null);
+        c = classFile.getClass('Things');
+        expect(c).toBe(null);
     });
 
 
