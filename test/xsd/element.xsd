@@ -1,11 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
-    <xs:element name="xxx" type="xs:string"/>
+
     <xs:element name="classname">
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="intField" type="xs:integer"/>
                 <xs:element name="dateField" type="xs:dateTime"/>
+                <xs:element name="things" type="Things"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -20,6 +21,14 @@
     </xs:element>
 
 
+    <xs:element name="thingy">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="ding" type="xs:string"/>
+                <xs:element name="things" type="Things"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
 
     <xs:complexType name="Show">
                 <xs:sequence>
@@ -34,6 +43,7 @@
         </xs:sequence>
     </xs:complexType>
 
+    <xs:element name="xxx" type="xs:string"/>
 
 </xs:schema>
 

@@ -105,6 +105,15 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             } else {
                 refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
             }
+            //rewrite the classes for single array field to direct type
+            const classType = fileDef.getClass(refType);
+            // if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+            //     refType = classType.properties[0].type.text;
+            //     fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+            //     log(indent + 'rewrite refType', refType);
+            // } else {
+            //     log(indent + 'no class for  refType', refType);
+            // }
             c.addProperty({name: refName, type: refType, scope: "protected"});
 
         });
@@ -150,10 +159,11 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 
             //rewrite the classes for single array field to direct type
             const classType = fileDef.getClass(fldType);
-            if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
-                fldType = classType.properties[0].type.text;
-                fileDef.classes = fileDef.classes.filter ( c => c !== classType);
-           }
+            // if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+            //     fldType = classType.properties[0].type.text;
+            //     fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+            //     log(indent + 'rewrite fldType', fldType);
+            // }
             c.addProperty({name: f.attr.fieldName, type: fldType, scope: "protected"});
 
             log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
@@ -311,14 +321,16 @@ export class ClassGenerator {
             .forEach((t) => {
                 const c = addClassForASTNode(fileDef, t);
                 if (t.attr.element) {
-                    //when th class represents an array en is a top level element then
+                    //when the class represents an array and is element then
                     //add the class as field to the schemas class and remove the classdef
-                    if (c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0){
-                        schemaClass.addProperty({name: lowfirst(t.name), type: c.properties[0].type.text});
-                        fileDef.classes = fileDef.classes.filter(x => x !== c);
-                    } else {
-                        schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
-                    }
+                    // if (c && c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0){
+                    //     schemaClass.addProperty({name: lowfirst(t.name), type: c.properties[0].type.text});
+                    //     fileDef.classes = fileDef.classes.filter(x => x !== c);
+                    //     log('rewrite for', t.name);
+                    // } else {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                    //log('no rewrite for', t.name);
+                    //}
                 }
             });
 
@@ -405,8 +417,8 @@ export class ClassGenerator {
 
         let depth = 0;
         let max_depth = 1;
-        // console.log('max_depth ',max_depth);
-        let skipArrayClasses:ClassDefinition[] = [];
+        log('makeSortedFileDefinition, max_depth ',max_depth);
+        let redundantArrayClasses:string[] = [];
         while (depth <= max_depth) {
             // console.log('depth ');
             sortedClasses.forEach(
@@ -424,9 +436,7 @@ export class ClassGenerator {
                             // return;
                         }
 
-                        if (skipArrayClasses.indexOf(c) >= 0) {
-                            return;
-                        }
+
 
                         outFile.addClass({name: c.name});
 
@@ -438,11 +448,15 @@ export class ClassGenerator {
                         c.extendsTypes.forEach((t) => classDef.addExtends(t.text));
                         c.getPropertiesAndConstructorParameters().forEach(
                             (prop) => {
-                                const ct = sortedClasses.filter(cd => cd.name === prop.type.text)[0];
-                                if (ct && ct.properties.length === 1 && ct.properties[0].type.text.indexOf('[]') > 0){
+                                const ct = sortedClasses.filter(cd => cd.name === prop.type.text.replace('[]', ''))[0];
+                                if (ct && ct.properties.length === 1 && ct.properties[0].type.text.indexOf('[]') > 0) {
                                     prop.type.text = ct.properties[0].type.text;
-                                    skipArrayClasses.push(ct);
+                                    log('array construct detected:', ct.name, prop.name, ct.properties[0].type.text, prop.type.text);
+                                    redundantArrayClasses.push(ct.name);
+                                } else{
+                                    //log('nonarray construct detected:', prop.name,  prop.type.text, sortedClasses.map(c=>c.name));
                                 }
+                                //log('addProtectedPropToClass:',classDef.name, prop.name, prop.type.text);
                                 this.addProtectedPropToClass(classDef, prop);
 
                             },
@@ -465,6 +479,9 @@ export class ClassGenerator {
             depth++;
         }
         log('ready');
+        log('redundantArrayClasses', redundantArrayClasses);
+        outFile.classes = outFile.classes.filter(c => redundantArrayClasses.indexOf(c.name) < 0 );
+        log('Classes', outFile.classes.map(c => c.name));
         return outFile;
     }
 
@@ -483,7 +500,7 @@ export class ClassGenerator {
             }
         }
 
-
+        //log('add property:', prop.name, prop.type.text);
         classDef.addProperty(
             {
                 defaultExpression: (prop.defaultExpression) ? prop.defaultExpression.text : null,

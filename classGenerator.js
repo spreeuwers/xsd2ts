@@ -101,6 +101,15 @@ function addClassForASTNode(fileDef, astNode, indent) {
         else {
             refType = ((ns) ? ns + '.' : '') + capfirst(localName + typePostFix);
         }
+        //rewrite the classes for single array field to direct type
+        var classType = fileDef.getClass(refType);
+        // if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+        //     refType = classType.properties[0].type.text;
+        //     fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+        //     log(indent + 'rewrite refType', refType);
+        // } else {
+        //     log(indent + 'no class for  refType', refType);
+        // }
         c.addProperty({ name: refName, type: refType, scope: "protected" });
     });
     fields.filter(function (f) { return f.nodeType === "choice"; }).forEach(function (f) {
@@ -139,10 +148,11 @@ function addClassForASTNode(fileDef, astNode, indent) {
         }
         //rewrite the classes for single array field to direct type
         var classType = fileDef.getClass(fldType);
-        if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0) {
-            fldType = classType.properties[0].type.text;
-            fileDef.classes = fileDef.classes.filter(function (c) { return c !== classType; });
-        }
+        // if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+        //     fldType = classType.properties[0].type.text;
+        //     fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+        //     log(indent + 'rewrite fldType', fldType);
+        // }
         c.addProperty({ name: f.attr.fieldName, type: fldType, scope: "protected" });
         xml_utils_1.log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
         if (f.attr.nestedClass) {
@@ -262,15 +272,16 @@ var ClassGenerator = /** @class */ (function () {
             .forEach(function (t) {
             var c = addClassForASTNode(fileDef, t);
             if (t.attr.element) {
-                //when th class represents an array en is a top level element then
+                //when the class represents an array and is element then
                 //add the class as field to the schemas class and remove the classdef
-                if (c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0) {
-                    schemaClass.addProperty({ name: lowfirst(t.name), type: c.properties[0].type.text });
-                    fileDef.classes = fileDef.classes.filter(function (x) { return x !== c; });
-                }
-                else {
-                    schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
-                }
+                // if (c && c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0){
+                //     schemaClass.addProperty({name: lowfirst(t.name), type: c.properties[0].type.text});
+                //     fileDef.classes = fileDef.classes.filter(x => x !== c);
+                //     log('rewrite for', t.name);
+                // } else {
+                schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
+                //log('no rewrite for', t.name);
+                //}
             }
         });
         children
@@ -343,7 +354,8 @@ var ClassGenerator = /** @class */ (function () {
         }
         var depth = 0;
         var max_depth = 1;
-        // console.log('max_depth ',max_depth);
+        xml_utils_1.log('makeSortedFileDefinition, max_depth ', max_depth);
+        var redundantArrayClasses = [];
         while (depth <= max_depth) {
             // console.log('depth ');
             sortedClasses.forEach(function (c) {
@@ -363,10 +375,16 @@ var ClassGenerator = /** @class */ (function () {
                     classDef_1.isAbstract = c.isAbstract;
                     c.extendsTypes.forEach(function (t) { return classDef_1.addExtends(t.text); });
                     c.getPropertiesAndConstructorParameters().forEach(function (prop) {
-                        var ct = sortedClasses.filter(function (cd) { return cd.name === prop.type.text; })[0];
+                        var ct = sortedClasses.filter(function (cd) { return cd.name === prop.type.text.replace('[]', ''); })[0];
                         if (ct && ct.properties.length === 1 && ct.properties[0].type.text.indexOf('[]') > 0) {
                             prop.type.text = ct.properties[0].type.text;
+                            xml_utils_1.log('array construct detected:', ct.name, prop.name, ct.properties[0].type.text, prop.type.text);
+                            redundantArrayClasses.push(ct.name);
                         }
+                        else {
+                            //log('nonarray construct detected:', prop.name,  prop.type.text, sortedClasses.map(c=>c.name));
+                        }
+                        //log('addProtectedPropToClass:',classDef.name, prop.name, prop.type.text);
                         _this.addProtectedPropToClass(classDef_1, prop);
                     });
                     var constructor = classDef_1.addMethod({ name: 'constructor' });
@@ -385,6 +403,9 @@ var ClassGenerator = /** @class */ (function () {
             depth++;
         }
         xml_utils_1.log('ready');
+        xml_utils_1.log('redundantArrayClasses', redundantArrayClasses);
+        outFile.classes = outFile.classes.filter(function (c) { return redundantArrayClasses.indexOf(c.name) < 0; });
+        xml_utils_1.log('Classes', outFile.classes.map(function (c) { return c.name; }));
         return outFile;
     };
     ClassGenerator.prototype.addProtectedPropToClass = function (classDef, prop) {
@@ -399,6 +420,7 @@ var ClassGenerator = /** @class */ (function () {
                 return;
             }
         }
+        //log('add property:', prop.name, prop.type.text);
         classDef.addProperty({
             defaultExpression: (prop.defaultExpression) ? prop.defaultExpression.text : null,
             name: prop.name,

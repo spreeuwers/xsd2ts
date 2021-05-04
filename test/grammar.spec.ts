@@ -42,13 +42,29 @@ describe("grammar", () => {
 
     it(" can parse a simple class starting with Element ", () => {
         let ast = testGrammar(elmXsd);
-        expect(ast.children.length).toBe(1);
+        expect(ast.children.length).toBe(7);
         expect(ast.children[0].nodeType).toBe('Class');
         expect(ast.children[0].name).toBe('Classname');
         expect(ast.children[0].children).toBeDefined();
         expect(ast.children[0].children[0].nodeType).toBe('Field');
         expect(ast.children[0].children[0].attr.fieldName).toBe('intField');
         expect(ast.children[0].children[0].attr.fieldType).toBe('number');
+        expect(ast.children[0].children[1].nodeType).toBe('Field');
+        expect(ast.children[0].children[1].attr.fieldName).toBe('dateField');
+        expect(ast.children[0].children[1].attr.fieldType).toBe('Date');
+
+        expect(ast.children[0].children[2].nodeType).toBe('Field');
+        expect(ast.children[0].children[2].attr.fieldName).toBe('things');
+        expect(ast.children[0].children[2].attr.fieldType).toBe('Things');
+
+        expect(ast.children[2].children[0].nodeType).toBe('Field');
+        expect(ast.children[2].children[0].attr.fieldName).toBe('show?');
+        expect(ast.children[2].children[0].attr.fieldType).toBe('Show[]');
+
+        expect(ast.children[6].nodeType).toBe('AliasType');
+        expect(ast.children[6].attr.type).toBe('xs:string');
+        expect(ast.children[6].attr.element).toBe('true');
+        expect(ast.children[6].name).toBe('xxx');
     });
 
     it(" can parse a simple class starting with complexType", () => {

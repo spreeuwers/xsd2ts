@@ -88,33 +88,34 @@ describe("ClassGenerator", () => {
         expect(test.getProperty("strArrayField").type.text).toBe("string[]");
     });
 
-    // it("geeft een  classFile terug met imports", () => {
-    //     let importingClass =generator.generateClassFileDefinition(importedClassXsd, '' , true);
-    //     expect(importingClass.classes.length).toBe(1);
-    //     let fld = importingClass.getClass("Test").getProperty("imported");
-    //     expect(fld).toBeDefined();
-    // });
-    //
-    // it("geeft een  classFile terug voor form met refs", () => {
-    //     const classFile = generator.generateClassFileDefinition(formXsd, "", true);
-    //
-    //     console.log(classFile.write());
-    //     expect(classFile.classes.length).toBe(6);
-    //     let fld = classFile.getClass("X").getProperty("field?");
-    //     expect(fld.type.text).toBe("Field[]");
-    //     expect(fld.name).toBe("field?");
-    //
-    //     fld = classFile.getClass("Field").getProperty("option?");
-    //     expect(fld.type.text).toBe("Option[]");
-    //     expect(fld.name).toBe("option?");
-    //
-    // });
+    it("geeft een  classFile terug met imports", () => {
+        let importingClass =generator.generateClassFileDefinition(importedClassXsd, '' , true);
+        console.log(importingClass.write());
+        expect(importingClass.classes.length).toBe(2);
+        let fld = importingClass.getClass("Test").getProperty("imported");
+        expect(fld).toBeDefined();
+    });
+
+    it("geeft een  classFile terug voor form met refs", () => {
+        const classFile = generator.generateClassFileDefinition(formXsd, "", true);
+
+        console.log(classFile.write());
+        expect(classFile.classes.length).toBe(4);
+        let fld = classFile.getClass("X").getProperty("field?");
+        expect(fld.type.text).toBe("Field[]");
+        expect(fld.name).toBe("field?");
+
+        fld = classFile.getClass("Field").getProperty("option?");
+        expect(fld.type.text).toBe("Option[]");
+        expect(fld.name).toBe("option?");
+
+    });
 
     it("geeft een  classFile terug voor form met refs", () => {
         const classFile = generator.generateClassFileDefinition(formXsd, "", true);
 
         log(classFile.write());
-        const classNames = ['X', 'Field', 'Option', 'ForValue', 'Item', 'Reported'];
+        const classNames = ['X', 'Field', 'Option', 'ForValue'];
         expect(classFile.classes.length).toBe(classNames.length);
         let fld = classFile.getClass("X").getProperty("field?");
         expect(fld.type.text).toBe("Field[]");
@@ -156,12 +157,12 @@ describe("ClassGenerator", () => {
 
     });
 
-    fit("returns a classFile for a single element with nested type", () => {
+    it("returns a classFile for a single element with nested type", () => {
 
         let classFile = generator.generateClassFileDefinition(elmXsd, "", true);
         let c = null;
         console.log(classFile.write());
-        expect(classFile.classes.length).toBe(3);
+        expect(classFile.classes.length).toBe(4);
          c = classFile.getClass("Naam");
         expect(c).toBeDefined();
         c = classFile.getClass('Show');
@@ -233,7 +234,7 @@ describe("ClassGenerator", () => {
         let classFile = generator.generateClassFileDefinition(targetnamespace, "", true);
         console.log("-------------------------------------\n");
         console.log(classFile.write());
-        expect(classFile.classes.length).toBe(3);
+        expect(classFile.classes.map(c => c.name).join(', ')).toBe('Schema, Order');
     });
 })
 
