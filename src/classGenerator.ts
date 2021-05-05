@@ -461,17 +461,7 @@ export class ClassGenerator {
 
                             },
                         );
-                        const constructor = classDef.addMethod({name: 'constructor'});
-                        constructor.scope = "protected";
-                        constructor.addParameter({name: "props?", type: c.name});
-                        constructor.onWriteFunctionBody = (writer) => {
-                            if (c.extendsTypes.length) {
-                                writer.write(`super();\n`);
-                            }
-                            writer.write(`this["@class"] = "${this.classPrefix}${c.name}";\n`);
-                            writer.write('(<any>Object).assign(this, <any> props);');
-                        };
-
+                        this.makeConstructor(classDef, c, outFile);
                     }
                 },
             );
@@ -483,6 +473,46 @@ export class ClassGenerator {
         outFile.classes = outFile.classes.filter(c => redundantArrayClasses.indexOf(c.name) < 0 );
         log('Classes', outFile.classes.map(c => c.name));
         return outFile;
+    }
+
+    //provide default constructor code that helps constructing
+    //an object hierarchy through recursion
+    private makeConstructor(classDef: ClassDefinition, c, outFile: FileDefinition) {
+        const constructor = classDef.addMethod({name: 'constructor'});
+        constructor.scope = "protected";
+        constructor.addParameter({name: "props?", type: c.name});
+        constructor.onWriteFunctionBody = (writer) => {
+            if (c.extendsTypes.length) {
+                //writer.write('//' + JSON.stringify(c.extendsTypes[0].text) + '\n');
+                if (outFile.getClass(c.extendsTypes[0].text) !== null) {
+                    writer.write(`super(props);\n`);
+                } else {
+                    writer.write(`super();\n`);
+                }
+            }
+
+            //writer.write('(<any>Object).assign(this, <any> props);\n');
+            //writer.write(`\nconsole.log("constructor:", props);`);
+            writer.write(`this["@class"] = "${this.classPrefix}${c.name}";\n`);
+            const codeLines = [];
+            classDef.getPropertiesAndConstructorParameters().forEach((prop) => {
+                const propName = prop.name.replace('?', '');
+                if (outFile.getClass(prop.type.text) != null) {
+                    codeLines.push(`\tthis.${propName} = (props.${propName}) ? new ${prop.type.text}(props.${propName}): undefined;`);
+                } else if (prop.type.text.indexOf('[]')  >= 0) {
+                    const arrayType = prop.type.text.replace('[]', '');
+                    const expr = (outFile.getClass(arrayType) != null) ? `new ${arrayType}(o)` : 'o';
+                    codeLines.push(`\tthis.${propName} = props.${propName}?.map(o => ${expr});`);
+                } else {
+                    codeLines.push(`\tthis.${propName} = props.${propName};`);
+                }
+            });
+            if (codeLines.length > 0) {
+                writer.write('\nif (props) {\n');
+                writer.write(codeLines.join('\n'));
+                writer.write('\n}');
+            }
+        };
     }
 
     private addProtectedPropToClass(classDef: ClassDefinition, prop) {

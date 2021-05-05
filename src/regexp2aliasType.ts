@@ -14,6 +14,7 @@ export const allW = digits + A2Z + a2z ;
 export const allC = digits + A2Z + a2z + leestekens;
 const CHAR_TYPE = 'char';
 const MAX_OPTIONS_LENGTH = 1000;
+const MAX_LENGTH = 100;
 
 const SPECIALS = {
     '\\d': digits,
@@ -179,7 +180,7 @@ export function series(index: number, pattern: string): [string, number] {
 
 
 
-export function variants( pattern: string, index = 0, maxLength = 10): [string[], number]  {
+export function variants( pattern: string, index = 0, maxLength = MAX_LENGTH): [string[], number]  {
     //console.log('   variants pattern:', index, pattern, pattern[index]);
     const offset = index;
     let  [r, i] = ['', 0];
@@ -268,7 +269,8 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
     return [result, index];
 }
 
-export function option(pattern: string, index = 0,  maxLength = 10): [string[], number]  {
+
+export function option(pattern: string, index = 0, maxLength = MAX_LENGTH): [string[], number]  {
     //console.log('  options pattern:', index, pattern, pattern[index]);
     const offset = index;
     let  [r, i] = [null, 0];
