@@ -50,7 +50,7 @@ function addNewImport(fileDef: FileDefinition, ns: string) {
         fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
     }
 }
-function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = '') {
+function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = ''): ClassDefinition {
     const c = fileDef.addClass({name: capfirst(astNode.name)});
 
     if (astNode.nodeType === 'Group') {
@@ -105,6 +105,15 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             } else {
                 refType = ((ns) ? ns + '.' : '')  + capfirst(localName + typePostFix);
             }
+            //rewrite the classes for single array field to direct type
+            const classType = fileDef.getClass(refType);
+            // if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+            //     refType = classType.properties[0].type.text;
+            //     fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+            //     log(indent + 'rewrite refType', refType);
+            // } else {
+            //     log(indent + 'no class for  refType', refType);
+            // }
             c.addProperty({name: refName, type: refType, scope: "protected"});
 
         });
@@ -145,8 +154,16 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             log('defined: ', fldType , undefinedType);
 
             if (undefinedType && namespaces.default && namespaces.default !== XSD_NS && 'xmlns' !== targetNamespace) {
-                fldType = getFieldType(f.attr.type, ('xmlns' != targetNamespace)? XMLNS : null);
+                fldType = getFieldType(f.attr.type, ('xmlns' !== targetNamespace)? XMLNS : null);
             }
+
+            //rewrite the classes for single array field to direct type
+            const classType = fileDef.getClass(fldType);
+            // if (classType && classType.properties.length === 1 && classType.properties[0].type.text.indexOf('[]') > 0 ){
+            //     fldType = classType.properties[0].type.text;
+            //     fileDef.classes = fileDef.classes.filter ( c => c !== classType);
+            //     log(indent + 'rewrite fldType', fldType);
+            // }
             c.addProperty({name: f.attr.fieldName, type: fldType, scope: "protected"});
 
             log(indent + 'nested class', f.attr.fieldName, JSON.stringify(f.attr.nestedClass));
@@ -155,6 +172,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
             }
         },
     );
+    return c;
 }
 
 
@@ -265,20 +283,25 @@ export class ClassGenerator {
                 const [ns, localName] = aliasType.split('.');
 
                 if (targetNamespace === ns && t.name === localName){
-                    console.log('skipping alias:', aliasType);
+                    log('skipping alias:', aliasType);
                 } else {
-                    if (ns == targetNamespace){
+                    if (ns === targetNamespace){
                         aliasType = capfirst(localName);
                     }
                     //skip circular refs
-                    if (t.name.toLowerCase() != aliasType.toLowerCase()) {
+                    log('circular refs:', aliasType, t.name.toLowerCase() === aliasType.toLowerCase());
+                    if (t.name.toLowerCase() !== aliasType.toLowerCase()) {
                         if (primitive.test(aliasType)){
                             aliasType = aliasType.toLowerCase();
                         }
                         //fileDef.addTypeAlias({name: capfirst(t.name), type: aliasType, isExported: true});
                         typeAliases[capfirst(t.name)] = aliasType;
-                        schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                        //only add elements to scheme class
+
                     }
+                }
+                if (t.attr.element) {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
                 }
 
             });
@@ -296,8 +319,19 @@ export class ClassGenerator {
         children
             .filter((t) => t.nodeType === 'Class')
             .forEach((t) => {
-                addClassForASTNode(fileDef, t);
-                schemaClass.addProperty({name: lowfirst(t.name), type: t.name});
+                const c = addClassForASTNode(fileDef, t);
+                if (t.attr.element) {
+                    //when the class represents an array and is element then
+                    //add the class as field to the schemas class and remove the classdef
+                    // if (c && c.properties.length === 1 && c.properties[0].type.text.indexOf('[]') > 0){
+                    //     schemaClass.addProperty({name: lowfirst(t.name), type: c.properties[0].type.text});
+                    //     fileDef.classes = fileDef.classes.filter(x => x !== c);
+                    //     log('rewrite for', t.name);
+                    // } else {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                    //log('no rewrite for', t.name);
+                    //}
+                }
             });
 
 
@@ -308,7 +342,9 @@ export class ClassGenerator {
                 t.attr.values.forEach (
                     (m) => { enumDef.addMember( {name: m.attr.value , value: `"${m.attr.value}"` as any } ); },
                 );
-                schemaClass.addProperty({name: lowfirst(t.name), type: capFirst(t.name)});
+                if (t.attr.element) {
+                    schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
+                }
             });
 
         const tmp = this.makeSortedFileDefinition(fileDef.classes);
@@ -381,7 +417,8 @@ export class ClassGenerator {
 
         let depth = 0;
         let max_depth = 1;
-        // console.log('max_depth ',max_depth);
+        log('makeSortedFileDefinition, max_depth ',max_depth);
+        let redundantArrayClasses:string[] = [];
         while (depth <= max_depth) {
             // console.log('depth ');
             sortedClasses.forEach(
@@ -411,22 +448,20 @@ export class ClassGenerator {
                         c.extendsTypes.forEach((t) => classDef.addExtends(t.text));
                         c.getPropertiesAndConstructorParameters().forEach(
                             (prop) => {
-
+                                const ct = sortedClasses.filter(cd => cd.name === prop.type.text.replace('[]', ''))[0];
+                                if (ct && ct.properties.length === 1 && ct.properties[0].type.text.indexOf('[]') > 0) {
+                                    prop.type.text = ct.properties[0].type.text;
+                                    log('array construct detected:', ct.name, prop.name, ct.properties[0].type.text, prop.type.text);
+                                    redundantArrayClasses.push(ct.name);
+                                } else{
+                                    //log('nonarray construct detected:', prop.name,  prop.type.text, sortedClasses.map(c=>c.name));
+                                }
+                                //log('addProtectedPropToClass:',classDef.name, prop.name, prop.type.text);
                                 this.addProtectedPropToClass(classDef, prop);
 
                             },
                         );
-                        const constructor = classDef.addMethod({name: 'constructor'});
-                        constructor.scope = "protected";
-                        constructor.addParameter({name: "props?", type: c.name});
-                        constructor.onWriteFunctionBody = (writer) => {
-                            if (c.extendsTypes.length) {
-                                writer.write(`super();\n`);
-                            }
-                            writer.write(`this["@class"] = "${this.classPrefix}${c.name}";\n`);
-                            writer.write('(<any>Object).assign(this, <any> props);');
-                        };
-
+                        this.makeConstructor(classDef, c, outFile);
                     }
                 },
             );
@@ -434,7 +469,50 @@ export class ClassGenerator {
             depth++;
         }
         log('ready');
+        log('redundantArrayClasses', redundantArrayClasses);
+        outFile.classes = outFile.classes.filter(c => redundantArrayClasses.indexOf(c.name) < 0 );
+        log('Classes', outFile.classes.map(c => c.name));
         return outFile;
+    }
+
+    //provide default constructor code that helps constructing
+    //an object hierarchy through recursion
+    private makeConstructor(classDef: ClassDefinition, c, outFile: FileDefinition) {
+        const constructor = classDef.addMethod({name: 'constructor'});
+        constructor.scope = "protected";
+        constructor.addParameter({name: "props?", type: c.name});
+        constructor.onWriteFunctionBody = (writer) => {
+            if (c.extendsTypes.length) {
+                //writer.write('//' + JSON.stringify(c.extendsTypes[0].text) + '\n');
+                if (outFile.getClass(c.extendsTypes[0].text) !== null) {
+                    writer.write(`super(props);\n`);
+                } else {
+                    writer.write(`super();\n`);
+                }
+            }
+
+            //writer.write('(<any>Object).assign(this, <any> props);\n');
+            //writer.write(`\nconsole.log("constructor:", props);`);
+            writer.write(`this["@class"] = "${this.classPrefix}${c.name}";\n`);
+            const codeLines = [];
+            classDef.getPropertiesAndConstructorParameters().forEach((prop) => {
+                const propName = prop.name.replace('?', '');
+                if (outFile.getClass(prop.type.text) != null) {
+                    codeLines.push(`\tthis.${propName} = (props.${propName}) ? new ${prop.type.text}(props.${propName}): undefined;`);
+                } else if (prop.type.text.indexOf('[]')  >= 0) {
+                    const arrayType = prop.type.text.replace('[]', '');
+                    const expr = (outFile.getClass(arrayType) != null) ? `new ${arrayType}(o)` : 'o';
+                    codeLines.push(`\tthis.${propName} = props.${propName}?.map(o => ${expr});`);
+                } else {
+                    codeLines.push(`\tthis.${propName} = props.${propName};`);
+                }
+            });
+            if (codeLines.length > 0) {
+                writer.write('\nif (props) {\n');
+                writer.write(codeLines.join('\n'));
+                writer.write('\n}');
+            }
+        };
     }
 
     private addProtectedPropToClass(classDef: ClassDefinition, prop) {
@@ -452,7 +530,7 @@ export class ClassGenerator {
             }
         }
 
-
+        //log('add property:', prop.name, prop.type.text);
         classDef.addProperty(
             {
                 defaultExpression: (prop.defaultExpression) ? prop.defaultExpression.text : null,

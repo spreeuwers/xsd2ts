@@ -23,6 +23,7 @@ export declare class ClassGenerator {
     private parseXsd;
     private log;
     private makeSortedFileDefinition;
+    private makeConstructor;
     private addProtectedPropToClass;
     private findHierachyDepth;
 }

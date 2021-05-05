@@ -14,6 +14,7 @@ export const allW = digits + A2Z + a2z ;
 export const allC = digits + A2Z + a2z + leestekens;
 const CHAR_TYPE = 'char';
 const MAX_OPTIONS_LENGTH = 1000;
+const MAX_LENGTH = 100;
 
 const SPECIALS = {
     '\\d': digits,
@@ -67,10 +68,10 @@ export function range(index: number, pattern: string): [string, number] {
     const part = pattern.substring(index);
 
     let matches = part.match(/\^?(\w-\w)/);
-    console.log('    range matches:', matches);
+    //console.log('    range matches:', matches);
     if (matches && matches.index === 0) {
         const [start, end] = matches[1].split('-');
-        console.log('    start:', start, 'end', end);
+        //console.log('    start:', start, 'end', end);
          //select all chars in the range from all chars available
         let res = expandRange(start, end);
          //invert selection by filtering out the res chars from all chars
@@ -80,7 +81,7 @@ export function range(index: number, pattern: string): [string, number] {
         result += res;
         index += matches[0].length;
     }
-    console.log('    range:', result);
+    //console.log('    range:', result);
     return [result, index];
 }
 
@@ -94,7 +95,7 @@ export function char(index: number, pattern: string): [string, number] {
         result += (pattern[index] === '^') ? invertSeries(matches[1]) : matches[1];
         index += matches[0].length;
     }
-    console.log('    char:', result);
+    //console.log('    char:', result);
     return [result, index];
 }
 
@@ -102,7 +103,7 @@ export function repeat(index: number, pattern: string): [string, number] {
     let result = '';
     const part = pattern.substring(index);
     const matches = part.match(/\{(\d+)(,\d+)?\}/);
-    console.log('char matches:', matches);
+    //console.log('char matches:', matches);
     if (matches && matches.index === 0) {
         //console.log('char:', matches[1]);
         let min = matches[1];
@@ -110,7 +111,7 @@ export function repeat(index: number, pattern: string): [string, number] {
         result = [min, max].join('');
         index  += matches[0].length;
     }
-    console.log('  repeat:', result);
+    //console.log('  repeat:', result);
     return [result, index];
 }
 
@@ -120,13 +121,13 @@ export function specials(index: number, pattern: string): [string, number] {
     //console.log('idx, pattern:', index, pattern);
     for (let t in SPECIALS) {
         if (part.indexOf(t) === 0) {
-            console.log('    special found:', t);
+            //console.log('    special found:', t);
             result = SPECIALS[t];
             index += t.length;
             break;
         }
     }
-    console.log('    specials:', result);
+    //console.log('    specials:', result);
     return [result, index];
 }
 
@@ -173,14 +174,14 @@ export function series(index: number, pattern: string): [string, number] {
     if (pattern[index] === ']'){
         index++;
     }
-    console.log('   series result:', result, index , pattern.length);
+    //console.log('   series result:', result, index , pattern.length);
     return [result, index];
 }
 
 
 
-export function variants( pattern: string, index = 0, maxLength = 10): [string[], number]  {
-    console.log('   variants pattern:', index, pattern, pattern[index]);
+export function variants( pattern: string, index = 0, maxLength = MAX_LENGTH): [string[], number]  {
+    //console.log('   variants pattern:', index, pattern, pattern[index]);
     const offset = index;
     let  [r, i] = ['', 0];
     let result = null;
@@ -188,7 +189,7 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
     let startOptionIndex = 0;
     let lastOptionType = null;
     while (pattern[index] !== '|' && pattern[index] !== ')' && index < pattern.length) {
-        console.log('    while variant:', result, options, pattern );
+        //console.log('    while variant:', result, options, pattern );
 
         [r, i] = specials(index, pattern);
         if (r) {
@@ -250,7 +251,7 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
             const chars = result.split('');
             chars.unshift('');
             while (options[options.length - 1].length < maxLength && options.length < MAX_OPTIONS_LENGTH){
-                console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
+                //console.log('    buildVariants options:', options, result, maxLength, options[options.length - 1].length);
                 options = buildVariants(options, chars, maxLength);
                 if (c=== '?'){
                     break; // 0 or 1 time
@@ -264,21 +265,19 @@ export function variants( pattern: string, index = 0, maxLength = 10): [string[]
 
     }
     result = (offset === index) ? null : options;
-    console.log('   variants result:', result, 'next:', pattern[index]);
-    // if (pattern[index] === '|'){
-    //     index++;
-    // }
+    //console.log('   variants result:', result, 'next:', pattern[index]);
     return [result, index];
 }
 
-export function option(pattern: string, index = 0,  maxLength = 10): [string[], number]  {
-    console.log('  options pattern:', index, pattern, pattern[index]);
+
+export function option(pattern: string, index = 0, maxLength = MAX_LENGTH): [string[], number]  {
+    //console.log('  options pattern:', index, pattern, pattern[index]);
     const offset = index;
     let  [r, i] = [null, 0];
     let result = null;
 
     while (index < pattern.length) {
-        console.log('  while option:', result, pattern[index], 'subpattern:', pattern.substring(index));
+        //console.log('  while option:', result, pattern[index], 'subpattern:', pattern.substring(index));
         [r, i] = variants(pattern, index);
         if (r) {
             if (!result) result = [];
@@ -287,12 +286,12 @@ export function option(pattern: string, index = 0,  maxLength = 10): [string[], 
             continue;
         }
         if (pattern[index] === '|' ) {
-            console.log('     new option:', result, pattern[index],  pattern.substring(index + 1));
+            //console.log('     new option:', result, pattern[index],  pattern.substring(index + 1));
             break;
         }
         break;
     }
-    console.log('    options result:', result, 'next:', pattern[index]);
+    //console.log('    options result:', result, 'next:', pattern[index]);
 
     // if (pattern[index] === '|') {
     //     index++;
@@ -302,9 +301,9 @@ export function option(pattern: string, index = 0,  maxLength = 10): [string[], 
 
 export function group(pattern: string, index = 0,  maxLength = 10): [string[], number]  {
 
-    console.log(' groups pattern:', index, pattern);
+    //console.log(' groups pattern:', index, pattern);
     if (pattern[index] !== '(') {
-        console.log(' groups result:', null, pattern[index]);
+        //console.log(' groups result:', null, pattern[index]);
         return [null, index];
     }
     const offset = index;
@@ -328,7 +327,7 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
             continue;
         }
         if (pattern[index] !== ')') {
-            console.log(' groups result:', null, pattern[offset]);
+            //console.log(' groups result:', null, pattern[offset]);
             return [null, offset];
         }
         break;
@@ -339,12 +338,12 @@ export function group(pattern: string, index = 0,  maxLength = 10): [string[], n
     }
     result = (options.length > 0) ? options : null;
     index++;
-    console.log(' groups result:', result, pattern[index]);
+    //console.log(' groups result:', result, pattern[index]);
     return [result, index];
 }
 
 export function expression(pattern: string, index = 0,  maxLength = 10): [string[], number]  {
-    console.log('expression pattern:', index, pattern);
+    //console.log('expression pattern:', index, pattern);
 
     let  [r, i] = [null, 0];
     let result = null;
@@ -354,7 +353,7 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
 
         if (pattern[index] === '|') {
             startIndex = options.length;
-            log('------option |', options, startIndex);
+            //log('------option |', options, startIndex);
             index++;
         }
 
@@ -398,15 +397,15 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
 
         let c = pattern[index];
 
-        console.log('c', c);
+        //console.log('c', c);
 ;        if ((c === '*'  || c === '+' || c === '?') && result !== null) {
-            console.log('  expression * or +:', result);
+            //console.log('  expression * or +:', result);
             let lastOptions = options.filter( (e,i,a) => i >= startIndex);
             const firstOptions = options.filter( (e,i,a) => i < startIndex);
             if (c === '*' || c === '?') {
                 lastOptions = lastOptions.map( o => o.substring(0, o.length - 1));
             }
-            console.log('  buildVariants first & lastOptions:', firstOptions, lastOptions, options);
+            //console.log('  buildVariants first & lastOptions:', firstOptions, lastOptions, options);
             const chars = result;
             chars.unshift('');
             while (lastOptions[lastOptions.length - 1].length < maxLength && lastOptions.length < MAX_OPTIONS_LENGTH){
@@ -421,14 +420,14 @@ export function expression(pattern: string, index = 0,  maxLength = 10): [string
             continue;
         }
         //must be handled otherwise break
-        console.log('no match:', i, pattern[i]);
+        //console.log('no match:', i, pattern[i]);
         break;
 
     }
     result = options;
     //console.log('expression result:', result);
     index++;
-    console.log(' expression result:', result, 'rest:', pattern[index]);
+    //console.log(' expression result:', result, 'rest:', pattern[index]);
     return [result, index];
 }
 
@@ -437,14 +436,14 @@ export function regexpPattern2typeAlias(pattern: string, base: string, attr?: ob
     let maxInt = (attr && /\d+/.test(attr['maxInclusive'])) ? parseInt(attr['maxInclusive']) : undefined;
     let minInt = (attr && /\d+/.test(attr['minInclusive'])) ? parseInt(attr['minInclusive']) : undefined;
     let maxLength = (attr &&/\d+/.test(attr['maxLength'])) ? parseInt(attr['maxLength']): undefined;
-    console.log('maxLength:', maxLength);
+    //console.log('maxLength:', maxLength);
     const [v, i] = expression(pattern, 0, maxLength);
 
     if (!v){
         return base;
     }
     let options = v || [];
-    console.log('alias options:', options);
+    //console.log('alias options:', options);
     if (base === 'string'){
         result = options
             .filter(n => !maxLength || ('' + n).length <= maxLength)
