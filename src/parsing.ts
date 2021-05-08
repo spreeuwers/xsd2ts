@@ -78,6 +78,7 @@ export function getFieldType(type: string, defNs: string): string {
         double: "number",
         int: "number",
         integer: "number",
+        long: "number",
         positiveinteger: "number",
         nonnegativeinteger: "number",
         decimal: "number",

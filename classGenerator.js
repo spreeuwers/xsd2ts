@@ -41,7 +41,10 @@ function choiceBody(m, names) {
 }
 function addNewImport(fileDef, ns) {
     if (fileDef.imports.filter(function (i) { return i.starImportName === ns; }).length === 0) {
-        fileDef.addImport({ moduleSpecifier: ns2modMap[ns], starImportName: ns });
+        if (ns !== XMLNS) {
+            xml_utils_1.log('addNewImport: ', ns, ns2modMap[ns]);
+            fileDef.addImport({ moduleSpecifier: ns2modMap[ns], starImportName: ns });
+        }
     }
 }
 function addClassForASTNode(fileDef, astNode, indent) {
@@ -288,12 +291,12 @@ var ClassGenerator = /** @class */ (function () {
             .filter(function (t) { return t.nodeType === 'Enumeration'; })
             .forEach(function (t) {
             var enumDef = fileDef.addEnum({ name: xml_utils_1.capFirst(t.name) });
-            t.attr.values.forEach(function (m) { enumDef.addMember({ name: m.attr.value, value: "\"" + m.attr.value + "\"" }); });
+            t.attr.values.forEach(function (m) { enumDef.addMember({ name: m.attr.value.replace('+', '_'), value: "\"" + m.attr.value + "\"" }); });
             if (t.attr.element) {
                 schemaClass.addProperty({ name: lowfirst(t.name), type: capfirst(t.name) });
             }
         });
-        var tmp = this.makeSortedFileDefinition(fileDef.classes);
+        var tmp = this.makeSortedFileDefinition(fileDef.classes, fileDef);
         Object.keys(typeAliases).forEach(function (k) {
             fileDef.addTypeAlias({ name: k, type: typeAliases[k], isExported: true });
         });
@@ -343,13 +346,13 @@ var ClassGenerator = /** @class */ (function () {
             console.log.apply(console, [message].concat(optionalParams));
         }
     };
-    ClassGenerator.prototype.makeSortedFileDefinition = function (sortedClasses) {
+    ClassGenerator.prototype.makeSortedFileDefinition = function (sortedClasses, fileDef) {
         var _this = this;
         //  console.log('makeSortedFileDefinition ');
         var outFile = ts_code_generator_1.createFile({ classes: [] });
         //outFile.addImport({moduleSpecifier: "mod", starImportName: "nspce"});
         for (var ns in this.importMap) {
-            xml_utils_1.log('ns ', ns, this.importMap[ns]);
+            xml_utils_1.log('addImport: ', ns, this.importMap[ns]);
             outFile.addImport({ moduleSpecifier: this.importMap[ns], starImportName: ns });
         }
         var depth = 0;
@@ -359,11 +362,11 @@ var ClassGenerator = /** @class */ (function () {
         while (depth <= max_depth) {
             // console.log('depth ');
             sortedClasses.forEach(function (c) {
-                var hDepth = _this.findHierachyDepth(c, _this.fileDef);
+                var hDepth = _this.findHierachyDepth(c, fileDef);
                 if (hDepth > max_depth) {
                     max_depth = hDepth;
                 }
-                _this.log(c.name + '\t' + hDepth);
+                _this.log('--DEPTH:', c.name + '\t' + hDepth);
                 if (hDepth === depth) {
                     if (c.name.indexOf(GROUP_PREFIX) === 0) {
                         // return;
@@ -466,9 +469,11 @@ var ClassGenerator = /** @class */ (function () {
         var result = 0;
         var superClassName = (c.extendsTypes[0]) ? c.extendsTypes[0].text : '';
         while (superClassName) {
+            //console.log('superClassName1:', superClassName , result);
             result++;
             c = f.getClass(superClassName);
             superClassName = (_a = c === null || c === void 0 ? void 0 : c.extendsTypes[0]) === null || _a === void 0 ? void 0 : _a.text;
+            //console.log('superClassName2:', superClassName , c, result);
         }
         return result;
     };

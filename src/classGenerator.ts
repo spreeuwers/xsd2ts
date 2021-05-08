@@ -7,7 +7,7 @@ import {ASTNode, getFieldType, NEWLINE} from "./parsing";
 import {capFirst, log} from "./xml-utils";
 import {regexpPattern2typeAlias, A2Z} from './regexp2aliasType';
 import {XsdGrammar} from "./xsd-grammar";
-import isUndefined = require("lodash/fp/isUndefined");
+
 
 let XMLNS = 'xmlns';
 let definedTypes: string[];
@@ -47,7 +47,10 @@ function choiceBody(m: any, names: string[]): string {
 
 function addNewImport(fileDef: FileDefinition, ns: string) {
     if (fileDef.imports.filter(i => i.starImportName === ns).length === 0) {
-        fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
+        if (ns !== XMLNS) {
+            log('addNewImport: ', ns, ns2modMap[ns]);
+            fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
+        }
     }
 }
 function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = ''): ClassDefinition {
@@ -182,7 +185,7 @@ function addClassForASTNode(fileDef: FileDefinition, astNode: ASTNode, indent = 
 export class ClassGenerator {
     public types: string[] = [];
     public schemaName = "schema";
-    public xmlnsName= "xmlns";
+    public xmlnsName = "xmlns";
     private fileDef = createFile({classes: []});
     private verbose = false;
     private pluralPostFix = 's';
@@ -340,14 +343,14 @@ export class ClassGenerator {
             .forEach((t) => {
                 const enumDef = fileDef.addEnum({name: capFirst(t.name)});
                 t.attr.values.forEach (
-                    (m) => { enumDef.addMember( {name: m.attr.value , value: `"${m.attr.value}"` as any } ); },
+                    (m) => { enumDef.addMember( {name: m.attr.value.replace('+', '_') , value: `"${m.attr.value}"` as any } ); },
                 );
                 if (t.attr.element) {
                     schemaClass.addProperty({name: lowfirst(t.name), type: capfirst(t.name)});
                 }
             });
 
-        const tmp = this.makeSortedFileDefinition(fileDef.classes);
+        const tmp = this.makeSortedFileDefinition(fileDef.classes, fileDef);
         Object.keys(typeAliases).forEach( k =>  {
             fileDef.addTypeAlias({name: k, type: typeAliases[k], isExported: true});
         });
@@ -405,31 +408,31 @@ export class ClassGenerator {
     }
 
 
-    private makeSortedFileDefinition(sortedClasses: ClassDefinition[]): FileDefinition {
+    private makeSortedFileDefinition(sortedClasses: ClassDefinition[], fileDef : FileDefinition): FileDefinition {
         //  console.log('makeSortedFileDefinition ');
         const outFile = createFile({classes: []});
 
         //outFile.addImport({moduleSpecifier: "mod", starImportName: "nspce"});
         for ( const ns in this.importMap) {
-            log('ns ', ns, this.importMap[ns]);
+            log('addImport: ', ns, this.importMap[ns]);
             outFile.addImport({moduleSpecifier: this.importMap[ns], starImportName: ns});
         }
 
         let depth = 0;
         let max_depth = 1;
-        log('makeSortedFileDefinition, max_depth ',max_depth);
+        log('makeSortedFileDefinition, max_depth ', max_depth);
         let redundantArrayClasses:string[] = [];
         while (depth <= max_depth) {
             // console.log('depth ');
             sortedClasses.forEach(
                 (c) => {
 
-                    const hDepth = this.findHierachyDepth(c, this.fileDef);
+                    const hDepth = this.findHierachyDepth(c, fileDef);
 
                     if (hDepth > max_depth) {
                         max_depth = hDepth;
                     }
-                    this.log( c.name + '\t' + hDepth);
+                    this.log('--DEPTH:',  c.name + '\t' + hDepth);
                     if (hDepth === depth) {
 
                         if (c.name.indexOf(GROUP_PREFIX) === 0) {
@@ -546,9 +549,11 @@ export class ClassGenerator {
         let result = 0;
         let superClassName = (c.extendsTypes[0]) ? c.extendsTypes[0].text : '';
         while (superClassName) {
+            //console.log('superClassName1:', superClassName , result);
             result++;
             c = f.getClass(superClassName);
             superClassName =  c?.extendsTypes[0]?.text;
+            //console.log('superClassName2:', superClassName , c, result);
         }
         return result;
     }
