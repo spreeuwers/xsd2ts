@@ -47,9 +47,10 @@ function choiceBody(m: any, names: string[]): string {
 
 function addNewImport(fileDef: FileDefinition, ns: string) {
     if (fileDef.imports.filter(i => i.starImportName === ns).length === 0) {
-        if (ns !== XMLNS) {
-            log('addNewImport: ', ns, ns2modMap[ns]);
-            fileDef.addImport({moduleSpecifier: ns2modMap[ns], starImportName: ns});
+        const modulePath = ns2modMap[ns];
+        if (modulePath) {
+            log('addNewImport: ', ns, modulePath);
+            fileDef.addImport({moduleSpecifier: modulePath, starImportName: ns});
         }
     }
 }

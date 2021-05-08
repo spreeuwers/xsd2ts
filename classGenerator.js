@@ -41,9 +41,10 @@ function choiceBody(m, names) {
 }
 function addNewImport(fileDef, ns) {
     if (fileDef.imports.filter(function (i) { return i.starImportName === ns; }).length === 0) {
-        if (ns !== XMLNS) {
-            xml_utils_1.log('addNewImport: ', ns, ns2modMap[ns]);
-            fileDef.addImport({ moduleSpecifier: ns2modMap[ns], starImportName: ns });
+        var modulePath = ns2modMap[ns];
+        if (modulePath) {
+            xml_utils_1.log('addNewImport: ', ns, modulePath);
+            fileDef.addImport({ moduleSpecifier: modulePath, starImportName: ns });
         }
     }
 }
