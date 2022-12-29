@@ -20,11 +20,11 @@
     "@types/lodash.merge": "4.6.3",
     "@types/node": "8.0.7",
     "@types/xml-parser": "^1.2.29",
-    "file-loader": "0.11.2",
+    "file-loader": "6.2.0",
     "fs-extra": "3.0.1",
     "npm-test": "0.0.1",
     "ts-code-generator": "0.0.3",
-    "ts-loader": "2.2.2",
+    "ts-loader": "9.4.2",
     "ts-node": "^8.6.2",
     "typescript": "^3.9.9",
     "xmldom-reborn": "^1.0.5"
